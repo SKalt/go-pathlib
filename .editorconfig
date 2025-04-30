@@ -1,0 +1,27 @@
+root = true
+
+[*]
+  # Unix-style newlines with a newline ending every file
+  end_of_line = lf
+  insert_final_newline = true
+
+  # assume all files are utf-8 unless otherwise specified
+  charset = utf-8
+
+  # prefer indenting with two spaces
+  indent_size = 2
+  indent_style = space
+
+  trim_trailing_whitespace = true
+
+
+[{*.go,Makefile,go.mod,go.sum}]
+  indent_style = tab
+
+# CSV and TSVs can be sensitive to trailing newlines
+[*.{csv,tsv}]
+  insert_final_newline = false
+
+# Python and rust customarily use 4-space indentation
+[*.{py,rs}]
+  indent_size = 4
