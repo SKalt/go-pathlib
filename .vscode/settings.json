@@ -1,0 +1,9 @@
+{
+  "go.formatTool": "custom",
+  "go.alternateTools": {
+        // the binary name if it is in your PATH, or
+        // provide the exact path to your
+        // custom formatter.
+        "customFormatter": "golines"
+    },
+}
