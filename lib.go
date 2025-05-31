@@ -21,7 +21,75 @@ type result[T any] struct {
 	value *T
 	err   error
 }
-// type optional[T any] *T
+
+// Map implements Residual.
+func (r result[T]) Map(f func(T) (*T, error)) Residual[T] {
+	if r.err != nil {
+		return r // propagate the error
+	}
+	next := result[T]{}
+	next.value, next.err = f(*r.value)
+	return next
+}
+
+// Or implements Residual.
+func (r result[T]) Or(T) T {
+	panic("unimplemented")
+}
+
+// OrElse implements Residual.
+func (r result[T]) OrElse(func(err error) T) T {
+	panic("unimplemented")
+}
+
+// Unwrap implements Residual.
+func (r result[T]) Unwrap() T {
+	panic("unimplemented")
+}
+
+type optional[T any] struct{ ptr *T }
+
+// Map implements Residual.
+func (o optional[T]) Map(f func(T) (*T, error)) Residual[T] {
+	if o.ptr == nil {
+		return o
+	} else {
+		next := optional[T]{}
+		val, err := f(*o.ptr)
+		if err == nil {
+			next.ptr = val
+		}
+		return next
+	}
+}
+func (o optional[T]) Or(defaultValue T) T {
+	if o.ptr == nil {
+		return defaultValue
+	}
+	return *o.ptr
+}
+func (o optional[T]) OrElse(f func(err error) T) T {
+	if o.ptr == nil {
+		return f(nil)
+	}
+	return *o.ptr
+}
+func (o optional[T]) Unwrap() T {
+	if o.ptr == nil {
+		panic("attempted to unwrap an empty optional")
+	}
+	return *o.ptr
+}
+
+type Residual[T any] interface {
+	Map(func(T) (*T, error)) Residual[T]
+	Or(T) T
+	OrElse(func(err error) T) T
+	Unwrap() T
+}
+
+var _ Residual[string] = optional[string]{}
+var _ Residual[int] = result[int]{}
 
 // wrappers around [os.Lstat]/[os.Stat] and operations on the resulting [os.FileInfo]
 type IFilePath interface {
@@ -60,7 +128,7 @@ type PurePath[Self PathStr | Dir | Symlink] interface {
 	// TODO: ToLocal(cwd string)
 
 	BaseName() string
-	// Ext() string
+	Ext() string
 }
 type ExistingManipulator[P PathStr | Dir] interface {
 	Remove() error
@@ -82,7 +150,7 @@ type FileManipulator[P PathStr] interface {
 
 var (
 	_ PurePath[PathStr] = PathStr(".")
-	_ PurePath[Dir] = Dir(".")
+	_ PurePath[Dir]     = Dir(".")
 	_ PurePath[Symlink] = Symlink("link")
 
 	_ Readable[[]os.DirEntry] = Dir(".")

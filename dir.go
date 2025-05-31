@@ -81,3 +81,7 @@ func (d Dir) Localize() Dir {
 func (d Dir) Rel(target Dir) (Dir, error) {
 	panic("unimplemented")
 }
+
+func (d Dir) Ext() string {
+	return PathStr(d).Ext()
+}

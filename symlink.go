@@ -42,3 +42,23 @@ func (s Symlink) NearestDir() Dir {
 func (s Symlink) Parent() Dir {
 	return PathStr(s).Parent()
 }
+
+// Abs implements PurePath.
+func (s Symlink) Abs(cwd Dir) Symlink {
+	return Symlink(PathStr(s).Abs(cwd)) // this will panic if cwd is not absolute
+}
+
+// Localize implements PurePath.
+func (s Symlink) Localize() Symlink {
+	return Symlink(PathStr(s).Localize())
+}
+
+// Rel implements PurePath.
+func (s Symlink) Rel(target Dir) (Symlink, error) {
+	result, err := PathStr(s).Rel(target)
+	return Symlink(result), err
+}
+
+func (s Symlink) Ext() string {
+	return PathStr(s).Ext()
+}
