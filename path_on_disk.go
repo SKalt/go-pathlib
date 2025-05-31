@@ -1,10 +1,14 @@
 package pathlib
 
+import (
+	"errors"
+	"io/fs"
+)
 
 func (p PathOnDisk[any]) Exists() bool {
-	return p.Info != nil
+	return  !errors.Is(p.err, fs.ErrExist)
 }
 
-func (p PathOnDisk[any]) IsRegular() bool {
-	return p.Info.Mode().IsRegular()
+func (p PathOnDisk[any]) IsRegular() (isRegular bool) {
+	return p.value != nil  && (*p.value).Mode().IsRegular()
 }

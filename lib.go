@@ -15,9 +15,13 @@ type Symlink PathStr
 
 type PathOnDisk[P PathStr | Dir | Symlink] struct {
 	original P // retained for error reporting in case Info is nil
-	Info     fs.FileInfo
-	err      error
+	result[fs.FileInfo]
 }
+type result[T any] struct {
+	value *T
+	err   error
+}
+// type optional[T any] *T
 
 // wrappers around [os.Lstat]/[os.Stat] and operations on the resulting [os.FileInfo]
 type IFilePath interface {

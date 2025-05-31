@@ -78,6 +78,6 @@ func (d Dir) Localize() Dir {
 }
 
 // Rel implements PurePath.
-func (d Dir) Rel(target Dir) (PathStr, error) {
+func (d Dir) Rel(target Dir) (Dir, error) {
 	panic("unimplemented")
 }
