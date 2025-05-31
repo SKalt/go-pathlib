@@ -1,7 +1,7 @@
 module github.com/skalt/go-pathlib
 
 // the minimum supported Go version is 1.18 due to the use of generics.
-go 1.23.0
+go 1.18
 
 toolchain go1.24.1
 
