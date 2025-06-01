@@ -85,3 +85,7 @@ func (d Dir) Rel(target Dir) (Dir, error) {
 func (d Dir) Ext() string {
 	return PathStr(d).Ext()
 }
+
+func (d Dir) Chdir() error {
+	return os.Chdir(string(d))
+}

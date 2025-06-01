@@ -17,11 +17,19 @@ func isLocal[P ~string](p P) bool {
 	return filepath.IsLocal(string(p))
 }
 
-func stat[P ~string](p P) (os.FileInfo, error) {
-	return os.Stat(string(p))
+func stat[P ~string](p P) (r result[os.FileInfo]) {
+	*r.value, r.err = os.Stat(string(p))
+	if r.err != nil {
+		r.value = nil // for consistency
+	}
+	return
 }
-func lstat[P ~string](p P) (os.FileInfo, error) {
-	return os.Lstat(string(p))
+func lstat[P ~string](p P) (r result[os.FileInfo]) {
+	*r.value, r.err = os.Lstat(string(p))
+	if r.err != nil {
+		r.value = nil // for consistency
+	}
+	return
 }
 
 func isSymLink(m os.FileMode) bool {

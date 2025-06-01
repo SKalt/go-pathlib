@@ -1,6 +1,7 @@
 package pathlib
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 )
@@ -17,6 +18,8 @@ type PathOnDisk[P PathStr | Dir | Symlink] struct {
 	original P // retained for error reporting in case Info is nil
 	result[fs.FileInfo]
 }
+
+// invariant: if result.err == nil, then result.value != nil
 type result[T any] struct {
 	value *T
 	err   error
@@ -45,6 +48,9 @@ func (r result[T]) OrElse(func(err error) T) T {
 // Unwrap implements Residual.
 func (r result[T]) Unwrap() T {
 	panic("unimplemented")
+}
+func (r result[T]) Ok() error {
+	return r.err
 }
 
 type optional[T any] struct{ ptr *T }
@@ -80,12 +86,20 @@ func (o optional[T]) Unwrap() T {
 	}
 	return *o.ptr
 }
+func (o optional[T]) Ok() (error) {
+	if o.ptr == nil {
+		return missing
+	}
+	return nil
+}
+var missing = errors.New("missing value")
 
 type Residual[T any] interface {
 	Map(func(T) (*T, error)) Residual[T]
 	Or(T) T
 	OrElse(func(err error) T) T
 	Unwrap() T
+	Ok() error
 }
 
 var _ Residual[string] = optional[string]{}
@@ -145,7 +159,7 @@ type DirManipulator interface {
 
 type FileManipulator[P PathStr] interface {
 	ExistingManipulator[P]
-	Open() (*os.File, error)
+	Open(flag int, mode os.FileMode) (*os.File, error)
 }
 
 var (

@@ -1,25 +1,22 @@
 package pathlib
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
 
 func (p PathStr) OnDisk() (onDisk PathOnDisk[PathStr]) {
 	onDisk.original = p
-	onDisk.Info, onDisk.err = lstat(p)
-	if onDisk.err != nil {
-		onDisk.Info = nil // for consistency
-	}
+	onDisk.result = lstat(p)
 	return
 }
 
 // Note: single-field structs have the same size as their field
 
 func (p PathStr) Exists() (exists bool) {
-	info, err := stat(string(p))
-	exists = err == nil && info != nil
-	return
+	return !errors.Is(stat(p).err, fs.ErrNotExist)
 }
 
 
