@@ -69,17 +69,18 @@ func (d Dir) Parent() Dir {
 
 // Abs implements PurePath.
 func (d Dir) Abs(cwd Dir) Dir {
-	panic("unimplemented")
+	return Dir(PathStr(d).Abs(cwd)) // this will panic if cwd is not absolute
 }
 
 // Localize implements PurePath.
 func (d Dir) Localize() Dir {
-	panic("unimplemented")
+	return Dir(PathStr(d).Localize()) // this will panic if d is not absolute
 }
 
 // Rel implements PurePath.
 func (d Dir) Rel(target Dir) (Dir, error) {
-	panic("unimplemented")
+	relative, err := PathStr(d).Rel(target)
+	return Dir(relative), err
 }
 
 func (d Dir) Ext() string {
