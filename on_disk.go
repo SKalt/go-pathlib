@@ -1,28 +1,22 @@
 package pathlib
 
 import (
-	"io/fs"
 	"os"
 )
 
 
-func (p *PathOnDisk[P]) Parent() Dir {
-	return PathStr(p.original).Parent()
+func (p OnDisk[P]) Parent() Dir {
+	return p.Path().Parent()
 }
 
-func (p *PathOnDisk[P]) Path() P {
-	return p.original
+func (p OnDisk[P]) Path() P {
+	return P(p.Name())
 }
 
-func (p *PathOnDisk[P]) Chmod(mode os.FileMode) PathOnDisk[P] {
-	result := p.Map(func(fi fs.FileInfo) (*fs.FileInfo, error) {
-		err := os.Chmod(fi.Name(), mode)
-		if err != nil {
-			return nil, err
-		}
-		r := lstat(fi.Name())
-		return r.value, r.err
-	}).(result[fs.FileInfo])
+func (p *OnDisk[P]) Chmod(mode os.FileMode) error {
+	return os.Chmod(p.Name(), mode)
+}
 
-	return PathOnDisk[P]{p.original, result}
+func (p OnDisk[P]) IsRegular() (isRegular bool) {
+	return p.Mode().IsRegular()
 }

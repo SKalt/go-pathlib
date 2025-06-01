@@ -7,18 +7,22 @@ import (
 	"path/filepath"
 )
 
-func (p PathStr) OnDisk() (onDisk PathOnDisk[PathStr]) {
-	onDisk.original = p
-	onDisk.result = lstat(p)
+func (p PathStr) OnDisk() (onDisk *OnDisk[PathStr], err error) {
+	var info os.FileInfo
+	info, err = lstat(p)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, err
+	}
+	onDisk = &OnDisk[PathStr]{info}
 	return
 }
 
 // Note: single-field structs have the same size as their field
 
 func (p PathStr) Exists() (exists bool) {
-	return !errors.Is(stat(p).err, fs.ErrNotExist)
+	_, err := p.OnDisk()
+	return !errors.Is(err, fs.ErrNotExist)
 }
-
 
 // Returns true if the path is absolute, false otherwise.
 func (p PathStr) IsAbsolute() bool {
@@ -30,17 +34,17 @@ func (p PathStr) IsLocal() bool {
 	return isLocal(p)
 }
 
-
 func (p PathStr) Read() (result any, err error) {
-	onDisk := p.OnDisk()
-	if onDisk.err != nil {
+	var onDisk *OnDisk[PathStr]
+	onDisk, err = p.OnDisk()
+	if err != nil {
 		return
 	}
-	mode := onDisk.Info.Mode()
+	mode := (*onDisk).Mode()
 
 	if mode.IsRegular() {
 		result, err = os.ReadFile(string(p))
-	} else if onDisk.Info.IsDir() {
+	} else if mode.IsDir() {
 		result, err = Dir(p).Read()
 	} else if isSymLink(mode) {
 		result, err = Symlink(p).Read()
@@ -91,5 +95,9 @@ func (p PathStr) Localize() PathStr {
 
 // Rel implements PurePath.
 func (p PathStr) Rel(target Dir) (PathStr, error) {
-	panic("unimplemented")
+	result, err := filepath.Rel(string(p), string(target))
+	if err != nil {
+		return "", errors.Join(err, errors.New("unable to make relative path"))
+	}
+	return PathStr(result), nil
 }

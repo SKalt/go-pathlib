@@ -46,11 +46,11 @@ func (p PathStr) Ext() string {
 
 // Either the parent of the path or the path itself, if it's a directory
 func (p PathStr) NearestDir() Dir {
-	if p.IsDir() {
-		return Dir(p)
-	} else {
-		return p.Parent()
+	if onDisk, err := p.OnDisk(); err == nil && onDisk.IsDir() {
+		return Dir(p) // p is a directory, return it as a Dir
 	}
+	return p.Parent()
+
 }
 
 var homeDir string

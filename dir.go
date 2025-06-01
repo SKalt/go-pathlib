@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	_ PurePath[Dir]               = Dir("/tmp")
+	_ PurePath        = Dir("/tmp")
+	_ Transmogrifier[Dir] = Dir("/tmp")
 )
 
 // a wrapper around [os.ReadDir]. Read() returns all the entries of the directory sorted
@@ -65,7 +66,6 @@ func (d Dir) NearestDir() Dir {
 func (d Dir) Parent() Dir {
 	return PathStr(d).Parent()
 }
-
 
 // Abs implements PurePath.
 func (d Dir) Abs(cwd Dir) Dir {
