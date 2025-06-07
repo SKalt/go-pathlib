@@ -20,7 +20,7 @@ type ContextManager[T io.Closer] interface {
 	With(func(T) error) error
 }
 
-type OnDisk[P kind] struct{ fs.FileInfo }
+type OnDisk[P kind] struct{ info fs.FileInfo }
 
 type Readable[T any] interface {
 	Read() (T, error) // TODO: ReadAll() (T, error)?

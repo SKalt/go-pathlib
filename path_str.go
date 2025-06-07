@@ -33,16 +33,20 @@ func (p PathStr) Exists() (exists bool) {
 }
 
 // Returns true if the path is absolute, false otherwise.
+// See [filepath.IsAbs] for more details.
 func (p PathStr) IsAbsolute() bool {
 	return isAbsolute(p)
 }
 
 // returns true if the path is local/relative, false otherwise.
+// see [filepath.IsLocal] for more details.
 func (p PathStr) IsLocal() bool {
 	return isLocal(p)
 }
 
 func (p PathStr) Read() (result any, err error) {
+	// can't define this switch as a method of OnDisk[P] since OnDisk[P] has to handle
+	// any kind of path
 	var onDisk *OnDisk[PathStr]
 	onDisk, err = p.OnDisk()
 	if err != nil {
