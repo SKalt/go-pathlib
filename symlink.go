@@ -1,17 +1,23 @@
 package pathlib
 
 import (
+	"errors"
 	"os"
 )
 
+type Symlink PathStr
 
+var (
+	_ PurePath                = Symlink("")
+	_ Transformer[Symlink] = Symlink("")
+	_ Readable[PathStr]       = Symlink("")
+)
 
+// Read implements Readable.
 func (s Symlink) Read() (PathStr, error) {
 	link, err := os.Readlink(string(s))
 	return PathStr(link), err
 }
-
-
 
 // BaseName implements PurePath.
 func (s Symlink) BaseName() string {
@@ -28,7 +34,7 @@ func (s Symlink) IsLocal() bool {
 	return PathStr(s).IsLocal()
 }
 
-// Join implements PurePath.
+// Join implements [PurePath].
 func (s Symlink) Join(parts ...string) PathStr {
 	return PathStr(s).Join(parts...)
 }
@@ -43,7 +49,7 @@ func (s Symlink) Parent() Dir {
 	return PathStr(s).Parent()
 }
 
-// Abs implements PurePath.
+// Abs implements [PurePath].
 func (s Symlink) Abs(cwd Dir) Symlink {
 	return Symlink(PathStr(s).Abs(cwd)) // this will panic if cwd is not absolute
 }
@@ -61,4 +67,15 @@ func (s Symlink) Rel(target Dir) (Symlink, error) {
 
 func (s Symlink) Ext() string {
 	return PathStr(s).Ext()
+}
+
+func (s Symlink) OnDisk() (*OnDisk[Symlink], error) {
+	onDisk, err := PathStr(s).OnDisk()
+	if err != nil {
+		return nil, err
+	}
+	if !isSymLink(onDisk.Mode()) {
+		return nil, errors.New("not a symlink: " + onDisk.Name())
+	}
+	return &OnDisk[Symlink]{*onDisk}, nil
 }

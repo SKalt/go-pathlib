@@ -1,14 +1,18 @@
 package pathlib
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
 )
 
+type Dir PathStr
+
 var (
-	_ PurePath        = Dir("/tmp")
-	_ Transmogrifier[Dir] = Dir("/tmp")
+	_ PurePath                = Dir(".")
+	_ Transformer[Dir]     = Dir(".")
+	_ Readable[[]os.DirEntry] = Dir(".")
 )
 
 // a wrapper around [os.ReadDir]. Read() returns all the entries of the directory sorted
@@ -89,4 +93,15 @@ func (d Dir) Ext() string {
 
 func (d Dir) Chdir() error {
 	return os.Chdir(string(d))
+}
+
+func (d Dir) OnDisk() (*OnDisk[Dir], error) {
+	onDisk, err := PathStr(d).OnDisk()
+	if err != nil {
+		return nil, err
+	}
+	if !onDisk.IsDir() {
+		return nil, errors.New("not a directory: " + string(d))
+	}
+	return &OnDisk[Dir]{*onDisk}, nil
 }

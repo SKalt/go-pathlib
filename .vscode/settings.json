@@ -6,4 +6,7 @@
         // custom formatter.
         "customFormatter": "golines"
     },
+    "cSpell.words": [
+      "Transmogrifier"
+    ],
 }

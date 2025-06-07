@@ -6,15 +6,9 @@ import (
 	"os"
 )
 
-type PathStr string
-
-type Dir PathStr
-
-type Symlink PathStr
-
 // TODO: type Fifo
 // TODO: type Device      PathStr
-// TODO: type Regularfile PathStr
+// TODO: type RegularFile PathStr
 
 type kind interface {
 	PurePath
@@ -26,7 +20,7 @@ type ContextManager[T io.Closer] interface {
 	With(func(T) error) error
 }
 
-type OnDisk[P PurePath] struct{ fs.FileInfo }
+type OnDisk[P kind] struct{ fs.FileInfo }
 
 type Readable[T any] interface {
 	Read() (T, error) // TODO: ReadAll() (T, error)?
@@ -45,35 +39,32 @@ type PurePath interface {
 	IsLocal() bool
 }
 
-type Transmogrifier[Self kind] interface {
+// transforms the appearance of a path, but not what it represents.
+type Transformer[Self kind] interface {
 	Abs(cwd Dir) Self
 	Rel(target Dir) (Self, error)
 	Localize() Self
+	OnDisk() (*OnDisk[Self], error)
 }
 
-type ExistingManipulator[P kind] interface {
+type Manipulator[P kind] interface {
 	Remove() error
-	Rename(newName string) OnDisk[P]
-	Move(newPath PathStr) error
-	Info() (os.FileInfo, error)
+	Rename(newName string) (*OnDisk[P], error)
+	Move(newPath PathStr) (*OnDisk[P], error)
+	// Info() (os.FileInfo, error)
 }
-type DirManipulator interface {
-	ExistingManipulator[Dir]
-	Mkdir(perm os.FileMode) OnDisk[Dir]
-	MkdirAll(perm os.FileMode) OnDisk[Dir]
-	MkdirTemp(pattern string) OnDisk[Dir]
+type DirCreator interface {
+	// see [os.Mkdir]
+	Mkdir(perm os.FileMode) (*OnDisk[Dir], error)
+	// see [os.MkdirAll]
+	MkdirAll(perm os.FileMode) (*OnDisk[Dir], error)
+	// see [os.MkdirTemp]
+	MkdirTemp(pattern string) (*OnDisk[Dir], error)
 }
 
 type FileManipulator[P kind] interface {
-	ExistingManipulator[P]
+	Manipulator[P]
 	Open(flag int, mode os.FileMode) (*os.File, error)
 }
 
-var (
-	_ PurePath = PathStr(".")
-	_ PurePath = Dir(".")
-	_ PurePath = Symlink("link")
-
-	_ Readable[[]os.DirEntry] = Dir(".")
-	_ Readable[PathStr]       = Symlink("link")
-)
+// TODO: type SymlinkManipulator interface {}
