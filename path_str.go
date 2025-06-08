@@ -15,13 +15,13 @@ var (
 	_ Readable[any]        = PathStr(".")
 )
 
-func (p PathStr) OnDisk() (onDisk *OnDisk[PathStr], err error) {
+func (p PathStr) OnDisk() (actual *onDisk[PathStr], err error) {
 	var info os.FileInfo
-	info, err = lstat(p)
+	info, err = os.Lstat(string(p))
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
-	onDisk = &OnDisk[PathStr]{info}
+	actual = &onDisk[PathStr]{info}
 	return
 }
 
@@ -35,24 +35,24 @@ func (p PathStr) Exists() (exists bool) {
 // Returns true if the path is absolute, false otherwise.
 // See [filepath.IsAbs] for more details.
 func (p PathStr) IsAbsolute() bool {
-	return isAbsolute(p)
+	return filepath.IsAbs(string(p))
 }
 
 // returns true if the path is local/relative, false otherwise.
 // see [filepath.IsLocal] for more details.
 func (p PathStr) IsLocal() bool {
-	return isLocal(p)
+	return filepath.IsLocal(string(p))
 }
 
 func (p PathStr) Read() (result any, err error) {
 	// can't define this switch as a method of OnDisk[P] since OnDisk[P] has to handle
 	// any kind of path
-	var onDisk *OnDisk[PathStr]
-	onDisk, err = p.OnDisk()
+	var actual *onDisk[PathStr]
+	actual, err = p.OnDisk()
 	if err != nil {
 		return
 	}
-	mode := (*onDisk).Mode()
+	mode := (*actual).Mode()
 
 	if mode.IsRegular() {
 		result, err = os.ReadFile(string(p))
@@ -88,21 +88,23 @@ func (p PathStr) WithOpen(cb func(*os.File) error) error { // FIXME: name
 }
 
 // Abs implements PurePath.
-func (p PathStr) Abs(cwd Dir) PathStr {
+// See [path/filepath.Abs] for more details.
+func (p PathStr) Abs() (PathStr, error) {
 	if p.IsAbsolute() {
-		return p
+		return p, nil
 	}
-	// assume that cwd is absolute
-	if !cwd.IsAbsolute() {
-		panic("cwd must be absolute")
+	cwd, err := Cwd() // get the current working directory
+	if err != nil {
+		return "", err
 	}
-	return cwd.Join(string(p)) // join the path with the current working directory
+
+	return cwd.Join(string(p)), nil
 }
 
 // Localize implements PurePath.
-func (p PathStr) Localize() PathStr {
-	filepath.Localize(string(p))
-	panic("unimplemented") // TODO: implement this
+func (p PathStr) Localize() (PathStr, error) {
+	q, err := filepath.Localize(string(p))
+	return PathStr(q), err
 }
 
 // Rel implements PurePath.
@@ -155,7 +157,7 @@ func (p PathStr) Ext() string {
 
 // Either the parent of the path or the path itself, if it's a directory
 func (p PathStr) NearestDir() Dir {
-	if onDisk, err := p.OnDisk(); err == nil && onDisk.IsDir() {
+	if actual, err := p.OnDisk(); err == nil && actual.IsDir() {
 		return Dir(p) // p is a directory, return it as a Dir
 	}
 	return p.Parent()
@@ -165,25 +167,26 @@ func (p PathStr) NearestDir() Dir {
 var homeDir string
 
 // caches the user's home directory. Returns an empty string if it cannot be determined.
-func getHomeDir() string {
-	if homeDir == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return ""
+func getHomeDir() (home string, err error) {
+	if homeDir != "" {
+		home = homeDir
+	} else {
+		home, err = os.UserHomeDir()
+		if err == nil {
+			homeDir = home
 		}
-		homeDir = home
 	}
-	return homeDir
+	return
 }
 
 // Expand a leading "~" into the user's home directory. If the home directory cannot be
 // determined, the path is returned unchanged.
-func (p PathStr) ExpandUser() PathStr {
+func (p PathStr) ExpandUser() (PathStr, error) {
 	if len(p) > 0 && p[0] == '~' {
-		if home := getHomeDir(); home != "" {
-			return PathStr(PathStr(home) + p[1:]) // FIXME: check p[2] == "/"
+		if home, err := getHomeDir(); home != "" && err == nil {
+			return PathStr(PathStr(home) + p[1:]), nil // FIXME: check p[2] == "/"
 		}
 	}
-	return p
+	return p, nil
 
 }

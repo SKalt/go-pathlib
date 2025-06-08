@@ -7,17 +7,17 @@ import (
 
 type Symlink PathStr
 
-var (
-	_ PurePath                = Symlink("")
-	_ Transformer[Symlink] = Symlink("")
-	_ Readable[PathStr]       = Symlink("")
-)
+// -----------------------------------------------------------------------------
+var _ Readable[PathStr] = Symlink("")
 
 // Read implements Readable.
 func (s Symlink) Read() (PathStr, error) {
 	link, err := os.Readlink(string(s))
 	return PathStr(link), err
 }
+
+// -----------------------------------------------------------------------------
+var _ PurePath = Symlink("")
 
 // BaseName implements PurePath.
 func (s Symlink) BaseName() string {
@@ -49,33 +49,43 @@ func (s Symlink) Parent() Dir {
 	return PathStr(s).Parent()
 }
 
-// Abs implements [PurePath].
-func (s Symlink) Abs(cwd Dir) Symlink {
-	return Symlink(PathStr(s).Abs(cwd)) // this will panic if cwd is not absolute
+// -----------------------------------------------------------------------------
+var _ Transformer[Symlink] = Symlink("")
+
+// Abs implements Transformer.
+func (s Symlink) Abs() (Symlink, error) {
+	q, err := PathStr(s).Abs()
+	return Symlink(q), err
 }
 
-// Localize implements PurePath.
-func (s Symlink) Localize() Symlink {
-	return Symlink(PathStr(s).Localize())
+// Localize implements Transformer.
+func (s Symlink) Localize() (Symlink, error) {
+	q, err := PathStr(s).Localize()
+	return Symlink(q), err
 }
 
-// Rel implements PurePath.
+// Rel implements Transformer.
 func (s Symlink) Rel(target Dir) (Symlink, error) {
 	result, err := PathStr(s).Rel(target)
 	return Symlink(result), err
+}
+
+func (s Symlink) ExpandUser() (Symlink, error) {
+	q, err := PathStr(s).ExpandUser()
+	return Symlink(q), err
 }
 
 func (s Symlink) Ext() string {
 	return PathStr(s).Ext()
 }
 
-func (s Symlink) OnDisk() (*OnDisk[Symlink], error) {
-	onDisk, err := PathStr(s).OnDisk()
+func (s Symlink) OnDisk() (*onDisk[Symlink], error) {
+	actual, err := PathStr(s).OnDisk()
 	if err != nil {
 		return nil, err
 	}
-	if !isSymLink(onDisk.Mode()) {
-		return nil, errors.New("not a symlink: " + onDisk.Name())
+	if !isSymLink(actual.Mode()) {
+		return nil, errors.New("not a symlink: " + actual.Name())
 	}
-	return &OnDisk[Symlink]{*onDisk}, nil
+	return &onDisk[Symlink]{*actual}, nil
 }

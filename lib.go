@@ -20,8 +20,6 @@ type ContextManager[T io.Closer] interface {
 	With(func(T) error) error
 }
 
-type OnDisk[P kind] struct{ info fs.FileInfo }
-
 type Readable[T any] interface {
 	Read() (T, error) // TODO: ReadAll() (T, error)?
 }
@@ -41,30 +39,49 @@ type PurePath interface {
 
 // transforms the appearance of a path, but not what it represents.
 type Transformer[Self kind] interface {
-	Abs(cwd Dir) Self
+	Abs() (Self, error)
 	Rel(target Dir) (Self, error)
-	Localize() Self
-	OnDisk() (*OnDisk[Self], error)
+	Localize() (Self, error)
+	ExpandUser() (Self, error)
+	// Stat() (OnDisk[Self], error)
+}
+type OnDisk[PathKind kind] interface {
+	fs.FileInfo
+	PurePath
+	Transformer[PathKind]
+	// Readable[any] // refining the type of what gets read would
+	// require passing an additional type parameter, which
+	// causes weird type-states to become possible, like OnDisk[Dir, struct{...}]
 }
 
-type Manipulator[P kind] interface {
+type Manipulator[PathKind kind] interface {
+	// see [os.Remove]
 	Remove() error
-	Rename(newName string) (*OnDisk[P], error)
-	Move(newPath PathStr) (*OnDisk[P], error)
-	// Info() (os.FileInfo, error)
+	// see [os.Chmod]
+	Chmod(os.FileMode) (PathKind, error)
+	// see [os.Chown]
+	Chown(uid, gid int) (PathKind, error)
+	// see [os.Rename]
+	Rename(newPath PathStr) (PathKind, error)
 }
+
 type DirCreator interface {
 	// see [os.Mkdir]
-	Mkdir(perm os.FileMode) (*OnDisk[Dir], error)
+	Mkdir(perm os.FileMode) (Dir, error)
 	// see [os.MkdirAll]
-	MkdirAll(perm os.FileMode) (*OnDisk[Dir], error)
+	MkdirAll(perm os.FileMode) (Dir, error)
 	// see [os.MkdirTemp]
-	MkdirTemp(pattern string) (*OnDisk[Dir], error)
+	MkdirTemp(pattern string) (Dir, error)
 }
 
 type FileManipulator[P kind] interface {
 	Manipulator[P]
 	Open(flag int, mode os.FileMode) (*os.File, error)
+}
+
+func Cwd() (Dir, error) {
+	dir, err := os.Getwd()
+	return Dir(dir), err
 }
 
 // TODO: type SymlinkManipulator interface {}

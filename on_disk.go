@@ -3,86 +3,114 @@ package pathlib
 import (
 	"io/fs"
 	"os"
-	"time"
 )
 
-var (
-	_ fs.FileInfo = OnDisk[PathStr]{}
-	_ PurePath    = OnDisk[PathStr]{}
-)
+type onDisk[P kind] struct{ fs.FileInfo }
 
-func (p OnDisk[P]) Parent() Dir {
+var _ OnDisk[PathStr] = onDisk[PathStr]{}
+
+func (p onDisk[P]) Path() P {
+	return P(p.Name())
+}
+
+// func (p onDisk[P]) IsRegular() (isRegular bool) {
+// 	return p.Mode().IsRegular()
+// }
+
+var _ fs.FileInfo = onDisk[PathStr]{}
+
+// PurePath --------------------------------------------------------------------
+var _ PurePath = onDisk[PathStr]{}
+
+// Implements PurePath
+func (p onDisk[P]) Parent() Dir {
 	return p.Path().Parent()
 }
 
-func (p OnDisk[P]) Path() P {
-	return P(p.info.Name())
-}
-
-func (p *OnDisk[P]) Chmod(mode os.FileMode) error {
-	return os.Chmod(p.info.Name(), mode)
-}
-
-func (p OnDisk[P]) IsRegular() (isRegular bool) {
-	return p.info.Mode().IsRegular()
-}
-
 // BaseName implements PurePath.
-func (p OnDisk[P]) BaseName() string {
+func (p onDisk[P]) BaseName() string {
 	return p.Path().BaseName()
 }
 
 // Ext implements PurePath.
-func (p OnDisk[P]) Ext() string {
+func (p onDisk[P]) Ext() string {
 	return p.Path().Ext()
 }
 
 // IsAbsolute implements PurePath.
-func (p OnDisk[P]) IsAbsolute() bool {
+func (p onDisk[P]) IsAbsolute() bool {
 	return p.Path().IsAbsolute()
 }
 
 // IsLocal implements PurePath.
-func (p OnDisk[P]) IsLocal() bool {
+func (p onDisk[P]) IsLocal() bool {
 	return p.Path().IsLocal()
 }
 
 // Join implements PurePath.
-func (p OnDisk[P]) Join(parts ...string) PathStr {
+func (p onDisk[P]) Join(parts ...string) PathStr {
 	return p.Path().Join(parts...)
 }
 
 // NearestDir implements PurePath.
-func (p OnDisk[P]) NearestDir() Dir {
+func (p onDisk[P]) NearestDir() Dir {
 	return p.Path().NearestDir()
 }
 
-// IsDir implements fs.FileInfo.
-func (p OnDisk[P]) IsDir() bool {
-	return p.info.IsDir()
+// Transformer -----------------------------------------------------------------
+var _ Transformer[PathStr] = onDisk[PathStr]{}
+
+// Abs implements Transformer.
+func (p onDisk[P]) Abs() (P, error) {
+	abs, err := PathStr(p.Path()).Abs()
+	return P(abs), err
 }
 
-// ModTime implements fs.FileInfo.
-func (p OnDisk[P]) ModTime() time.Time {
-	return p.info.ModTime()
+// Localize implements Transformer.
+func (p onDisk[P]) Localize() (P, error) {
+	q, err := PathStr(p.Path()).Localize()
+	return P(q), err
 }
 
-// Mode implements fs.FileInfo.
-func (p OnDisk[P]) Mode() fs.FileMode {
-	return p.info.Mode()
+// Rel implements Transformer.
+func (p onDisk[P]) Rel(target Dir) (P, error) {
+	q, err := PathStr(p.Path()).Rel(target)
+	return P(q), err
 }
 
-// Name implements fs.FileInfo.
-func (p OnDisk[P]) Name() string {
-	return p.info.Name()
+func (p onDisk[P]) ExpandUser() (P, error) {
+	q, err := PathStr(p.Path()).ExpandUser()
+	return P(q), err
 }
 
-// Size implements fs.FileInfo.
-func (p OnDisk[P]) Size() int64 {
-	return p.info.Size()
+// Manipulator -----------------------------------------------------------------
+var _ Manipulator[PathStr] = onDisk[PathStr]{}
+
+// Move implements Manipulator.
+func (p onDisk[P]) Move(destination PathStr) (P, error) {
+	panic("unimplemented")
 }
 
-// Sys implements fs.FileInfo.
-func (p OnDisk[P]) Sys() any {
-	return p.info.Sys()
+// Remove implements Manipulator.
+func (p onDisk[P]) Remove() error {
+	panic("unimplemented")
+}
+
+// Rename implements Manipulator.
+func (p onDisk[P]) Rename(destination PathStr) (result P, err error) {
+	result = P(destination)
+	err = os.Rename(p.Name(), string(destination))
+	return
+}
+
+func (p onDisk[P]) Chmod(mode os.FileMode) (result P, err error) {
+	result = p.Path()
+	err = os.Chmod(string(result), mode)
+	return
+}
+
+func (p onDisk[P]) Chown(uid, gid int) (result P, err error) {
+	result = p.Path()
+	err = os.Chown(string(result), uid, gid)
+	return
 }

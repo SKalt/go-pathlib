@@ -11,12 +11,12 @@ type Dir PathStr
 
 var (
 	_ PurePath                = Dir(".")
-	_ Transformer[Dir]     = Dir(".")
+	_ Transformer[Dir]        = Dir(".")
 	_ Readable[[]os.DirEntry] = Dir(".")
 )
 
 // a wrapper around [os.ReadDir]. Read() returns all the entries of the directory sorted
-// by filename. If an error occured reading the directory, Read returns the entries it was
+// by filename. If an error occurred reading the directory, Read returns the entries it was
 // able to read before the error, along with the error.
 func (d Dir) Read() ([]os.DirEntry, error) {
 	return os.ReadDir(string(d))
@@ -38,8 +38,6 @@ func (root Dir) Walk(
 func (d Dir) Glob(pattern string) ([]string, error) {
 	return filepath.Glob(filepath.Join(string(d), pattern))
 }
-
-// implmenting IPurePath
 
 // BaseName implements IPurePath.
 func (d Dir) BaseName() string {
@@ -72,13 +70,15 @@ func (d Dir) Parent() Dir {
 }
 
 // Abs implements PurePath.
-func (d Dir) Abs(cwd Dir) Dir {
-	return Dir(PathStr(d).Abs(cwd)) // this will panic if cwd is not absolute
+func (d Dir) Abs() (Dir, error) {
+	abs, err := PathStr(d).Abs()
+	return Dir(abs), err
 }
 
 // Localize implements PurePath.
-func (d Dir) Localize() Dir {
-	return Dir(PathStr(d).Localize()) // this will panic if d is not absolute
+func (d Dir) Localize() (Dir, error) {
+	q, err := PathStr(d).Localize()
+	return Dir(q), err // this will panic if d is not absolute
 }
 
 // Rel implements PurePath.
@@ -95,13 +95,19 @@ func (d Dir) Chdir() error {
 	return os.Chdir(string(d))
 }
 
-func (d Dir) OnDisk() (*OnDisk[Dir], error) {
-	onDisk, err := PathStr(d).OnDisk()
+func (d Dir) OnDisk() (*onDisk[Dir], error) {
+	actual, err := PathStr(d).OnDisk()
 	if err != nil {
 		return nil, err
 	}
-	if !onDisk.IsDir() {
+	if !actual.IsDir() {
 		return nil, errors.New("not a directory: " + string(d))
 	}
-	return &OnDisk[Dir]{*onDisk}, nil
+	return &onDisk[Dir]{*actual}, nil
+}
+
+// ExpandUser implements TildeTransformer.
+func (d Dir) ExpandUser() (Dir, error) {
+	p, err := PathStr(d).ExpandUser()
+	return Dir(p), err
 }
