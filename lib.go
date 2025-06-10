@@ -37,6 +37,10 @@ type PurePath interface {
 	IsLocal() bool
 }
 
+type Maybe[P kind] interface {
+	Stat() (OnDisk[P], error)
+}
+
 // transforms the appearance of a path, but not what it represents.
 type Transformer[Self kind] interface {
 	Abs() (Self, error)
@@ -52,6 +56,11 @@ type OnDisk[PathKind kind] interface {
 	// Readable[any] // refining the type of what gets read would
 	// require passing an additional type parameter, which
 	// causes weird type-states to become possible, like OnDisk[Dir, struct{...}]
+	// TODO: Observed() time.Time?
+}
+
+type Creator[PathKind kind] interface {
+	Create() (OnDisk[PathKind], error)
 }
 
 type Manipulator[PathKind kind] interface {

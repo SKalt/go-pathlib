@@ -1,7 +1,13 @@
-## patlib-go
+# patlib-go
 
-Inspired by Python's ergonomic [`pathlib`][python-pathlib] and Go's cornucopia of useful filesystem methods scatttered throughout the <abbr title="Standard library">stdlib</abbr>.
+Inspired by Python's ergonomic [`pathlib`][python-pathlib] and Go's cornucopia of useful filesystem methods scattered throughout the <abbr title="Standard library">stdlib</abbr>.
 
+## Usage
+<!-- TODO: draw from an example -->
+```go
+type Path = pathlib.PathStr
+Path("./foo").Create()
+```
 ## Prior art
 <!--
 https://pkg.go.dev/github.com/chigopher/pathlib: structs

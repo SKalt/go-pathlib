@@ -86,14 +86,9 @@ func (p onDisk[P]) ExpandUser() (P, error) {
 // Manipulator -----------------------------------------------------------------
 var _ Manipulator[PathStr] = onDisk[PathStr]{}
 
-// Move implements Manipulator.
-func (p onDisk[P]) Move(destination PathStr) (P, error) {
-	panic("unimplemented")
-}
-
 // Remove implements Manipulator.
 func (p onDisk[P]) Remove() error {
-	panic("unimplemented")
+	return os.Remove(p.Name())
 }
 
 // Rename implements Manipulator.
@@ -103,14 +98,15 @@ func (p onDisk[P]) Rename(destination PathStr) (result P, err error) {
 	return
 }
 
-func (p onDisk[P]) Chmod(mode os.FileMode) (result P, err error) {
+func (p onDisk[P]) Chmod(mode fs.FileMode) (result P, err error) {
 	result = p.Path()
+	// os.Lchown()
 	err = os.Chmod(string(result), mode)
 	return
 }
 
 func (p onDisk[P]) Chown(uid, gid int) (result P, err error) {
 	result = p.Path()
-	err = os.Chown(string(result), uid, gid)
+	err = os.Lchown(string(result), uid, gid)
 	return
 }
