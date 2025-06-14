@@ -29,7 +29,6 @@ type PurePath interface {
 	// Navigation
 	Join(...string) PathStr
 	Parent() Dir
-	NearestDir() Dir
 	BaseName() string
 	Ext() string
 
@@ -102,3 +101,14 @@ func TempDir() Dir {
 }
 
 // TODO: type SymlinkManipulator interface {}
+
+// func expect[T any](t T, err error) T {
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return t
+// }
+
+// func temp() {
+// 	x := expect(Cwd())
+// }

@@ -51,10 +51,18 @@ func (p onDisk[P]) IsLocal() bool {
 func (p onDisk[P]) Join(parts ...string) PathStr {
 	return p.Path().Join(parts...)
 }
+func typeIs[A, B kind]() (typesAreEqual bool) {
+	_, typesAreEqual = any((*A)(nil)).(*B)
+	return
+}
 
 // NearestDir implements PurePath.
 func (p onDisk[P]) NearestDir() Dir {
-	return p.Path().NearestDir()
+	if typeIs[P, Dir]() {
+		return Dir(p.Path())
+	} else {
+		return p.Parent()
+	}
 }
 
 // Transformer -----------------------------------------------------------------

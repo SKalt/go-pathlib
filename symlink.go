@@ -38,11 +38,6 @@ func (s Symlink) Join(parts ...string) PathStr {
 	return PathStr(s).Join(parts...)
 }
 
-// NearestDir implements PurePath.
-func (s Symlink) NearestDir() Dir {
-	return PathStr(s).NearestDir()
-}
-
 // Parent implements PurePath.
 func (s Symlink) Parent() Dir {
 	return PathStr(s).Parent()

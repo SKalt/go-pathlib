@@ -62,11 +62,6 @@ func (d Dir) Join(parts ...string) PathStr {
 	return PathStr(d).Join(parts...)
 }
 
-// NearestDir implements PurePath.
-func (d Dir) NearestDir() Dir {
-	return d
-}
-
 // Parent implements PurePath.
 func (d Dir) Parent() Dir {
 	return PathStr(d).Parent()

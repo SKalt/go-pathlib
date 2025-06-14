@@ -169,15 +169,6 @@ func (p PathStr) Ext() string {
 	return filepath.Ext(string(p))
 }
 
-// Either the parent of the path or the path itself, if it's a directory
-func (p PathStr) NearestDir() Dir {
-	if actual, err := p.OnDisk(); err == nil && actual.IsDir() {
-		return Dir(p) // p is a directory, return it as a Dir
-	}
-	return p.Parent()
-
-}
-
 var homeDir string
 
 // caches the user's home directory. Returns an empty string if it cannot be determined.
