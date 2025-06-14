@@ -1,7 +1,6 @@
 package pathlib
 
 import (
-	"errors"
 	"os"
 )
 
@@ -79,13 +78,41 @@ func (s Symlink) Ext() string {
 	return PathStr(s).Ext()
 }
 
-func (s Symlink) OnDisk() (*onDisk[Symlink], error) {
+// Beholder --------------------------------------------------------------------
+var _ Beholder[Symlink] = Symlink("")
+
+// OnDisk implements Beholder.
+func (s Symlink) OnDisk() (OnDisk[Symlink], error) {
 	actual, err := PathStr(s).OnDisk()
 	if err != nil {
 		return nil, err
 	}
 	if !isSymLink(actual.Mode()) {
-		return nil, errors.New("not a symlink: " + actual.Name())
+		return nil, WrongTypeOnDisk[Symlink]{actual}
 	}
-	return &onDisk[Symlink]{*actual}, nil
+	return onDisk[Symlink]{actual}, nil
 }
+
+// Exists implements Beholder.
+func (s Symlink) Exists() bool {
+	panic("unimplemented")
+}
+
+// Lstat implements Beholder.
+func (s Symlink) Lstat() (OnDisk[Symlink], error) {
+	panic("unimplemented")
+}
+
+// Stat implements Beholder.
+func (s Symlink) Stat() (OnDisk[Symlink], error) {
+	panic("unimplemented")
+}
+
+// // https://go.dev/play/p/mWNvcZLrjog
+// // https://godbolt.org/z/1caPfvzfh
+
+// func temp[T kind]() {
+// 	switch any((*T)(nil)).(type) {
+// 	case *PathStr:
+// 	}
+// }

@@ -37,18 +37,21 @@ type PurePath interface {
 	IsLocal() bool
 }
 
-type Maybe[P kind] interface {
-	Stat() (OnDisk[P], error)
-}
-
 // transforms the appearance of a path, but not what it represents.
 type Transformer[Self kind] interface {
 	Abs() (Self, error)
 	Rel(target Dir) (Self, error)
 	Localize() (Self, error)
 	ExpandUser() (Self, error)
-	// Stat() (OnDisk[Self], error)
 }
+
+type Beholder[PathKind kind] interface {
+	OnDisk() (OnDisk[PathKind], error)
+	Stat() (OnDisk[PathKind], error)
+	Lstat() (OnDisk[PathKind], error)
+	Exists() bool
+}
+
 type OnDisk[PathKind kind] interface {
 	fs.FileInfo
 	PurePath
@@ -91,6 +94,11 @@ type FileManipulator[P kind] interface {
 func Cwd() (Dir, error) {
 	dir, err := os.Getwd()
 	return Dir(dir), err
+}
+
+// returns the process/os-wide temporary directory
+func TempDir() Dir {
+	return Dir(os.TempDir())
 }
 
 // TODO: type SymlinkManipulator interface {}

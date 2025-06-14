@@ -9,19 +9,33 @@ import (
 
 type PathStr string
 
+// Note: go's `os.Stat/Lstat` imitates `stat(2)` from POSIX's libc spec.
+
+// Stat implements Beholder.
+func (p PathStr) Stat() (OnDisk[PathStr], error) {
+	info, err := os.Stat(string(p))
+	return onDisk[PathStr]{info}, err
+}
+
+// Lstat implements Beholder.
+func (p PathStr) Lstat() (OnDisk[PathStr], error) {
+	return p.OnDisk()
+}
+
 var (
 	_ PurePath             = PathStr(".")
 	_ Transformer[PathStr] = PathStr(".")
 	_ Readable[any]        = PathStr(".")
+	_ Beholder[PathStr]    = PathStr(".")
 )
 
-func (p PathStr) OnDisk() (actual *onDisk[PathStr], err error) {
+func (p PathStr) OnDisk() (actual OnDisk[PathStr], err error) {
 	var info os.FileInfo
 	info, err = os.Lstat(string(p))
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
-	actual = &onDisk[PathStr]{info}
+	actual = onDisk[PathStr]{info}
 	return
 }
 
@@ -47,12 +61,12 @@ func (p PathStr) IsLocal() bool {
 func (p PathStr) Read() (result any, err error) {
 	// can't define this switch as a method of OnDisk[P] since OnDisk[P] has to handle
 	// any kind of path
-	var actual *onDisk[PathStr]
+	var actual OnDisk[PathStr]
 	actual, err = p.OnDisk()
 	if err != nil {
 		return
 	}
-	mode := (*actual).Mode()
+	mode := actual.Mode()
 
 	if mode.IsRegular() {
 		result, err = os.ReadFile(string(p))

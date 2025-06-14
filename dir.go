@@ -1,7 +1,6 @@
 package pathlib
 
 import (
-	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -99,19 +98,47 @@ func (d Dir) Rel(target Dir) (Dir, error) {
 	return Dir(relative), err
 }
 
-func (d Dir) OnDisk() (*onDisk[Dir], error) {
+// ExpandUser implements TildeTransformer.
+func (d Dir) ExpandUser() (Dir, error) {
+	p, err := PathStr(d).ExpandUser()
+	return Dir(p), err
+}
+
+// Beholder --------------------------------------------------------------------
+var _ Beholder[Dir] = Dir(".")
+
+func (d Dir) OnDisk() (OnDisk[Dir], error) {
 	actual, err := PathStr(d).OnDisk()
 	if err != nil {
 		return nil, err
 	}
 	if !actual.IsDir() {
-		return nil, errors.New("not a directory: " + string(d))
+		return nil, WrongTypeOnDisk[Dir]{actual}
 	}
-	return &onDisk[Dir]{*actual}, nil
+	return onDisk[Dir]{actual}, nil
 }
 
-// ExpandUser implements TildeTransformer.
-func (d Dir) ExpandUser() (Dir, error) {
-	p, err := PathStr(d).ExpandUser()
-	return Dir(p), err
+// Exists implements Beholder.
+func (root Dir) Exists() bool {
+	return PathStr(root).Exists()
+}
+
+// Lstat implements Beholder.
+func (root Dir) Lstat() (OnDisk[Dir], error) {
+	return root.OnDisk()
+}
+
+// Stat implements Beholder.
+func (root Dir) Stat() (result OnDisk[Dir], err error) {
+	var info fs.FileInfo
+	info, err = os.Stat(string(root))
+	if err != nil {
+		return
+	}
+	if !info.IsDir() {
+		err = WrongTypeOnDisk[Dir]{info}
+		return
+	}
+	result = onDisk[Dir]{info}
+	return
 }
