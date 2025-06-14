@@ -46,6 +46,10 @@ func (s Symlink) Parent() Dir {
 // -----------------------------------------------------------------------------
 var _ Transformer[Symlink] = Symlink("")
 
+func (s Symlink) Clean() Symlink {
+	return Symlink(PathStr(s).Clean())
+}
+
 // Abs implements Transformer.
 func (s Symlink) Abs() (Symlink, error) {
 	q, err := PathStr(s).Abs()
