@@ -19,3 +19,8 @@
   - `Device`
 - Any subtype can be converted to an `OnDisk[T]`, which is a wrapper around a `fs.FileInfo` pointer.
 - `OnDisk[T]` grants access to file-manipulation methods, such as `Chmod()`, `Chown()`. The benefit of knowing that the file existed on-disk is obviated by possible concurrent writes to disk: a file can be changed/deleted once it has been `stat`ed.
+
+<!--
+I considered adding some sort of Absolute[P] type, but discarded the idea
+since the determinant is the first letter of the underlying PathStr.
+-->

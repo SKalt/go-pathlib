@@ -5,8 +5,7 @@ Inspired by Python's ergonomic [`pathlib`][python-pathlib] and Go's cornucopia o
 ## Usage
 <!-- TODO: draw from an example -->
 ```go
-type Path = pathlib.PathStr
-Path("./foo").Create()
+pathlib.PathStr("./foo").Create()
 ```
 ## Prior art
 <!--

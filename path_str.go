@@ -75,15 +75,15 @@ func (p PathStr) Read() (result any, err error) {
 	} else if isSymLink(mode) {
 		result, err = Symlink(p).Read()
 	} else if isCharDevice(mode) {
-		// TODO
+		// TODO: CharDevice
 	} else if isDevice(mode) {
-		// TODO
+		// TODO: BlockDevice
 	} else if isFifo(mode) {
-		// TODO
+		// TODO: Fifo
 	} else if isSocket(mode) {
-		// TODO
+		// TODO: Socket
 	} else if isTemporary(mode) {
-		// TODO
+		// TODO: TempFile
 	}
 	return
 }
@@ -148,7 +148,7 @@ func (p PathStr) Rel(target Dir) (PathStr, error) {
 // elements are empty, Join returns an empty string. On Windows, the result will only be
 // a UNC path if the first non-empty element is a UNC path.
 func (p PathStr) Join(segments ...string) PathStr {
-// FIXME: handle joining absolute paths
+	// FIXME: handle joining absolute paths
 	return PathStr(filepath.Join(append([]string{string(p)}, segments...)...))
 }
 
@@ -204,5 +204,27 @@ func (p PathStr) ExpandUser() (PathStr, error) {
 		}
 	}
 	return p, nil
-
 }
+
+func (p PathStr) AsDir() Dir {
+	return Dir(p)
+}
+func (p PathStr) AsSymlink() Symlink {
+	return Symlink(p)
+}
+
+// experimental
+// func (p PathStr) AllParts() iter.Seq[PathStr] {
+// 	return func(yield func(PathStr) bool) {
+// 		i := 0
+// 		p = p.Clean()
+// 		b := len(p.BaseName())
+// 		for i < len(p)-b {
+// 			if !yield(p) || {
+// 				return
+// 			}
+
+// 		}
+// 	}
+// 	// i := 0
+// }

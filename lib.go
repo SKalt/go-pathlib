@@ -10,6 +10,17 @@ import (
 // TODO: type Device      PathStr
 // TODO: type RegularFile PathStr
 
+// type _pathKind uint8
+// const (
+// 	kindUnknown _pathKind = iota
+// 	kindDir
+// 	kindSymlink
+// )
+// type kinder interface {
+// 	PurePath
+// 	kind() _pathKind
+// }
+
 type kind interface {
 	PurePath
 	PathStr | Dir | Symlink
@@ -21,23 +32,26 @@ type ContextManager[T io.Closer] interface {
 }
 
 type Readable[T any] interface {
-	Read() (T, error) // TODO: ReadAll() (T, error)?
+	Read() (T, error)
 }
 
 // String-only path operations that do not require filesystem access.
 type PurePath interface {
 	// Navigation
-	Join(...string) PathStr
+	Join(...string) PathStr // TODO: handle joining an absolute path
 	Parent() Dir
 	BaseName() string
 	Ext() string
+	// TODO: parts
+	// -> volume
+	// -> iter.Seq[AnyPath]
 
 	IsAbsolute() bool
 	IsLocal() bool
 }
 
 // transforms the appearance of a path, but not what it represents.
-type Transformer[Self kind] interface {
+type Transformer[Self kind] interface { // ~Fallible x3
 	Abs() (Self, error)
 	Rel(target Dir) (Self, error)
 	Localize() (Self, error)
@@ -62,11 +76,13 @@ type OnDisk[PathKind kind] interface {
 	// TODO: Observed() time.Time?
 }
 
-type Creator[PathKind kind] interface {
+type Creator[PathKind kind] interface { // ~Fallible
+	// see [os.Create]
 	Create() (OnDisk[PathKind], error)
+	// TODO: add mode, parents args?
 }
 
-type Manipulator[PathKind kind] interface {
+type Manipulator[PathKind kind] interface { // ~Fallible x3 + 1
 	// see [os.Remove]
 	Remove() error
 	// see [os.Chmod]
@@ -77,18 +93,18 @@ type Manipulator[PathKind kind] interface {
 	Rename(newPath PathStr) (PathKind, error)
 }
 
-type DirCreator interface {
+type DirCreator interface { // ~Fallible x3
 	// see [os.Mkdir]
-	Mkdir(perm os.FileMode) (Dir, error)
+	Mkdir(perm fs.FileMode) (Dir, error)
 	// see [os.MkdirAll]
-	MkdirAll(perm os.FileMode) (Dir, error)
+	MkdirAll(perm fs.FileMode) (Dir, error)
 	// see [os.MkdirTemp]
 	MkdirTemp(pattern string) (Dir, error)
 }
 
 type FileManipulator[P kind] interface {
 	Manipulator[P]
-	Open(flag int, mode os.FileMode) (*os.File, error)
+	Open(flag int, mode os.FileMode) (*os.File, error) // ~Fallible
 }
 
 func Cwd() (Dir, error) {
