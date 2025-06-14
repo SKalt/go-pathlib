@@ -101,18 +101,20 @@ func (p PathStr) WithOpen(cb func(*os.File) error) error { // FIXME: name
 	return cb(f)
 }
 
-// Abs implements PurePath.
-// See [path/filepath.Abs] for more details.
-func (p PathStr) Abs() (PathStr, error) {
-	if p.IsAbsolute() {
-		return p, nil
-	}
-	cwd, err := Cwd() // get the current working directory
-	if err != nil {
-		return "", err
-	}
+func (p PathStr) Clean() PathStr {
+	return PathStr(filepath.Clean(string(p)))
+}
 
-	return cwd.Join(string(p)), nil
+// Abs implements PurePath.
+// See [path/filepath.Abs] for more details:
+//
+// > Abs returns an absolute representation of path. If the path is not absolute
+// it will be joined with the current working directory to turn it into an
+// absolute path. The absolute path name for a given file is not guaranteed to
+// be unique. Abs calls [path/filepath.Clean] on the result.
+func (p PathStr) Abs() (PathStr, error) {
+	q, err := filepath.Abs(string(p))
+	return PathStr(q), err
 }
 
 // Localize implements PurePath.
@@ -121,7 +123,15 @@ func (p PathStr) Localize() (PathStr, error) {
 	return PathStr(q), err
 }
 
-// Rel implements PurePath.
+// Rel implements PurePath. See [path/filepath.Rel]:
+//
+// > Rel returns a relative path that is lexically equivalent to [target] when
+// joined to basepath with an intervening separator. That is,
+// [path/filepath.Join](basepath, Rel(basepath, target)) is equivalent to target
+// itself. On success, the returned path will always be relative to basepath,
+// even if basepath and target share no elements. An error is returned if target
+// can't be made relative to basepath or if knowing the current working directory
+// would be necessary to compute it. Rel calls [path/filepath.Clean] on the result.
 func (p PathStr) Rel(target Dir) (PathStr, error) {
 	result, err := filepath.Rel(string(p), string(target))
 	if err != nil {
@@ -133,11 +143,12 @@ func (p PathStr) Rel(target Dir) (PathStr, error) {
 // A wrapper around [path/filepath.Join]:
 //
 // > Join joins any number of path elements into a single path, separating them with an OS
-// > specific [path/filepath.Separator]. Empty elements are ignored. The result passed
-// > through [path/filepath.Clean]. However, if the argument list is empty or all its
-// > elements are empty, Join returns an empty string. On Windows, the result will only be
-// > a UNC path if the first non-empty element is a UNC path.
+// specific [path/filepath.Separator]. Empty elements are ignored. The result passed
+// through [path/filepath.Clean]. However, if the argument list is empty or all its
+// elements are empty, Join returns an empty string. On Windows, the result will only be
+// a UNC path if the first non-empty element is a UNC path.
 func (p PathStr) Join(segments ...string) PathStr {
+// FIXME: handle joining absolute paths
 	return PathStr(filepath.Join(append([]string{string(p)}, segments...)...))
 }
 

@@ -68,6 +68,11 @@ func (p onDisk[P]) NearestDir() Dir {
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = onDisk[PathStr]{}
 
+// Clean implements Transformer
+func (p onDisk[P]) Clean() P {
+	return P(PathStr(p.Path()).Clean())
+}
+
 // Abs implements Transformer.
 func (p onDisk[P]) Abs() (P, error) {
 	abs, err := PathStr(p.Path()).Abs()

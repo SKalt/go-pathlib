@@ -80,6 +80,9 @@ func (d Dir) Abs() (Dir, error) {
 	abs, err := PathStr(d).Abs()
 	return Dir(abs), err
 }
+func (d Dir) Clean() Dir {
+	return Dir(filepath.Clean(string(d)))
+}
 
 // Localize implements Transformer.
 func (d Dir) Localize() (Dir, error) {

@@ -42,6 +42,7 @@ type Transformer[Self kind] interface {
 	Rel(target Dir) (Self, error)
 	Localize() (Self, error)
 	ExpandUser() (Self, error)
+	Clean() Self
 }
 
 type Beholder[PathKind kind] interface {
