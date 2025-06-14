@@ -197,16 +197,12 @@ func (p PathStr) ExpandUser() (PathStr, error) {
 	return p, nil
 }
 
-func UserHomeDir() (Dir, error) {
-	dir, err := os.UserHomeDir()
-	return Dir(dir), err
-}
-
 func (p PathStr) Eq(q PathStr) bool {
 	// try to avoid panicking if Cwd() can't be obtained
 	if p.IsLocal() && q.IsLocal() {
 		return p == q
 	}
+	// FIXME: check that this still works with UNC strings on windows
 	return expect(p.Abs()) == expect(q.Abs())
 }
 

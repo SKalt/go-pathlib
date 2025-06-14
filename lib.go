@@ -113,6 +113,19 @@ func Cwd() (Dir, error) {
 	return Dir(dir), err
 }
 
+func UserHomeDir() (Dir, error) {
+	dir, err := os.UserHomeDir()
+	return Dir(dir), err
+}
+func UserCacheDir() (Dir, error) {
+	dir, err := os.UserCacheDir()
+	return Dir(dir), err
+}
+func UserConfigDir() (Dir, error) {
+	dir, err := os.UserConfigDir()
+	return Dir(dir), err
+}
+
 // returns the process/os-wide temporary directory
 func TempDir() Dir {
 	return Dir(os.TempDir())
@@ -126,7 +139,3 @@ func expect[T any](t T, err error) T {
 	}
 	return t
 }
-
-// func temp() {
-// 	x := expect(Cwd())
-// }
