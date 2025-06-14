@@ -206,6 +206,14 @@ func (p PathStr) ExpandUser() (PathStr, error) {
 	return p, nil
 }
 
+func (p PathStr) Eq(q PathStr) bool {
+	// try to avoid panicking if Cwd() can't be obtained
+	if p.IsLocal() && q.IsLocal() {
+		return p == q
+	}
+	return expect(p.Abs()) == expect(q.Abs())
+}
+
 func (p PathStr) AsDir() Dir {
 	return Dir(p)
 }

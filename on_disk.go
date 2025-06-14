@@ -51,13 +51,18 @@ func (p onDisk[P]) IsLocal() bool {
 func (p onDisk[P]) Join(parts ...string) PathStr {
 	return p.Path().Join(parts...)
 }
-func typeIs[A, B kind]() (typesAreEqual bool) {
-	_, typesAreEqual = any((*A)(nil)).(*B)
-	return
-}
+
+// func typeIs[A, B kind]() (typesAreEqual bool) {
+// 	_, typesAreEqual = any((*A)(nil)).(*B)
+// 	return
+// }
 
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = onDisk[PathStr]{}
+
+func (p onDisk[P]) Eq(q P) bool {
+	return PathStr(p.Path()).Eq(PathStr(q))
+}
 
 // Clean implements Transformer
 func (p onDisk[P]) Clean() P {
@@ -104,7 +109,6 @@ func (p onDisk[P]) Rename(destination PathStr) (result P, err error) {
 
 func (p onDisk[P]) Chmod(mode fs.FileMode) (result P, err error) {
 	result = p.Path()
-	// os.Lchown()
 	err = os.Chmod(string(result), mode)
 	return
 }

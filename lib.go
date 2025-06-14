@@ -57,6 +57,7 @@ type Transformer[Self kind] interface { // ~Fallible x3
 	Localize() (Self, error)
 	ExpandUser() (Self, error)
 	Clean() Self
+	Eq(other Self) bool
 }
 
 type Beholder[PathKind kind] interface {
@@ -119,12 +120,12 @@ func TempDir() Dir {
 
 // TODO: type SymlinkManipulator interface {}
 
-// func expect[T any](t T, err error) T {
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return t
-// }
+func expect[T any](t T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
 
 // func temp() {
 // 	x := expect(Cwd())

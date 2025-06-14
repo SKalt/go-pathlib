@@ -46,6 +46,10 @@ func (s Symlink) Parent() Dir {
 // -----------------------------------------------------------------------------
 var _ Transformer[Symlink] = Symlink("")
 
+func (s Symlink) Eq(other Symlink) bool {
+	return PathStr(s).Eq(PathStr(other))
+}
+
 func (s Symlink) Clean() Symlink {
 	return Symlink(PathStr(s).Clean())
 }
