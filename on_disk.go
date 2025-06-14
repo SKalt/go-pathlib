@@ -56,15 +56,6 @@ func typeIs[A, B kind]() (typesAreEqual bool) {
 	return
 }
 
-// NearestDir implements PurePath.
-func (p onDisk[P]) NearestDir() Dir {
-	if typeIs[P, Dir]() {
-		return Dir(p.Path())
-	} else {
-		return p.Parent()
-	}
-}
-
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = onDisk[PathStr]{}
 
