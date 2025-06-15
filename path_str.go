@@ -240,6 +240,9 @@ func (p PathStr) Eq(q PathStr) bool {
 func (p PathStr) AsDir() Dir {
 	return Dir(p)
 }
+func (p PathStr) AsFile() File {
+	return File(p)
+}
 func (p PathStr) AsSymlink() Symlink {
 	return Symlink(p)
 }

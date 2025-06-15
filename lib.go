@@ -23,7 +23,7 @@ import (
 
 type kind interface {
 	PurePath
-	PathStr | Dir | Symlink
+	~string // TODO: re-restrict to Dir | File | Symlink?
 	// see https://blog.chewxy.com/2018/03/18/golang-interfaces/#sealed-interfaces
 }
 

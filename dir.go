@@ -29,10 +29,22 @@ func (root Dir) Walk(
 // the [path/filepath.Separator] is '/').
 //
 // > Glob ignores file system errors such as I/O errors reading directories. The only possible returned error is [path/filepath.ErrBadPattern], when pattern is malformed.
-func (d Dir) Glob(pattern string) (matches []string, err error) {
-	matches, err = filepath.Glob(filepath.Join(string(d), pattern))
+func (d Dir) Glob(pattern string) ([]PathStr, error) {
+	matches, err := filepath.Glob(filepath.Join(string(d), pattern))
 	// TODO: sort.Strings(matches)?
-	return
+	result := make([]PathStr, len(matches))
+	for i, m := range matches {
+		result[i] = PathStr(m)
+	}
+	return result, err
+}
+
+func (d Dir) RemoveAll() error {
+	return os.RemoveAll(string(d))
+}
+
+func (d Dir) MustGlob(pattern string) []PathStr {
+	return expect(d.Glob(pattern))
 }
 
 func (d Dir) Chdir() error {
@@ -163,6 +175,7 @@ var _ Maker[Dir] = Dir("/example")
 
 // Make implements Maker.
 func (root Dir) Make(perm ...fs.FileMode) (result Dir, err error) {
+	result = root
 	const defaultMode fs.FileMode = 0775
 init:
 	{
@@ -173,7 +186,7 @@ init:
 		case 1:
 			// mkdir
 			err = os.Mkdir(string(root), perm[0])
-			break
+			return
 		default:
 			// parts := root.Parts()
 			// for i := range len(perm) {
@@ -187,5 +200,5 @@ init:
 
 // MustMake implements Maker.
 func (root Dir) MustMake(perm ...fs.FileMode) Dir {
-	panic("unimplemented")
+	return expect(root.Make(perm...))
 }
