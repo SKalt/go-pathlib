@@ -3,6 +3,7 @@ package pathlib
 import (
 	"errors"
 	"io/fs"
+	"iter"
 	"os"
 	"path/filepath"
 	"slices"
@@ -80,6 +81,20 @@ func (p PathStr) Parts() (parts []string) {
 // returned path does not end in a separator unless it is the root directory.
 func (p PathStr) Parent() Dir {
 	return Dir(filepath.Dir(string(p)))
+}
+
+// experimental
+func (p PathStr) Ancestors() iter.Seq[Dir] {
+	return func(yield func(pp Dir) bool) {
+		q := p.Parent()
+		for yield(q) {
+			parent := q.Parent()
+			if q == parent {
+				break
+			}
+			q = parent
+		}
+	}
 }
 
 // A wrapper around [path/filepath.Base]:

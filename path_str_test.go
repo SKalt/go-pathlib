@@ -55,3 +55,41 @@ func ExamplePathStr_IsAbsolute() {
 	// true
 	// false
 }
+
+func ExamplePathStr_Ancestors_absolute() {
+	for d := range pathlib.PathStr("/foo/bar/baz").Ancestors() {
+		fmt.Println(d)
+	}
+	// output:
+	// /foo/bar
+	// /foo
+	// /
+}
+
+func ExamplePathStr_Ancestors_relative() {
+	for d := range pathlib.PathStr("./foo/bar/baz").Ancestors() {
+		fmt.Println(d)
+	}
+	// this is the same as:
+	for d := range pathlib.PathStr("foo/bar/baz").Ancestors() {
+		fmt.Println(d)
+	}
+	// output:
+	// foo/bar
+	// foo
+	// .
+	// foo/bar
+	// foo
+	// .
+}
+
+// func ExamplePathStr_Ancestors_unc() {
+// 	// an UNC path:
+// 	for d := range pathlib.PathStr("//foo/bar/baz").Ancestors() {
+// 		fmt.Println(d)
+// 	}
+// 	// output:
+// 	// /foo/bar
+// 	// /foo
+// 	// /
+// }
