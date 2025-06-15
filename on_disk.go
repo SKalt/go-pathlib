@@ -52,6 +52,10 @@ func (p onDisk[P]) Join(parts ...string) PathStr {
 	return p.Path().Join(parts...)
 }
 
+func (p onDisk[P]) Parts() []string {
+	return p.Path().Parts()
+}
+
 // func typeIs[A, B kind]() (typesAreEqual bool) {
 // 	_, typesAreEqual = any((*A)(nil)).(*B)
 // 	return

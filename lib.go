@@ -42,8 +42,8 @@ type PurePath interface {
 	Parent() Dir
 	BaseName() string
 	Ext() string
-	// TODO: parts
-	// -> volume
+	Parts() []string
+	// -> volume (windows-only)
 	// -> iter.Seq[AnyPath]
 
 	IsAbsolute() bool
@@ -77,9 +77,10 @@ type OnDisk[PathKind kind] interface {
 	// TODO: Observed() time.Time?
 }
 
-type Creator[PathKind kind] interface { // ~Fallible
+type Maker[T any] interface { // ~Fallible
 	// see [os.Create]
-	Create() (OnDisk[PathKind], error)
+	Make(perm ...fs.FileMode) (T, error)
+	MustMake(perm ...fs.FileMode) T
 	// TODO: add mode, parents args?
 }
 
@@ -93,6 +94,8 @@ type Manipulator[PathKind kind] interface { // ~Fallible x3 + 1
 	// see [os.Rename]
 	Rename(newPath PathStr) (PathKind, error)
 }
+
+// TODO: Dir and Symlink should add a .RemoveAll()
 
 type DirCreator interface { // ~Fallible x3
 	// see [os.Mkdir]
@@ -133,6 +136,7 @@ func TempDir() Dir {
 
 // TODO: type SymlinkManipulator interface {}
 
+// utility function
 func expect[T any](t T, err error) T {
 	if err != nil {
 		panic(err)

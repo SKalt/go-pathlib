@@ -38,6 +38,10 @@ func (s Symlink) Join(parts ...string) PathStr {
 	return PathStr(s).Join(parts...)
 }
 
+func (s Symlink) Parts() []string {
+	return PathStr(s).Parts()
+}
+
 // Parent implements PurePath.
 func (s Symlink) Parent() Dir {
 	return PathStr(s).Parent()

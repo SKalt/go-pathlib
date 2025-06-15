@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 )
 
 type PathStr string
@@ -55,6 +56,21 @@ var _ PurePath = PathStr(".")
 func (p PathStr) Join(segments ...string) PathStr {
 	// FIXME: handle joining absolute paths
 	return PathStr(filepath.Join(append([]string{string(p)}, segments...)...))
+}
+func (p PathStr) Parts() (parts []string) {
+	if p == "" {
+		return
+	}
+	var dir, file string
+	for {
+		dir, file = filepath.Split(dir)
+		parts = append(parts, file)
+		if dir == "" {
+			break
+		}
+	}
+	slices.Reverse(parts)
+	return
 }
 
 // a wrapper around [path/filepath.Dir]:

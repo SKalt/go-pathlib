@@ -21,8 +21,18 @@ func (root Dir) Walk(
 	return filepath.WalkDir(string(root), callback)
 }
 
-func (d Dir) Glob(pattern string) ([]string, error) {
-	return filepath.Glob(filepath.Join(string(d), pattern))
+// See [path/filepath.Glob]:
+//
+// > Glob returns the names of all files matching pattern or nil if there is no
+// matching file. The syntax of patterns is the same as in [path/filepath.Match].
+// The pattern may describe hierarchical names such as /usr/*/bin/ed (assuming
+// the [path/filepath.Separator] is '/').
+//
+// > Glob ignores file system errors such as I/O errors reading directories. The only possible returned error is [path/filepath.ErrBadPattern], when pattern is malformed.
+func (d Dir) Glob(pattern string) (matches []string, err error) {
+	matches, err = filepath.Glob(filepath.Join(string(d), pattern))
+	// TODO: sort.Strings(matches)?
+	return
 }
 
 func (d Dir) Chdir() error {
@@ -60,6 +70,10 @@ func (d Dir) IsLocal() bool {
 // Join implements PurePath.
 func (d Dir) Join(parts ...string) PathStr {
 	return PathStr(d).Join(parts...)
+}
+
+func (d Dir) Parts() []string {
+	return PathStr(d).Parts()
 }
 
 // Parent implements PurePath.
@@ -142,4 +156,36 @@ func (root Dir) Stat() (result OnDisk[Dir], err error) {
 	}
 	result = onDisk[Dir]{info}
 	return
+}
+
+// Maker -----------------------------------------------------------------------
+var _ Maker[Dir] = Dir("/example")
+
+// Make implements Maker.
+func (root Dir) Make(perm ...fs.FileMode) (result Dir, err error) {
+	const defaultMode fs.FileMode = 0775
+init:
+	{
+		switch len(perm) {
+		case 0:
+			perm = append(perm, defaultMode)
+			goto init
+		case 1:
+			// mkdir
+			err = os.Mkdir(string(root), perm[0])
+			break
+		default:
+			// parts := root.Parts()
+			// for i := range len(perm) {
+
+			// }
+			// mkdirAll
+		}
+	}
+	return
+}
+
+// MustMake implements Maker.
+func (root Dir) MustMake(perm ...fs.FileMode) Dir {
+	panic("unimplemented")
 }
