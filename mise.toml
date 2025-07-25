@@ -1,0 +1,9 @@
+[tools]
+go = "latest"
+
+[env]
+# https://mise.jdx.dev/environments/#env-path
+_.path = [
+  "{{config_root}}/.bin",
+]
+GOBIN="{{config_root}}/bin"
