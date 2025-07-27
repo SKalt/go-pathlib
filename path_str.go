@@ -55,8 +55,10 @@ var _ PurePath = PathStr(".")
 // through [path/filepath.Clean]. However, if the argument list is empty or all its
 // elements are empty, Join returns an empty string. On Windows, the result will only be
 // a UNC path if the first non-empty element is a UNC path.
+//
+// Note that this method inherits [path/filepath.Join]'s behavior of ignoring leading
+// path separators.
 func (p PathStr) Join(segments ...string) PathStr {
-	// FIXME: handle joining absolute paths
 	return PathStr(filepath.Join(append([]string{string(p)}, segments...)...))
 }
 func (p PathStr) Parts() (parts []string) {
