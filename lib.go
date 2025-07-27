@@ -1,9 +1,9 @@
 package pathlib
 
 import (
-	"io"
 	"io/fs"
 	"os"
+	"time"
 )
 
 type kind interface { // TODO: make public?
@@ -12,12 +12,11 @@ type kind interface { // TODO: make public?
 	// see https://blog.chewxy.com/2018/03/18/golang-interfaces/#sealed-interfaces
 }
 
-type ContextManager[T io.Closer] interface {
-	With(func(T) error) error
-}
-
 type Readable[T any] interface {
 	Read() (T, error)
+}
+type InfallibleReader[T any] interface {
+	MustRead() T
 }
 
 // String-only path operations that do not require filesystem access.
@@ -42,12 +41,24 @@ type Transformer[Self kind] interface { // ~Fallible x3
 	Clean() Self
 	Eq(other Self) bool
 }
+type InfallibleTransformer[Self kind] interface {
+	MustMakeAbs() Self
+	MustMakeRel(target Dir) Self
+	MustLocalize() Self
+	MustExpandUser() Self
+}
 
 type Beholder[PathKind kind] interface {
 	OnDisk() (OnDisk[PathKind], error)
 	Stat() (OnDisk[PathKind], error)
 	Lstat() (OnDisk[PathKind], error)
 	Exists() bool
+}
+type InfallibleBeholder[PathKind kind] interface {
+	// OnDisk implements Beholder.
+	MustBeOnDisk() OnDisk[PathKind]
+	MustStat() OnDisk[PathKind]
+	MustLstat() OnDisk[PathKind]
 }
 
 type OnDisk[PathKind kind] interface {
@@ -63,6 +74,9 @@ type OnDisk[PathKind kind] interface {
 type Maker[T any] interface { // ~Fallible
 	// see [os.Create]
 	Make(perm ...fs.FileMode) (T, error)
+}
+
+type InfallibleMaker[T any] interface {
 	MustMake(perm ...fs.FileMode) T
 }
 
@@ -76,6 +90,16 @@ type Manipulator[PathKind kind] interface { // ~Fallible x3 + 1
 	// see [os.Rename]
 	Rename(newPath PathStr) (PathKind, error)
 }
+type InfallibleManipulator[PathKind kind] interface {
+	// see [os.Remove]. Panics if Remove fails.
+	MustRemove()
+	// see [os.Chmod]. Panics if Chmod fails.
+	MustChmod(mode os.FileMode) PathKind
+	// see [os.Chown]. Panics if Chown fails.
+	MustChown(uid, gid int) PathKind
+	// see [os.Rename]. Panics if Rename fails.
+	MustRename(newPath PathStr) PathKind
+}
 
 // TODO: Dir and Symlink should add a .RemoveAll()
 
@@ -86,6 +110,13 @@ type DirCreator interface { // ~Fallible x3
 	MkdirAll(perm fs.FileMode) (Dir, error)
 	// see [os.MkdirTemp]
 	MkdirTemp(pattern string) (Dir, error)
+}
+
+type Destroyer interface {
+	RemoveAll() error
+}
+type InfallibleDestroyer interface {
+	MustRemoveAll()
 }
 
 type FileManipulator[P kind] interface {

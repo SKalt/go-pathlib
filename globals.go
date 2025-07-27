@@ -11,10 +11,12 @@ func UserHomeDir() (Dir, error) {
 	dir, err := os.UserHomeDir()
 	return Dir(dir), err
 }
+
 func UserCacheDir() (Dir, error) {
 	dir, err := os.UserCacheDir()
 	return Dir(dir), err
 }
+
 func UserConfigDir() (Dir, error) {
 	dir, err := os.UserConfigDir()
 	return Dir(dir), err

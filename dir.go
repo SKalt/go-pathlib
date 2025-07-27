@@ -133,6 +133,7 @@ func (d Dir) ExpandUser() (Dir, error) {
 
 // Beholder --------------------------------------------------------------------
 var _ Beholder[Dir] = Dir(".")
+var _ InfallibleBeholder[Dir] = Dir(".")
 
 func (d Dir) OnDisk() (OnDisk[Dir], error) {
 	actual, err := PathStr(d).OnDisk()
@@ -170,10 +171,27 @@ func (root Dir) Stat() (result OnDisk[Dir], err error) {
 	return
 }
 
+// MustLstat implements InfallibleBeholder.
+func (root Dir) MustLstat() OnDisk[Dir] {
+	return expect(root.Lstat())
+}
+
+// MustOnDisk implements InfallibleBeholder.
+func (root Dir) MustBeOnDisk() OnDisk[Dir] {
+	return expect(root.OnDisk())
+}
+
+// MustStat implements InfallibleBeholder.
+func (root Dir) MustStat() OnDisk[Dir] {
+	return expect(root.Stat())
+}
+
 // Maker -----------------------------------------------------------------------
+var _ InfallibleMaker[Dir] = Dir("/example")
 var _ Maker[Dir] = Dir("/example")
 
 // Make implements Maker.
+// FIXME: document
 func (root Dir) Make(perm ...fs.FileMode) (result Dir, err error) {
 	result = root
 	const defaultMode fs.FileMode = 0775
@@ -197,7 +215,64 @@ main:
 	}
 }
 
-// MustMake implements Maker.
+// MustMake implements InfallibleMaker.
 func (root Dir) MustMake(perm ...fs.FileMode) Dir {
 	return expect(root.Make(perm...))
+}
+
+// Manipulator -----------------------------------------------------------------
+var _ Manipulator[Dir] = Dir(".")
+var _ InfallibleManipulator[Dir] = Dir(".")
+
+// Chmod implements Manipulator.
+func (root Dir) Chmod(mode os.FileMode) (result Dir, err error) {
+	if err = os.Chmod(string(root), mode); err != nil {
+		return
+	}
+	result = root
+	return
+}
+
+// Chown implements Manipulator.
+func (root Dir) Chown(uid int, gid int) (result Dir, err error) {
+	if err = os.Chown(string(root), uid, gid); err != nil {
+		return
+	}
+	result = root
+	return
+}
+
+// Remove implements Manipulator.
+func (root Dir) Remove() error {
+	return os.Remove(string(root))
+}
+
+// Rename implements Manipulator.
+func (root Dir) Rename(newPath PathStr) (result Dir, err error) {
+	err = os.Rename(string(root), string(newPath))
+	if err != nil {
+		return
+	}
+	result = Dir(newPath)
+	return
+}
+
+// MustChmod implements InfallibleManipulator.
+func (root Dir) MustChmod(mode os.FileMode) Dir {
+	return expect(root.Chmod(mode))
+}
+
+// MustChown implements InfallibleManipulator.
+func (root Dir) MustChown(uid int, gid int) Dir {
+	return expect(root.Chown(uid, gid))
+}
+
+// MustRemove implements InfallibleManipulator.
+func (root Dir) MustRemove() {
+	expect[any](nil, root.Remove())
+}
+
+// MustRename implements InfallibleManipulator.
+func (root Dir) MustRename(newPath PathStr) Dir {
+	return expect(root.Rename(newPath))
 }

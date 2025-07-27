@@ -1,9 +1,9 @@
 package pathlib
 
 import (
-	"errors"
 	"io/fs"
 	"os"
+	"time"
 )
 
 type File PathStr
@@ -12,42 +12,12 @@ func (f File) Open(flag int, perm fs.FileMode) (*os.File, error) {
 	return os.OpenFile(string(f), flag, perm)
 }
 
-// func (f File) withOpen(
-// 	flag int,
-// 	perm fs.FileMode,
-// 	callback func(handle *os.File) error,
-// ) (err error) {
-// 	var handle *os.File
-// 	handle, err = f.Open(flag, perm)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer func() {
-// 		err = errors.Join(handle.Close())
-// 	}()
-// 	if callback != nil {
-// 		err = callback(handle)
-// 	}
-// 	return
-// }
-
-func (f File) withMake(callback func(*os.File) error) (err error) {
-	var handle *os.File
-	handle, err = f.Make()
+func (f File) Touch() error {
+	handle, err := f.Make()
 	if err != nil {
 		return err
 	}
-	defer func() {
-		err = errors.Join(handle.Close())
-	}()
-	if callback != nil {
-		err = callback(handle)
-	}
-	return
-}
-
-func (f File) Touch() error {
-	return f.withMake(nil)
+	return handle.Close()
 }
 
 // PurePath --------------------------------------------------------------------
@@ -90,6 +60,7 @@ func (f File) Parts() []string {
 
 // Transformer -----------------------------------------------------------------
 var _ Transformer[File] = File("./example")
+var _ InfallibleTransformer[File] = File("./example")
 
 // Abs implements Transformer.
 func (f File) Abs() (File, error) {
@@ -125,8 +96,29 @@ func (f File) Rel(target Dir) (File, error) {
 	return File(q), err
 }
 
+// MustExpandUser implements InfallibleTransformer.
+func (f File) MustExpandUser() File {
+	return expect(f.ExpandUser())
+}
+
+// MustLocalize implements InfallibleTransformer.
+func (f File) MustLocalize() File {
+	return expect(f.Localize())
+}
+
+// MustMakeAbs implements InfallibleTransformer.
+func (f File) MustMakeAbs() File {
+	return expect(f.Abs())
+}
+
+// MustMakeRel implements InfallibleTransformer.
+func (f File) MustMakeRel(target Dir) File {
+	return expect(f.Rel(target))
+}
+
 // Beholder --------------------------------------------------------------------
 var _ Beholder[File] = File("./example")
+var _ InfallibleBeholder[File] = File("./example")
 
 // Exists implements Beholder.
 func (f File) Exists() bool {
@@ -150,8 +142,24 @@ func (f File) Stat() (OnDisk[File], error) {
 	return onDisk[File]{info, time.Now()}, err
 }
 
+// MustBeOnDisk implements InfallibleBeholder.
+func (f File) MustBeOnDisk() OnDisk[File] {
+	return expect(f.OnDisk())
+}
+
+// MustLstat implements InfallibleBeholder.
+func (f File) MustLstat() OnDisk[File] {
+	return expect(f.Lstat())
+}
+
+// MustStat implements InfallibleBeholder.
+func (f File) MustStat() OnDisk[File] {
+	return expect(f.Stat())
+}
+
 // Manipulator -----------------------------------------------------------------
 var _ Manipulator[File] = File("./example")
+var _ InfallibleManipulator[File] = File("./example")
 
 // Chmod implements Manipulator.
 func (f File) Chmod(mode os.FileMode) (File, error) {
@@ -173,8 +181,29 @@ func (f File) Rename(newPath PathStr) (File, error) {
 	return f, os.Rename(string(f), string(newPath))
 }
 
+// MustChmod implements InfallibleManipulator.
+func (f File) MustChmod(perm os.FileMode) File {
+	return expect(f.Chmod(perm))
+}
+
+// MustChown implements InfallibleManipulator.
+func (f File) MustChown(uid int, gid int) File {
+	return expect(f.Chown(uid, gid))
+}
+
+// MustRemove implements InfallibleManipulator.
+func (f File) MustRemove() {
+	expect[any](nil, f.Remove())
+}
+
+// MustRename implements InfallibleManipulator.
+func (f File) MustRename(newPath PathStr) File {
+	return expect(f.Rename(newPath))
+}
+
 // Maker -----------------------------------------------------------------------
 var _ Maker[*os.File] = File("./example")
+var _ InfallibleMaker[*os.File] = File("./example")
 
 // Make implements Maker.
 func (f File) Make(perm ...fs.FileMode) (*os.File, error) {
@@ -203,7 +232,17 @@ func (f File) MustMake(perm ...fs.FileMode) *os.File {
 	return expect(f.Make(perm...))
 }
 
-var _ Readable[[]byte]
+// Readable --------------------------------------------------------------------
+var _ Readable[[]byte] = File("./example")
+var _ InfallibleReader[[]byte] = File("./example")
+
+func (f File) Read() (data []byte, err error) {
+	return os.ReadFile(string(f))
+}
+
+func (f File) MustRead() []byte {
+	return expect(f.Read())
+}
 
 // extra functions:
 // .Touch() error

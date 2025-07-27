@@ -14,6 +14,7 @@ type PathStr string
 
 // Beholder --------------------------------------------------------------------
 var _ Beholder[PathStr] = PathStr(".")
+var _ InfallibleBeholder[PathStr] = PathStr(".")
 
 // Note: go's `os.Stat/Lstat` imitates `stat(2)` from POSIX's libc spec.
 
@@ -43,6 +44,21 @@ func (p PathStr) OnDisk() (actual OnDisk[PathStr], err error) {
 func (p PathStr) Exists() (exists bool) {
 	_, err := p.OnDisk()
 	return !errors.Is(err, fs.ErrNotExist)
+}
+
+// MustBeOnDisk implements InfallibleBeholder.
+func (p PathStr) MustBeOnDisk() OnDisk[PathStr] {
+	return expect(p.OnDisk())
+}
+
+// MustLstat implements InfallibleBeholder.
+func (p PathStr) MustLstat() OnDisk[PathStr] {
+	return expect(p.Lstat())
+}
+
+// MustStat implements InfallibleBeholder.
+func (p PathStr) MustStat() OnDisk[PathStr] {
+	return expect(p.Stat())
 }
 
 // PurePath --------------------------------------------------------------------
@@ -133,6 +149,7 @@ func (p PathStr) IsLocal() bool {
 
 // Readable --------------------------------------------------------------------
 var _ Readable[any] = PathStr(".")
+var _ InfallibleReader[any] = PathStr(".")
 
 func (p PathStr) Read() (result any, err error) {
 	// can't define this switch as a method of OnDisk[P] since OnDisk[P] has to handle
@@ -153,12 +170,17 @@ func (p PathStr) Read() (result any, err error) {
 	return
 }
 
+func (p PathStr) MustRead() any {
+	return expect(p.Read())
+}
+
 func (p PathStr) Open() (*os.File, error) {
 	return os.Open(string(p))
 }
 
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = PathStr(".")
+var _ InfallibleTransformer[PathStr] = PathStr(".")
 
 // Clean implements Transformer
 func (p PathStr) Clean() PathStr {
@@ -218,12 +240,34 @@ func (p PathStr) ExpandUser() (result PathStr, err error) {
 	return
 }
 
+// MustExpandUser implements InfallibleTransformer.
+func (p PathStr) MustExpandUser() PathStr {
+	return expect(p.ExpandUser())
+}
+
+// MustLocalize implements InfallibleTransformer.
+func (p PathStr) MustLocalize() PathStr {
+	return expect(p.Localize())
+}
+
+// MustMakeAbs implements InfallibleTransformer.
+func (p PathStr) MustMakeAbs() PathStr {
+	return expect(p.Abs())
+}
+
+// MustMakeRel implements InfallibleTransformer.
+func (p PathStr) MustMakeRel(target Dir) PathStr {
+	return expect(p.Rel(target))
+}
+
+// -----------------------------------------------------------------------------
+
 func (p PathStr) Eq(q PathStr) bool {
 	// try to avoid panicking if Cwd() can't be obtained
 	if p.IsLocal() && q.IsLocal() {
 		return p == q
 	}
-	// FIXME: check that this still works with UNC strings on windows
+	// TODO: check that this still works with UNC strings on windows
 	return expect(p.Abs()) == expect(q.Abs())
 }
 
@@ -236,19 +280,3 @@ func (p PathStr) AsFile() File {
 func (p PathStr) AsSymlink() Symlink {
 	return Symlink(p)
 }
-
-// experimental
-// func (p PathStr) AllParts() iter.Seq[PathStr] {
-// 	return func(yield func(PathStr) bool) {
-// 		i := 0
-// 		p = p.Clean()
-// 		b := len(p.BaseName())
-// 		for i < len(p)-b {
-// 			if !yield(p) || {
-// 				return
-// 			}
-
-// 		}
-// 	}
-// 	// i := 0
-// }
