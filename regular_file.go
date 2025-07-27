@@ -136,7 +136,7 @@ func (f File) Exists() bool {
 // Lstat implements Beholder.
 func (f File) Lstat() (OnDisk[File], error) {
 	info, err := os.Lstat(string(f))
-	return onDisk[File]{info}, err
+	return onDisk[File]{info, time.Now()}, err
 }
 
 // OnDisk implements Beholder.
@@ -147,7 +147,7 @@ func (f File) OnDisk() (OnDisk[File], error) {
 // Stat implements Beholder.
 func (f File) Stat() (OnDisk[File], error) {
 	info, err := os.Stat(string(f))
-	return onDisk[File]{info}, err
+	return onDisk[File]{info, time.Now()}, err
 }
 
 // Manipulator -----------------------------------------------------------------

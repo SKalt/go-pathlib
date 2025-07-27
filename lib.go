@@ -57,7 +57,7 @@ type OnDisk[PathKind kind] interface {
 	// Readable[any] // refining the type of what gets read would
 	// require passing an additional type parameter, which
 	// causes weird type-states to become possible, like OnDisk[Dir, struct{...}]
-	// TODO: Observed() time.Time?
+	Observed() time.Time
 }
 
 type Maker[T any] interface { // ~Fallible

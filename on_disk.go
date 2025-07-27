@@ -3,9 +3,13 @@ package pathlib
 import (
 	"io/fs"
 	"os"
+	"time"
 )
 
-type onDisk[P kind] struct{ fs.FileInfo }
+type onDisk[P kind] struct {
+	fs.FileInfo
+	observed time.Time
+}
 
 var _ OnDisk[PathStr] = onDisk[PathStr]{}
 
@@ -13,9 +17,9 @@ func (p onDisk[P]) Path() P {
 	return P(p.Name())
 }
 
-// func (p onDisk[P]) IsRegular() (isRegular bool) {
-// 	return p.Mode().IsRegular()
-// }
+func (p onDisk[P]) Observed() time.Time {
+	return p.observed
+}
 
 var _ fs.FileInfo = onDisk[PathStr]{}
 

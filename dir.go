@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type Dir PathStr
@@ -141,7 +142,7 @@ func (d Dir) OnDisk() (OnDisk[Dir], error) {
 	if !actual.IsDir() {
 		return nil, WrongTypeOnDisk[Dir]{actual}
 	}
-	return onDisk[Dir]{actual}, nil
+	return onDisk[Dir]{actual, time.Now()}, nil
 }
 
 // Exists implements Beholder.
@@ -165,7 +166,7 @@ func (root Dir) Stat() (result OnDisk[Dir], err error) {
 		err = WrongTypeOnDisk[Dir]{info}
 		return
 	}
-	result = onDisk[Dir]{info}
+	result = onDisk[Dir]{info, time.Now()}
 	return
 }
 

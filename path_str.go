@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"time"
 )
 
 type PathStr string
@@ -19,7 +20,7 @@ var _ Beholder[PathStr] = PathStr(".")
 // Stat implements Beholder.
 func (p PathStr) Stat() (OnDisk[PathStr], error) {
 	info, err := os.Stat(string(p))
-	return onDisk[PathStr]{info}, err
+	return onDisk[PathStr]{info, time.Now()}, err
 }
 
 // Lstat implements Beholder.
@@ -33,7 +34,7 @@ func (p PathStr) OnDisk() (actual OnDisk[PathStr], err error) {
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
-	actual = onDisk[PathStr]{info}
+	actual = onDisk[PathStr]{info, time.Now()}
 	return
 }
 
