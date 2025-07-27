@@ -219,13 +219,20 @@ func (p PathStr) Rel(target Dir) (PathStr, error) {
 
 // Expand a leading "~" into the user's home directory. If the home directory cannot be
 // determined, the path is returned unchanged.
-func (p PathStr) ExpandUser() (PathStr, error) {
-	if len(p) > 0 && p[0] == '~' {
-		if home, err := UserHomeDir(); home != "" && err == nil {
-			return PathStr(PathStr(home) + p[1:]), nil // FIXME: check p[2] == "/"
-		}
+func (p PathStr) ExpandUser() (result PathStr, err error) {
+	if len(p) == 0 || p[0] != '~' || (len(p) > 1 && !os.IsPathSeparator(p[1])) {
+		result = p
+		return
 	}
-	return p, nil
+
+	var home Dir
+	home, err = UserHomeDir()
+	if err != nil {
+		return
+	}
+
+	result = PathStr(PathStr(home) + p[1:])
+	return
 }
 
 func (p PathStr) Eq(q PathStr) bool {
