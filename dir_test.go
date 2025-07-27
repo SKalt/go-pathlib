@@ -23,9 +23,10 @@ func ExampleDir_Eq() {
 }
 
 func ExampleDir_Join() {
-	fmt.Println(pathlib.Dir("/tmp").Join("a/b"))
+	result := pathlib.Dir("/tmp").Join("a/b")
+	fmt.Printf("%s is a %T", result, result)
 	// output:
-	// /tmp/a/b
+	// /tmp/a/b is a pathlib.PathStr
 }
 
 func ExampleDir_Glob() {
