@@ -177,25 +177,24 @@ var _ Maker[Dir] = Dir("/example")
 func (root Dir) Make(perm ...fs.FileMode) (result Dir, err error) {
 	result = root
 	const defaultMode fs.FileMode = 0775
-init:
+main:
 	{
 		switch len(perm) {
 		case 0:
 			perm = append(perm, defaultMode)
-			goto init
+			goto main
 		case 1:
 			// mkdir
 			err = os.Mkdir(string(root), perm[0])
 			return
 		default:
-			// parts := root.Parts()
-			// for i := range len(perm) {
-
-			// }
-			// mkdirAll
+			_, err = root.Parent().Make(perm[1:]...)
+			if err != nil {
+				return
+			}
+			goto main
 		}
 	}
-	return
 }
 
 // MustMake implements Maker.
