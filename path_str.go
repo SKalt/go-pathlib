@@ -139,24 +139,13 @@ func (p PathStr) Read() (result any, err error) {
 	if err != nil {
 		return
 	}
-	mode := actual.Mode()
 
-	if mode.IsRegular() {
-		result, err = os.ReadFile(string(p))
-	} else if mode.IsDir() {
+	if actual.Mode().IsDir() {
 		result, err = Dir(p).Read()
-	} else if isSymLink(mode) {
+	} else if isSymLink(actual.Mode()) {
 		result, err = Symlink(p).Read()
-	} else if isCharDevice(mode) {
-		// TODO: CharDevice
-	} else if isDevice(mode) {
-		// TODO: BlockDevice
-	} else if isFifo(mode) {
-		// TODO: Fifo
-	} else if isSocket(mode) {
-		// TODO: Socket
-	} else if isTemporary(mode) {
-		// TODO: TempFile
+	} else {
+		result, err = os.ReadFile(string(p))
 	}
 	return
 }
@@ -164,15 +153,6 @@ func (p PathStr) Read() (result any, err error) {
 func (p PathStr) Open() (*os.File, error) {
 	return os.Open(string(p))
 }
-
-// func (p PathStr) WithOpen(cb func(*os.File) error) error { // FIXME: name
-// 	f, err := p.Open()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer f.Close()
-// 	return cb(f)
-// }
 
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = PathStr(".")

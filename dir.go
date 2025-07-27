@@ -31,7 +31,6 @@ func (root Dir) Walk(
 // > Glob ignores file system errors such as I/O errors reading directories. The only possible returned error is [path/filepath.ErrBadPattern], when pattern is malformed.
 func (d Dir) Glob(pattern string) ([]PathStr, error) {
 	matches, err := filepath.Glob(filepath.Join(string(d), pattern))
-	// TODO: sort.Strings(matches)?
 	result := make([]PathStr, len(matches))
 	for i, m := range matches {
 		result[i] = PathStr(m)

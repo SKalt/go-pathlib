@@ -6,22 +6,7 @@ import (
 	"os"
 )
 
-// TODO: type Fifo
-// TODO: type Device      PathStr
-// TODO: type RegularFile PathStr
-
-// type _pathKind uint8
-// const (
-// 	kindUnknown _pathKind = iota
-// 	kindDir
-// 	kindSymlink
-// )
-// type kinder interface {
-// 	PurePath
-// 	kind() _pathKind
-// }
-
-type kind interface {
+type kind interface { // TODO: make public?
 	PurePath
 	~string // TODO: re-restrict to Dir | File | Symlink?
 	// see https://blog.chewxy.com/2018/03/18/golang-interfaces/#sealed-interfaces
@@ -38,13 +23,11 @@ type Readable[T any] interface {
 // String-only path operations that do not require filesystem access.
 type PurePath interface {
 	// Navigation
-	Join(...string) PathStr // TODO: handle joining an absolute path
+	Join(...string) PathStr
 	Parent() Dir
 	BaseName() string
 	Ext() string
 	Parts() []string
-	// -> volume (windows-only)
-	// -> iter.Seq[AnyPath]
 
 	IsAbsolute() bool
 	IsLocal() bool
