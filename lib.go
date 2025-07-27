@@ -64,7 +64,6 @@ type Maker[T any] interface { // ~Fallible
 	// see [os.Create]
 	Make(perm ...fs.FileMode) (T, error)
 	MustMake(perm ...fs.FileMode) T
-	// TODO: add mode, parents args?
 }
 
 type Manipulator[PathKind kind] interface { // ~Fallible x3 + 1
@@ -94,35 +93,4 @@ type FileManipulator[P kind] interface {
 	Open(flag int, mode os.FileMode) (*os.File, error) // ~Fallible
 }
 
-func Cwd() (Dir, error) {
-	dir, err := os.Getwd()
-	return Dir(dir), err
-}
-
-func UserHomeDir() (Dir, error) {
-	dir, err := os.UserHomeDir()
-	return Dir(dir), err
-}
-func UserCacheDir() (Dir, error) {
-	dir, err := os.UserCacheDir()
-	return Dir(dir), err
-}
-func UserConfigDir() (Dir, error) {
-	dir, err := os.UserConfigDir()
-	return Dir(dir), err
-}
-
-// returns the process/os-wide temporary directory
-func TempDir() Dir {
-	return Dir(os.TempDir())
-}
-
-// TODO: type SymlinkManipulator interface {}
-
-// utility function
-func expect[T any](t T, err error) T {
-	if err != nil {
-		panic(err)
-	}
-	return t
-}
+// TODO: infallible methods/interfaces
