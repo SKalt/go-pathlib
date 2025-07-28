@@ -260,6 +260,65 @@ func (p PathStr) MustMakeRel(target Dir) PathStr {
 	return expect(p.Rel(target))
 }
 
+// Manipulator -----------------------------------------------------------------
+var _ Manipulator[PathStr] = PathStr(".")
+var _ InfallibleManipulator[PathStr] = PathStr(".")
+
+// Chmod implements Manipulator.
+func (root PathStr) Chmod(mode os.FileMode) (result PathStr, err error) {
+	if err = os.Chmod(string(root), mode); err != nil {
+		return
+	}
+	result = root
+	return
+}
+
+// Chown implements Manipulator.
+func (root PathStr) Chown(uid int, gid int) (result PathStr, err error) {
+	if err = os.Chown(string(root), uid, gid); err != nil {
+		return
+	}
+	result = root
+	return
+}
+
+// Remove implements Manipulator.
+func (root PathStr) Remove() error {
+	return os.Remove(string(root))
+}
+
+// Rename implements Manipulator.
+func (root PathStr) Rename(newPath PathStr) (result PathStr, err error) {
+	err = os.Rename(string(root), string(newPath))
+	if err != nil {
+		return
+	}
+	result = PathStr(newPath)
+	return
+}
+
+// MustChmod implements InfallibleManipulator.
+func (root PathStr) MustChmod(mode os.FileMode) PathStr {
+	return expect(root.Chmod(mode))
+}
+
+// MustChown implements InfallibleManipulator.
+func (root PathStr) MustChown(uid int, gid int) PathStr {
+	return expect(root.Chown(uid, gid))
+}
+
+// MustRemove implements InfallibleManipulator.
+func (root PathStr) MustRemove() {
+	if err := root.Remove(); err != nil {
+		panic(err)
+	}
+}
+
+// MustRename implements InfallibleManipulator.
+func (root PathStr) MustRename(newPath PathStr) PathStr {
+	return expect(root.Rename(newPath))
+}
+
 // -----------------------------------------------------------------------------
 
 func (p PathStr) Eq(q PathStr) bool {

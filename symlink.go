@@ -119,8 +119,66 @@ func (s Symlink) Stat() (OnDisk[Symlink], error) {
 // // https://go.dev/play/p/mWNvcZLrjog
 // // https://godbolt.org/z/1caPfvzfh
 
-// func temp[T kind]() {
-// 	switch any((*T)(nil)).(type) {
-// 	case *PathStr:
-// 	}
-// }
+// Manipulator -----------------------------------------------------------------
+var _ Manipulator[Symlink] = Symlink("./link")
+var _ InfallibleManipulator[Symlink] = Symlink("./link")
+
+// Chmod implements Manipulator.
+func (s Symlink) Chmod(mode os.FileMode) (Symlink, error) {
+	result, err := PathStr(s).Chmod(mode)
+	return Symlink(result), err
+}
+
+// Chown implements Manipulator.
+func (s Symlink) Chown(uid int, gid int) (Symlink, error) {
+	result, err := PathStr(s).Chown(uid, gid)
+	return Symlink(result), err
+}
+
+// Remove implements Manipulator.
+func (s Symlink) Remove() error {
+	return os.Remove(string(s))
+}
+
+// Rename implements Manipulator.
+func (s Symlink) Rename(newPath PathStr) (Symlink, error) {
+	result, err := PathStr(s).Rename(newPath)
+	return Symlink(result), err
+}
+
+// MustChmod implements InfallibleManipulator.
+func (s Symlink) MustChmod(mode os.FileMode) Symlink {
+	return expect(s.Chmod(mode))
+}
+
+// MustChown implements InfallibleManipulator.
+func (s Symlink) MustChown(uid int, gid int) Symlink {
+	return expect(s.Chown(uid, gid))
+}
+
+// MustRemove implements InfallibleManipulator.
+func (s Symlink) MustRemove() {
+	if err := s.Remove(); err != nil {
+		panic(err)
+	}
+}
+
+// MustRename implements InfallibleManipulator.
+func (s Symlink) MustRename(newPath PathStr) Symlink {
+	return expect(s.Rename(newPath))
+}
+
+// Destroyer -------------------------------------------------------------------
+var _ Destroyer = Symlink("./link")
+var _ InfallibleDestroyer = Symlink("./link")
+
+// RemoveAll implements Destroyer.
+func (s Symlink) RemoveAll() error {
+	return os.RemoveAll(string(s))
+}
+
+func (s Symlink) MustRemoveAll() {
+	if err := os.RemoveAll(string(s)); err != nil {
+		panic(err)
+	}
+}

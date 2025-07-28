@@ -39,14 +39,11 @@ func (d Dir) Glob(pattern string) ([]PathStr, error) {
 	return result, err
 }
 
-func (d Dir) RemoveAll() error {
-	return os.RemoveAll(string(d))
-}
-
 func (d Dir) MustGlob(pattern string) []PathStr {
 	return expect(d.Glob(pattern))
 }
 
+// CHange DIRectory. See [os.Chdir].
 func (d Dir) Chdir() error {
 	return os.Chdir(string(d))
 }
@@ -225,21 +222,16 @@ var _ Manipulator[Dir] = Dir(".")
 var _ InfallibleManipulator[Dir] = Dir(".")
 
 // Chmod implements Manipulator.
-func (root Dir) Chmod(mode os.FileMode) (result Dir, err error) {
-	if err = os.Chmod(string(root), mode); err != nil {
-		return
-	}
-	result = root
-	return
+func (root Dir) Chmod(mode os.FileMode) (Dir, error) {
+	result, err := PathStr(root).Chmod(mode)
+	return Dir(result), err
 }
 
 // Chown implements Manipulator.
-func (root Dir) Chown(uid int, gid int) (result Dir, err error) {
-	if err = os.Chown(string(root), uid, gid); err != nil {
-		return
-	}
-	result = root
-	return
+func (root Dir) Chown(uid int, gid int) (Dir, error) {
+	result, err := PathStr(root).Chown(uid, gid)
+	return Dir(result), err
+
 }
 
 // Remove implements Manipulator.
@@ -248,13 +240,9 @@ func (root Dir) Remove() error {
 }
 
 // Rename implements Manipulator.
-func (root Dir) Rename(newPath PathStr) (result Dir, err error) {
-	err = os.Rename(string(root), string(newPath))
-	if err != nil {
-		return
-	}
-	result = Dir(newPath)
-	return
+func (root Dir) Rename(newPath PathStr) (Dir, error) {
+	result, err := PathStr(root).Rename(newPath)
+	return Dir(result), err
 }
 
 // MustChmod implements InfallibleManipulator.
@@ -275,4 +263,19 @@ func (root Dir) MustRemove() {
 // MustRename implements InfallibleManipulator.
 func (root Dir) MustRename(newPath PathStr) Dir {
 	return expect(root.Rename(newPath))
+}
+
+// Destroyer -------------------------------------------------------------------
+var _ Destroyer = Dir(".")
+var _ InfallibleDestroyer = Dir(".")
+
+func (d Dir) RemoveAll() error {
+	return os.RemoveAll(string(d))
+}
+
+// MustRemoveAll implements InfallibleDestroyer.
+func (root Dir) MustRemoveAll() {
+	if err := root.RemoveAll(); err != nil {
+		panic(err)
+	}
 }
