@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type onDisk[P kind] struct {
+type onDisk[P Kind] struct {
 	fs.FileInfo
 	observed time.Time
 }

@@ -7,8 +7,8 @@ import (
 
 type Symlink PathStr
 
-// -----------------------------------------------------------------------------
-var _ Readable[PathStr] = Symlink("")
+// Readable --------------------------------------------------------------------
+var _ Readable[PathStr] = Symlink("./link")
 
 // Read implements Readable.
 func (s Symlink) Read() (PathStr, error) {
@@ -17,7 +17,7 @@ func (s Symlink) Read() (PathStr, error) {
 }
 
 // -----------------------------------------------------------------------------
-var _ PurePath = Symlink("")
+var _ PurePath = Symlink("./link")
 
 // BaseName implements PurePath.
 func (s Symlink) BaseName() string {
@@ -49,7 +49,7 @@ func (s Symlink) Parent() Dir {
 }
 
 // -----------------------------------------------------------------------------
-var _ Transformer[Symlink] = Symlink("")
+var _ Transformer[Symlink] = Symlink("./link")
 
 func (s Symlink) Eq(other Symlink) bool {
 	return PathStr(s).Eq(PathStr(other))
@@ -87,7 +87,8 @@ func (s Symlink) Ext() string {
 }
 
 // Beholder --------------------------------------------------------------------
-var _ Beholder[Symlink] = Symlink("")
+var _ Beholder[Symlink] = Symlink("./link")
+var _ InfallibleBeholder[Symlink] = Symlink("./link")
 
 // OnDisk implements Beholder.
 func (s Symlink) OnDisk() (OnDisk[Symlink], error) {
@@ -114,6 +115,21 @@ func (s Symlink) Lstat() (OnDisk[Symlink], error) {
 // Stat implements Beholder.
 func (s Symlink) Stat() (OnDisk[Symlink], error) {
 	panic("unimplemented")
+}
+
+// MustBeOnDisk implements InfallibleBeholder.
+func (s Symlink) MustBeOnDisk() OnDisk[Symlink] {
+	return expect(s.OnDisk())
+}
+
+// MustLstat implements InfallibleBeholder.
+func (s Symlink) MustLstat() OnDisk[Symlink] {
+	return expect(s.Lstat())
+}
+
+// MustStat implements InfallibleBeholder.
+func (s Symlink) MustStat() OnDisk[Symlink] {
+	return expect(s.Stat())
 }
 
 // // https://go.dev/play/p/mWNvcZLrjog

@@ -5,7 +5,7 @@ import (
 	"io/fs"
 )
 
-type WrongTypeOnDisk[P kind] struct{ fs.FileInfo }
+type WrongTypeOnDisk[P Kind] struct{ fs.FileInfo }
 
 func (w WrongTypeOnDisk[P]) Error() string {
 	return fmt.Sprintf(

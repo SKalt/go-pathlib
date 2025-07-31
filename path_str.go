@@ -136,13 +136,13 @@ func (p PathStr) Ext() string {
 }
 
 // Returns true if the path is absolute, false otherwise.
-// See [filepath.IsAbs] for more details.
+// See [path/filepath.IsAbs] for more details.
 func (p PathStr) IsAbsolute() bool {
 	return filepath.IsAbs(string(p))
 }
 
 // returns true if the path is local/relative, false otherwise.
-// see [filepath.IsLocal] for more details.
+// see [path/filepath.IsLocal] for more details.
 func (p PathStr) IsLocal() bool {
 	return filepath.IsLocal(string(p))
 }
@@ -327,8 +327,26 @@ func (p PathStr) Eq(q PathStr) bool {
 		return p == q
 	}
 	// TODO: check that this still works with UNC strings on windows
-	return expect(p.Abs()) == expect(q.Abs())
+	return p.MustMakeAbs().MustLocalize() == q.MustMakeAbs().MustLocalize()
 }
+
+// Destroyer -------------------------------------------------------------------
+var _ Destroyer = PathStr(".")
+var _ InfallibleDestroyer = PathStr(".")
+
+// RemoveAll implements Destroyer.
+func (p PathStr) RemoveAll() error {
+	return os.RemoveAll(string(p))
+}
+
+// MustRemoveAll implements InfallibleDestroyer.
+func (p PathStr) MustRemoveAll() {
+	if err := p.RemoveAll(); err != nil {
+		panic(err)
+	}
+}
+
+// casts -----------------------------------------------------------------------
 
 func (p PathStr) AsDir() Dir {
 	return Dir(p)

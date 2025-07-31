@@ -6,10 +6,9 @@ import (
 	"time"
 )
 
-type kind interface { // TODO: make public?
+type Kind interface {
 	PurePath
-	~string // TODO: re-restrict to Dir | File | Symlink?
-	// see https://blog.chewxy.com/2018/03/18/golang-interfaces/#sealed-interfaces
+	~string
 }
 
 type Readable[T any] interface {
@@ -19,78 +18,106 @@ type InfallibleReader[T any] interface {
 	MustRead() T
 }
 
-// String-only path operations that do not require filesystem access.
+// String-only infallible path operations that do not require filesystem access or syscalls.
 type PurePath interface {
-	// Navigation
-	Join(...string) PathStr
+	// See [path/filepath.Join].
+	Join(segments ...string) PathStr
+	// Return the parent directory. Should have the same properties as [path/filepath.Dir].
 	Parent() Dir
+	// See [path/filepath.Base].
 	BaseName() string
+	// See [path/filepath.Ext].
 	Ext() string
+	// Split the path into multiple non-empty segments.
 	Parts() []string
 
+	// Returns true if the path is absolute. See [path/filepath.IsAbs].
 	IsAbsolute() bool
+	// Returns true if the path is local/relative. See [path/filepath.IsLocal].
 	IsLocal() bool
 }
 
 // transforms the appearance of a path, but not what it represents.
-type Transformer[Self kind] interface { // ~Fallible x3
+type Transformer[Self Kind] interface {
+	// See [path/filepath.Abs].
+	// Returns an absolute path, or an error if the path cannot be made absolute.
 	Abs() (Self, error)
+	// See [path/filepath.Rel].
+	// Returns a relative path to the target directory, or an error if the path cannot be made relative.
 	Rel(target Dir) (Self, error)
+	// See [path/filepath.Localize].
 	Localize() (Self, error)
+	// Expand `~` into the home directory of the current user.
 	ExpandUser() (Self, error)
+	// See [path/filepath.Clean].
 	Clean() Self
+	// Returns true if the two paths represent the same path.
 	Eq(other Self) bool
 }
-type InfallibleTransformer[Self kind] interface {
+type InfallibleTransformer[Self Kind] interface {
+	// Makes the path absolute or panics if it cannot.
 	MustMakeAbs() Self
+	// Makes the path relative to the target directory or panics if it cannot.
 	MustMakeRel(target Dir) Self
+	// Localizes the path or panics if it cannot. See [path/filepath.Localize].
 	MustLocalize() Self
+	// Expands a leading tilde into the home directory. Panics if [os.UserHomeDir] is unable to resolve the user's home directory.
 	MustExpandUser() Self
 }
 
-type Beholder[PathKind kind] interface {
-	OnDisk() (OnDisk[PathKind], error)
-	Stat() (OnDisk[PathKind], error)
-	Lstat() (OnDisk[PathKind], error)
-	Exists() bool
-}
-type InfallibleBeholder[PathKind kind] interface {
-	// OnDisk implements Beholder.
-	MustBeOnDisk() OnDisk[PathKind]
-	MustStat() OnDisk[PathKind]
-	MustLstat() OnDisk[PathKind]
-}
-
-type OnDisk[PathKind kind] interface {
+// An observation of a path on-disk, including a constant observation timestamp.
+type OnDisk[PathKind Kind] interface {
 	fs.FileInfo
 	PurePath
 	Transformer[PathKind]
-	// Readable[any] // refining the type of what gets read would
-	// require passing an additional type parameter, which
-	// causes weird type-states to become possible, like OnDisk[Dir, struct{...}]
+
+	// The time that the path was observed on-disk. Should never change after the
+	// initial observation.
 	Observed() time.Time
 }
 
-type Maker[T any] interface { // ~Fallible
-	// see [os.Create]
-	Make(perm ...fs.FileMode) (T, error)
+type Beholder[PathKind Kind] interface {
+	// Observe the file info of the path on-disk. Does not follow symlinks. See [os.Lstat].
+	OnDisk() (OnDisk[PathKind], error)
+	// See [os.Stat].
+	Stat() (OnDisk[PathKind], error)
+	// See [os.Lstat].
+	Lstat() (OnDisk[PathKind], error)
+	// Returns true if the path exists on-disk.
+	Exists() bool
+}
+type InfallibleBeholder[PathKind Kind] interface {
+	// Panics if the path does not exist on-disk.
+	MustBeOnDisk() OnDisk[PathKind]
+	// Panics if [os.Stat] fails.
+	MustStat() OnDisk[PathKind]
+	// Panics if [os.Lstat] fails.
+	MustLstat() OnDisk[PathKind]
+}
+
+type Maker[T any] interface {
+	// Creates the object on-disk. The first file mode is the permissions for the object itself.
+	// If zero permissions are passed, a sensible default is used. If more than one permission is passed,
+	// parent directories are created with the remaining permissions.
+	Make(permissions ...fs.FileMode) (T, error)
 }
 
 type InfallibleMaker[T any] interface {
-	MustMake(perm ...fs.FileMode) T
+	// Panics if Make fails.
+	MustMake(permissions ...fs.FileMode) T
 }
 
-type Manipulator[PathKind kind] interface { // ~Fallible x3 + 1
-	// see [os.Remove]
+type Manipulator[PathKind Kind] interface { // ~Fallible x3 + 1
+	// see [os.Remove].
 	Remove() error
-	// see [os.Chmod]
+	// see [os.Chmod].
 	Chmod(os.FileMode) (PathKind, error)
-	// see [os.Chown]
+	// see [os.Chown].
 	Chown(uid, gid int) (PathKind, error)
-	// see [os.Rename]
+	// see [os.Rename].
 	Rename(newPath PathStr) (PathKind, error)
 }
-type InfallibleManipulator[PathKind kind] interface {
+type InfallibleManipulator[PathKind Kind] interface {
 	// see [os.Remove]. Panics if Remove fails.
 	MustRemove()
 	// see [os.Chmod]. Panics if Chmod fails.
@@ -101,27 +128,11 @@ type InfallibleManipulator[PathKind kind] interface {
 	MustRename(newPath PathStr) PathKind
 }
 
-// TODO: Dir and Symlink should add a .RemoveAll()
-
-type DirCreator interface { // ~Fallible x3
-	// see [os.Mkdir]
-	Mkdir(perm fs.FileMode) (Dir, error)
-	// see [os.MkdirAll]
-	MkdirAll(perm fs.FileMode) (Dir, error)
-	// see [os.MkdirTemp]
-	MkdirTemp(pattern string) (Dir, error)
-}
-
 type Destroyer interface {
+	// see [os.RemoveAll].
 	RemoveAll() error
 }
 type InfallibleDestroyer interface {
+	// Panics if [os.RemoveAll] fails.
 	MustRemoveAll()
 }
-
-type FileManipulator[P kind] interface {
-	Manipulator[P]
-	Open(flag int, mode os.FileMode) (*os.File, error) // ~Fallible
-}
-
-// TODO: infallible methods/interfaces

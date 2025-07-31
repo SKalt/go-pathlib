@@ -206,25 +206,18 @@ var _ Maker[*os.File] = File("./example")
 var _ InfallibleMaker[*os.File] = File("./example")
 
 // Make implements Maker.
-func (f File) Make(perm ...fs.FileMode) (*os.File, error) {
-	const defaultMode fs.FileMode = 0777
-main:
-	{
-		switch len(perm) {
-		case 0:
-			perm = append(perm, defaultMode)
-			goto main
-		case 1:
-			return f.Open(os.O_RDWR|os.O_CREATE, perm[0])
-		default:
-			_, err := f.Parent().Make(perm[1:]...)
-			if err != nil {
+func (f File) Make(perm ...fs.FileMode) (handle *os.File, err error) {
+	const defaultMode fs.FileMode = 0o666
+	if len(perm) == 0 {
+		perm = append(perm, defaultMode)
+	} else if len(perm) > 1 {
+		if parent := f.Parent(); !parent.Exists() {
+			if _, err := parent.Make(perm[1:]...); err != nil {
 				return nil, err
 			}
-			perm = perm[0:1]
-			goto main
 		}
 	}
+	return f.Open(os.O_RDWR|os.O_CREATE, perm[0])
 }
 
 // MustMake implements Maker.
@@ -244,5 +237,16 @@ func (f File) MustRead() []byte {
 	return expect(f.Read())
 }
 
-// extra functions:
-// .Touch() error
+// Destroyer -------------------------------------------------------------------
+var _ Destroyer = File("./example")
+var _ InfallibleDestroyer = File("./example")
+
+// MustRemoveAll implements InfallibleDestroyer.
+func (f File) MustRemoveAll() {
+	PathStr(f).MustRemoveAll()
+}
+
+// RemoveAll implements Destroyer.
+func (f File) RemoveAll() error {
+	return os.RemoveAll(string(f))
+}
