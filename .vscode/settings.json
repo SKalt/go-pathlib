@@ -7,7 +7,8 @@
         "customFormatter": "golines"
     },
     "cSpell.words": [
+      "libc",
       "pathlib",
-      "Transmogrifier"
+      "stdlib"
     ],
 }
