@@ -1,5 +1,7 @@
 [tools]
 go = "latest"
+golangci-lint = "latest"
+ripgrep = "latest"
 
 [env]
 # https://mise.jdx.dev/environments/#env-path
