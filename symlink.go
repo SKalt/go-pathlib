@@ -8,11 +8,17 @@ type Symlink PathStr
 
 // Readable --------------------------------------------------------------------
 var _ Readable[PathStr] = Symlink("./link")
+var _ InfallibleReader[PathStr] = Symlink("./link")
 
 // Read implements [Readable].
 func (s Symlink) Read() (PathStr, error) {
 	link, err := os.Readlink(string(s))
 	return PathStr(link), err
+}
+
+// MustRead implements [InfallibleReader].
+func (s Symlink) MustRead() PathStr {
+	return expect(s.Read())
 }
 
 // -----------------------------------------------------------------------------
@@ -49,6 +55,7 @@ func (s Symlink) Parent() Dir {
 
 // -----------------------------------------------------------------------------
 var _ Transformer[Symlink] = Symlink("./link")
+var _ InfallibleTransformer[Symlink] = Symlink("./link")
 
 func (s Symlink) Eq(other Symlink) bool {
 	return PathStr(s).Eq(PathStr(other))
@@ -85,6 +92,26 @@ func (s Symlink) Ext() string {
 	return PathStr(s).Ext()
 }
 
+// MustExpandUser implements [InfallibleTransformer].
+func (s Symlink) MustExpandUser() Symlink {
+	return expect(s.ExpandUser())
+}
+
+// MustLocalize implements [InfallibleTransformer].
+func (s Symlink) MustLocalize() Symlink {
+	return expect(s.Localize())
+}
+
+// MustMakeAbs implements [InfallibleTransformer].
+func (s Symlink) MustMakeAbs() Symlink {
+	return expect(s.Abs())
+}
+
+// MustMakeRel implements [InfallibleTransformer].
+func (s Symlink) MustMakeRel(target Dir) Symlink {
+	return expect(s.Rel(target))
+}
+
 // Beholder --------------------------------------------------------------------
 var _ Beholder[Symlink] = Symlink("./link")
 var _ InfallibleBeholder[Symlink] = Symlink("./link")
@@ -98,7 +125,7 @@ func (s Symlink) OnDisk() (OnDisk[Symlink], error) {
 	if !isSymLink(actual.Mode()) {
 		return nil, WrongTypeOnDisk[Symlink]{actual}
 	}
-	return onDisk[Symlink]{actual, }, nil
+	return onDisk[Symlink]{actual}, nil
 }
 
 // Exists implements [Beholder].
