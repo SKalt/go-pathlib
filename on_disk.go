@@ -26,32 +26,32 @@ var _ fs.FileInfo = onDisk[PathStr]{}
 // PurePath --------------------------------------------------------------------
 var _ PurePath = onDisk[PathStr]{}
 
-// Implements PurePath
+// implements [PurePath]
 func (p onDisk[P]) Parent() Dir {
 	return p.Path().Parent()
 }
 
-// BaseName implements PurePath.
+// BaseName implements [PurePath].
 func (p onDisk[P]) BaseName() string {
 	return p.Path().BaseName()
 }
 
-// Ext implements PurePath.
+// Ext implements [PurePath].
 func (p onDisk[P]) Ext() string {
 	return p.Path().Ext()
 }
 
-// IsAbsolute implements PurePath.
+// IsAbsolute implements [PurePath].
 func (p onDisk[P]) IsAbsolute() bool {
 	return p.Path().IsAbsolute()
 }
 
-// IsLocal implements PurePath.
+// IsLocal implements [PurePath].
 func (p onDisk[P]) IsLocal() bool {
 	return p.Path().IsLocal()
 }
 
-// Join implements PurePath.
+// Join implements [PurePath].
 func (p onDisk[P]) Join(parts ...string) PathStr {
 	return p.Path().Join(parts...)
 }
@@ -73,24 +73,24 @@ func (p onDisk[P]) Eq(q P) bool {
 	return PathStr(p.Path()).Eq(PathStr(q))
 }
 
-// Clean implements Transformer
+// Clean implements [Transformer]
 func (p onDisk[P]) Clean() P {
 	return P(PathStr(p.Path()).Clean())
 }
 
-// Abs implements Transformer.
+// Abs implements [Transformer].
 func (p onDisk[P]) Abs() (P, error) {
 	abs, err := PathStr(p.Path()).Abs()
 	return P(abs), err
 }
 
-// Localize implements Transformer.
+// Localize implements [Transformer].
 func (p onDisk[P]) Localize() (P, error) {
 	q, err := PathStr(p.Path()).Localize()
 	return P(q), err
 }
 
-// Rel implements Transformer.
+// Rel implements [Transformer].
 func (p onDisk[P]) Rel(target Dir) (P, error) {
 	q, err := PathStr(p.Path()).Rel(target)
 	return P(q), err
@@ -101,22 +101,22 @@ func (p onDisk[P]) ExpandUser() (P, error) {
 	return P(q), err
 }
 
-// MustExpandUser implements InfallibleTransformer.
+// MustExpandUser implements [InfallibleTransformer].
 func (p onDisk[P]) MustExpandUser() P {
 	return expect(p.ExpandUser())
 }
 
-// MustLocalize implements InfallibleTransformer.
+// MustLocalize implements [InfallibleTransformer].
 func (p onDisk[P]) MustLocalize() P {
 	return expect(p.Localize())
 }
 
-// MustMakeAbs implements InfallibleTransformer.
+// MustMakeAbs implements [InfallibleTransformer].
 func (p onDisk[P]) MustMakeAbs() P {
 	return expect(p.Abs())
 }
 
-// MustMakeRel implements InfallibleTransformer.
+// MustMakeRel implements [InfallibleTransformer].
 func (p onDisk[P]) MustMakeRel(target Dir) P {
 	return expect(p.Rel(target))
 }
@@ -125,12 +125,12 @@ func (p onDisk[P]) MustMakeRel(target Dir) P {
 var _ Manipulator[PathStr] = onDisk[PathStr]{}
 var _ InfallibleManipulator[PathStr] = onDisk[PathStr]{}
 
-// Remove implements Manipulator.
+// Remove implements [Manipulator].
 func (p onDisk[P]) Remove() error {
 	return os.Remove(p.Name())
 }
 
-// Rename implements Manipulator.
+// Rename implements [Manipulator].
 func (p onDisk[P]) Rename(destination PathStr) (result P, err error) {
 	result = P(destination)
 	err = os.Rename(p.Name(), string(destination))
@@ -149,22 +149,22 @@ func (p onDisk[P]) Chown(uid, gid int) (result P, err error) {
 	return
 }
 
-// MustChmod implements InfallibleManipulator.
+// MustChmod implements [InfallibleManipulator].
 func (p onDisk[P]) MustChmod(mode os.FileMode) P {
 	return expect(p.Chmod(mode))
 }
 
-// MustChown implements InfallibleManipulator.
+// MustChown implements [InfallibleManipulator].
 func (p onDisk[P]) MustChown(uid int, gid int) P {
 	return expect(p.Chown(uid, gid))
 }
 
-// MustRemove implements InfallibleManipulator.
+// MustRemove implements [InfallibleManipulator].
 func (p onDisk[P]) MustRemove() {
 	expect[any](nil, p.Remove())
 }
 
-// MustRename implements InfallibleManipulator.
+// MustRename implements [InfallibleManipulator].
 func (p onDisk[P]) MustRename(newPath PathStr) P {
 	return expect(p.Rename(newPath))
 }

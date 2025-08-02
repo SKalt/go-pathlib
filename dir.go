@@ -70,7 +70,7 @@ func (d Dir) MustRead() []os.DirEntry {
 var _ PurePath = Dir(".")
 
 // See [filepath.Base].
-// BaseName implements PurePath.
+// BaseName implements [PurePath].
 func (d Dir) BaseName() string {
 	return PathStr(d).BaseName()
 }
@@ -78,17 +78,17 @@ func (d Dir) BaseName() string {
 // Returns true if the path is absolute, false otherwise.
 // See [filepath.IsAbs] for more details.
 //
-// IsAbsolute implements PurePath.
+// IsAbsolute implements [PurePath].
 func (d Dir) IsAbsolute() bool {
 	return PathStr(d).IsAbsolute()
 }
 
-// IsLocal implements PurePath.
+// IsLocal implements [PurePath].
 func (d Dir) IsLocal() bool {
 	return PathStr(d).IsLocal()
 }
 
-// Join implements PurePath.
+// Join implements [PurePath].
 func (d Dir) Join(parts ...string) PathStr {
 	return PathStr(d).Join(parts...)
 }
@@ -97,12 +97,12 @@ func (d Dir) Parts() []string {
 	return PathStr(d).Parts()
 }
 
-// Parent implements PurePath.
+// Parent implements [PurePath].
 func (d Dir) Parent() Dir {
 	return PathStr(d).Parent()
 }
 
-// Ext implements PurePath.
+// Ext implements [PurePath].
 func (d Dir) Ext() string {
 	return PathStr(d).Ext()
 }
@@ -111,7 +111,7 @@ func (d Dir) Ext() string {
 var _ Transformer[Dir] = Dir(".")
 var _ InfallibleTransformer[Dir] = Dir(".")
 
-// Abs implements Transformer.
+// Abs implements [Transformer].
 func (d Dir) Abs() (Dir, error) {
 	abs, err := PathStr(d).Abs()
 	return Dir(abs), err
@@ -123,40 +123,40 @@ func (d Dir) Clean() Dir {
 	return Dir(filepath.Clean(string(d)))
 }
 
-// Localize implements Transformer.
+// Localize implements [Transformer].
 func (d Dir) Localize() (Dir, error) {
 	q, err := PathStr(d).Localize()
 	return Dir(q), err // this will panic if d is not absolute
 }
 
-// Rel implements Transformer.
+// Rel implements [Transformer].
 func (d Dir) Rel(target Dir) (Dir, error) {
 	relative, err := PathStr(d).Rel(target)
 	return Dir(relative), err
 }
 
-// ExpandUser implements Transformer.
+// ExpandUser implements [Transformer].
 func (d Dir) ExpandUser() (Dir, error) {
 	p, err := PathStr(d).ExpandUser()
 	return Dir(p), err
 }
 
-// MustExpandUser implements InfallibleTransformer.
+// MustExpandUser implements [InfallibleTransformer].
 func (d Dir) MustExpandUser() Dir {
 	return expect(d.ExpandUser())
 }
 
-// MustLocalize implements InfallibleTransformer.
+// MustLocalize implements [InfallibleTransformer].
 func (d Dir) MustLocalize() Dir {
 	return expect(d.Localize())
 }
 
-// MustMakeAbs implements InfallibleTransformer.
+// MustMakeAbs implements [InfallibleTransformer].
 func (d Dir) MustMakeAbs() Dir {
 	return expect(d.Abs())
 }
 
-// MustMakeRel implements InfallibleTransformer.
+// MustMakeRel implements [InfallibleTransformer].
 func (d Dir) MustMakeRel(target Dir) Dir {
 	return expect(d.Rel(target))
 }
@@ -176,17 +176,17 @@ func (d Dir) OnDisk() (OnDisk[Dir], error) {
 	return onDisk[Dir]{actual, time.Now()}, nil
 }
 
-// Exists implements Beholder.
+// Exists implements [Beholder].
 func (d Dir) Exists() bool {
 	return PathStr(d).Exists()
 }
 
-// Lstat implements Beholder.
+// Lstat implements [Beholder].
 func (d Dir) Lstat() (OnDisk[Dir], error) {
 	return d.OnDisk()
 }
 
-// Stat implements Beholder.
+// Stat implements [Beholder].
 func (d Dir) Stat() (result OnDisk[Dir], err error) {
 	var info fs.FileInfo
 	info, err = os.Stat(string(d))
@@ -201,17 +201,17 @@ func (d Dir) Stat() (result OnDisk[Dir], err error) {
 	return
 }
 
-// MustLstat implements InfallibleBeholder.
+// MustLstat implements [InfallibleBeholder].
 func (d Dir) MustLstat() OnDisk[Dir] {
 	return expect(d.Lstat())
 }
 
-// MustOnDisk implements InfallibleBeholder.
+// MustOnDisk implements [InfallibleBeholder].
 func (d Dir) MustBeOnDisk() OnDisk[Dir] {
 	return expect(d.OnDisk())
 }
 
-// MustStat implements InfallibleBeholder.
+// MustStat implements [InfallibleBeholder].
 func (d Dir) MustStat() OnDisk[Dir] {
 	return expect(d.Stat())
 }
@@ -239,7 +239,7 @@ func (d Dir) makeAll(permissions ...fs.FileMode) (err error) {
 	return
 }
 
-// Make implements Maker.
+// Make implements [Maker].
 // FIXME: document
 func (d Dir) Make(perm ...fs.FileMode) (result Dir, err error) {
 	const defaultMode fs.FileMode = 0o775
@@ -258,7 +258,7 @@ func (d Dir) Make(perm ...fs.FileMode) (result Dir, err error) {
 	return d, nil
 }
 
-// MustMake implements InfallibleMaker.
+// MustMake implements [InfallibleMaker].
 func (root Dir) MustMake(perm ...fs.FileMode) Dir {
 	return expect(root.Make(perm...))
 }
@@ -268,14 +268,14 @@ var _ Manipulator[Dir] = Dir(".")
 var _ InfallibleManipulator[Dir] = Dir(".")
 
 // See [os.Chmod].
-// Chmod implements Manipulator.
+// Chmod implements [Manipulator].
 func (d Dir) Chmod(mode os.FileMode) (Dir, error) {
 	result, err := PathStr(d).Chmod(mode)
 	return Dir(result), err
 }
 
 // See [os.Chown].
-// Chown implements Manipulator.
+// Chown implements [Manipulator].
 func (d Dir) Chown(uid int, gid int) (Dir, error) {
 	result, err := PathStr(d).Chown(uid, gid)
 	return Dir(result), err
@@ -283,38 +283,38 @@ func (d Dir) Chown(uid int, gid int) (Dir, error) {
 }
 
 // See [os.Remove].
-// Remove implements Manipulator.
+// Remove implements [Manipulator].
 func (d Dir) Remove() error {
 	return os.Remove(string(d))
 }
 
 // See [os.Rename].
-// Rename implements Manipulator.
+// Rename implements [Manipulator].
 func (d Dir) Rename(newPath PathStr) (Dir, error) {
 	result, err := PathStr(d).Rename(newPath)
 	return Dir(result), err
 }
 
 // See [os.Chmod].
-// MustChmod implements InfallibleManipulator.
+// MustChmod implements [InfallibleManipulator].
 func (d Dir) MustChmod(mode os.FileMode) Dir {
 	return expect(d.Chmod(mode))
 }
 
 // See [os.Chown].
-// MustChown implements InfallibleManipulator.
+// MustChown implements [InfallibleManipulator].
 func (d Dir) MustChown(uid int, gid int) Dir {
 	return expect(d.Chown(uid, gid))
 }
 
 // See [os.Remove].
-// MustRemove implements InfallibleManipulator.
+// MustRemove implements [InfallibleManipulator].
 func (d Dir) MustRemove() {
 	expect[any](nil, d.Remove())
 }
 
 // See [os.Rename].
-// MustRename implements InfallibleManipulator.
+// MustRename implements [InfallibleManipulator].
 func (d Dir) MustRename(newPath PathStr) Dir {
 	return expect(d.Rename(newPath))
 }
@@ -324,13 +324,13 @@ var _ Destroyer = Dir(".")
 var _ InfallibleDestroyer = Dir(".")
 
 // See [os.RemoveAll].
-// RemoveAll implements Destroyer.
+// RemoveAll implements [Destroyer].
 func (d Dir) RemoveAll() error {
 	return os.RemoveAll(string(d))
 }
 
 // See [os.RemoveAll].
-// MustRemoveAll implements InfallibleDestroyer.
+// MustRemoveAll implements [InfallibleDestroyer].
 func (d Dir) MustRemoveAll() {
 	PathStr(d).MustRemoveAll()
 }

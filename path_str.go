@@ -18,13 +18,13 @@ var _ InfallibleBeholder[PathStr] = PathStr(".")
 
 // Note: go's `os.Stat/Lstat` imitates `stat(2)` from POSIX's libc spec.
 
-// Stat implements Beholder.
+// Stat implements [Beholder].
 func (p PathStr) Stat() (OnDisk[PathStr], error) {
 	info, err := os.Stat(string(p))
 	return onDisk[PathStr]{info, time.Now()}, err
 }
 
-// Lstat implements Beholder.
+// Lstat implements [Beholder].
 func (p PathStr) Lstat() (OnDisk[PathStr], error) {
 	return p.OnDisk()
 }
@@ -46,17 +46,17 @@ func (p PathStr) Exists() (exists bool) {
 	return !errors.Is(err, fs.ErrNotExist)
 }
 
-// MustBeOnDisk implements InfallibleBeholder.
+// MustBeOnDisk implements [InfallibleBeholder].
 func (p PathStr) MustBeOnDisk() OnDisk[PathStr] {
 	return expect(p.OnDisk())
 }
 
-// MustLstat implements InfallibleBeholder.
+// MustLstat implements [InfallibleBeholder].
 func (p PathStr) MustLstat() OnDisk[PathStr] {
 	return expect(p.Lstat())
 }
 
-// MustStat implements InfallibleBeholder.
+// MustStat implements [InfallibleBeholder].
 func (p PathStr) MustStat() OnDisk[PathStr] {
 	return expect(p.Stat())
 }
@@ -182,12 +182,12 @@ func (p PathStr) Open() (*os.File, error) {
 var _ Transformer[PathStr] = PathStr(".")
 var _ InfallibleTransformer[PathStr] = PathStr(".")
 
-// Clean implements Transformer
+// Clean implements [Transformer]
 func (p PathStr) Clean() PathStr {
 	return PathStr(filepath.Clean(string(p)))
 }
 
-// Abs implements Transformer.
+// Abs implements [Transformer].
 // See [path/filepath.Abs] for more details:
 //
 // > Abs returns an absolute representation of path. If the path is not absolute
@@ -199,13 +199,13 @@ func (p PathStr) Abs() (PathStr, error) {
 	return PathStr(q), err
 }
 
-// Localize implements Transformer.
+// Localize implements [Transformer].
 func (p PathStr) Localize() (PathStr, error) {
 	q, err := filepath.Localize(string(p))
 	return PathStr(q), err
 }
 
-// Rel implements Transformer. See [path/filepath.Rel]:
+// Rel implements [Transformer]. See [path/filepath.Rel]:
 //
 // > Rel returns a relative path that is lexically equivalent to [target] when
 // joined to basepath with an intervening separator. That is,
@@ -240,22 +240,22 @@ func (p PathStr) ExpandUser() (result PathStr, err error) {
 	return
 }
 
-// MustExpandUser implements InfallibleTransformer.
+// MustExpandUser implements [InfallibleTransformer].
 func (p PathStr) MustExpandUser() PathStr {
 	return expect(p.ExpandUser())
 }
 
-// MustLocalize implements InfallibleTransformer.
+// MustLocalize implements [InfallibleTransformer].
 func (p PathStr) MustLocalize() PathStr {
 	return expect(p.Localize())
 }
 
-// MustMakeAbs implements InfallibleTransformer.
+// MustMakeAbs implements [InfallibleTransformer].
 func (p PathStr) MustMakeAbs() PathStr {
 	return expect(p.Abs())
 }
 
-// MustMakeRel implements InfallibleTransformer.
+// MustMakeRel implements [InfallibleTransformer].
 func (p PathStr) MustMakeRel(target Dir) PathStr {
 	return expect(p.Rel(target))
 }
@@ -264,7 +264,7 @@ func (p PathStr) MustMakeRel(target Dir) PathStr {
 var _ Manipulator[PathStr] = PathStr(".")
 var _ InfallibleManipulator[PathStr] = PathStr(".")
 
-// Chmod implements Manipulator.
+// Chmod implements [Manipulator].
 func (root PathStr) Chmod(mode os.FileMode) (result PathStr, err error) {
 	if err = os.Chmod(string(root), mode); err != nil {
 		return
@@ -273,7 +273,7 @@ func (root PathStr) Chmod(mode os.FileMode) (result PathStr, err error) {
 	return
 }
 
-// Chown implements Manipulator.
+// Chown implements [Manipulator].
 func (root PathStr) Chown(uid int, gid int) (result PathStr, err error) {
 	if err = os.Chown(string(root), uid, gid); err != nil {
 		return
@@ -282,12 +282,12 @@ func (root PathStr) Chown(uid int, gid int) (result PathStr, err error) {
 	return
 }
 
-// Remove implements Manipulator.
+// Remove implements [Manipulator].
 func (root PathStr) Remove() error {
 	return os.Remove(string(root))
 }
 
-// Rename implements Manipulator.
+// Rename implements [Manipulator].
 func (root PathStr) Rename(newPath PathStr) (result PathStr, err error) {
 	err = os.Rename(string(root), string(newPath))
 	if err != nil {
@@ -297,24 +297,24 @@ func (root PathStr) Rename(newPath PathStr) (result PathStr, err error) {
 	return
 }
 
-// MustChmod implements InfallibleManipulator.
+// MustChmod implements [InfallibleManipulator].
 func (root PathStr) MustChmod(mode os.FileMode) PathStr {
 	return expect(root.Chmod(mode))
 }
 
-// MustChown implements InfallibleManipulator.
+// MustChown implements [InfallibleManipulator].
 func (root PathStr) MustChown(uid int, gid int) PathStr {
 	return expect(root.Chown(uid, gid))
 }
 
-// MustRemove implements InfallibleManipulator.
+// MustRemove implements [InfallibleManipulator].
 func (root PathStr) MustRemove() {
 	if err := root.Remove(); err != nil {
 		panic(err)
 	}
 }
 
-// MustRename implements InfallibleManipulator.
+// MustRename implements [InfallibleManipulator].
 func (root PathStr) MustRename(newPath PathStr) PathStr {
 	return expect(root.Rename(newPath))
 }
@@ -334,12 +334,12 @@ func (p PathStr) Eq(q PathStr) bool {
 var _ Destroyer = PathStr(".")
 var _ InfallibleDestroyer = PathStr(".")
 
-// RemoveAll implements Destroyer.
+// RemoveAll implements [Destroyer].
 func (p PathStr) RemoveAll() error {
 	return os.RemoveAll(string(p))
 }
 
-// MustRemoveAll implements InfallibleDestroyer.
+// MustRemoveAll implements [InfallibleDestroyer].
 func (p PathStr) MustRemoveAll() {
 	if err := p.RemoveAll(); err != nil {
 		panic(err)

@@ -10,7 +10,7 @@ type Symlink PathStr
 // Readable --------------------------------------------------------------------
 var _ Readable[PathStr] = Symlink("./link")
 
-// Read implements Readable.
+// Read implements [Readable].
 func (s Symlink) Read() (PathStr, error) {
 	link, err := os.Readlink(string(s))
 	return PathStr(link), err
@@ -19,17 +19,17 @@ func (s Symlink) Read() (PathStr, error) {
 // -----------------------------------------------------------------------------
 var _ PurePath = Symlink("./link")
 
-// BaseName implements PurePath.
+// BaseName implements [PurePath].
 func (s Symlink) BaseName() string {
 	return PathStr(s).BaseName()
 }
 
-// IsAbsolute implements PurePath.
+// IsAbsolute implements [PurePath].
 func (s Symlink) IsAbsolute() bool {
 	return PathStr(s).IsAbsolute()
 }
 
-// IsLocal implements PurePath.
+// IsLocal implements [PurePath].
 func (s Symlink) IsLocal() bool {
 	return PathStr(s).IsLocal()
 }
@@ -43,7 +43,7 @@ func (s Symlink) Parts() []string {
 	return PathStr(s).Parts()
 }
 
-// Parent implements PurePath.
+// Parent implements [PurePath].
 func (s Symlink) Parent() Dir {
 	return PathStr(s).Parent()
 }
@@ -59,19 +59,19 @@ func (s Symlink) Clean() Symlink {
 	return Symlink(PathStr(s).Clean())
 }
 
-// Abs implements Transformer.
+// Abs implements [Transformer].
 func (s Symlink) Abs() (Symlink, error) {
 	q, err := PathStr(s).Abs()
 	return Symlink(q), err
 }
 
-// Localize implements Transformer.
+// Localize implements [Transformer].
 func (s Symlink) Localize() (Symlink, error) {
 	q, err := PathStr(s).Localize()
 	return Symlink(q), err
 }
 
-// Rel implements Transformer.
+// Rel implements [Transformer].
 func (s Symlink) Rel(target Dir) (Symlink, error) {
 	result, err := PathStr(s).Rel(target)
 	return Symlink(result), err
@@ -90,7 +90,7 @@ func (s Symlink) Ext() string {
 var _ Beholder[Symlink] = Symlink("./link")
 var _ InfallibleBeholder[Symlink] = Symlink("./link")
 
-// OnDisk implements Beholder.
+// OnDisk implements [Beholder].
 func (s Symlink) OnDisk() (OnDisk[Symlink], error) {
 	actual, err := PathStr(s).OnDisk()
 	if err != nil {
@@ -102,32 +102,32 @@ func (s Symlink) OnDisk() (OnDisk[Symlink], error) {
 	return onDisk[Symlink]{actual, time.Now()}, nil
 }
 
-// Exists implements Beholder.
+// Exists implements [Beholder].
 func (s Symlink) Exists() bool {
 	panic("unimplemented")
 }
 
-// Lstat implements Beholder.
+// Lstat implements [Beholder].
 func (s Symlink) Lstat() (OnDisk[Symlink], error) {
 	panic("unimplemented")
 }
 
-// Stat implements Beholder.
+// Stat implements [Beholder].
 func (s Symlink) Stat() (OnDisk[Symlink], error) {
 	panic("unimplemented")
 }
 
-// MustBeOnDisk implements InfallibleBeholder.
+// MustBeOnDisk implements [InfallibleBeholder].
 func (s Symlink) MustBeOnDisk() OnDisk[Symlink] {
 	return expect(s.OnDisk())
 }
 
-// MustLstat implements InfallibleBeholder.
+// MustLstat implements [InfallibleBeholder].
 func (s Symlink) MustLstat() OnDisk[Symlink] {
 	return expect(s.Lstat())
 }
 
-// MustStat implements InfallibleBeholder.
+// MustStat implements [InfallibleBeholder].
 func (s Symlink) MustStat() OnDisk[Symlink] {
 	return expect(s.Stat())
 }
@@ -139,47 +139,47 @@ func (s Symlink) MustStat() OnDisk[Symlink] {
 var _ Manipulator[Symlink] = Symlink("./link")
 var _ InfallibleManipulator[Symlink] = Symlink("./link")
 
-// Chmod implements Manipulator.
+// Chmod implements [Manipulator].
 func (s Symlink) Chmod(mode os.FileMode) (Symlink, error) {
 	result, err := PathStr(s).Chmod(mode)
 	return Symlink(result), err
 }
 
-// Chown implements Manipulator.
+// Chown implements [Manipulator].
 func (s Symlink) Chown(uid int, gid int) (Symlink, error) {
 	result, err := PathStr(s).Chown(uid, gid)
 	return Symlink(result), err
 }
 
-// Remove implements Manipulator.
+// Remove implements [Manipulator].
 func (s Symlink) Remove() error {
 	return os.Remove(string(s))
 }
 
-// Rename implements Manipulator.
+// Rename implements [Manipulator].
 func (s Symlink) Rename(newPath PathStr) (Symlink, error) {
 	result, err := PathStr(s).Rename(newPath)
 	return Symlink(result), err
 }
 
-// MustChmod implements InfallibleManipulator.
+// MustChmod implements [InfallibleManipulator].
 func (s Symlink) MustChmod(mode os.FileMode) Symlink {
 	return expect(s.Chmod(mode))
 }
 
-// MustChown implements InfallibleManipulator.
+// MustChown implements [InfallibleManipulator].
 func (s Symlink) MustChown(uid int, gid int) Symlink {
 	return expect(s.Chown(uid, gid))
 }
 
-// MustRemove implements InfallibleManipulator.
+// MustRemove implements [InfallibleManipulator].
 func (s Symlink) MustRemove() {
 	if err := s.Remove(); err != nil {
 		panic(err)
 	}
 }
 
-// MustRename implements InfallibleManipulator.
+// MustRename implements [InfallibleManipulator].
 func (s Symlink) MustRename(newPath PathStr) Symlink {
 	return expect(s.Rename(newPath))
 }
@@ -188,7 +188,7 @@ func (s Symlink) MustRename(newPath PathStr) Symlink {
 var _ Destroyer = Symlink("./link")
 var _ InfallibleDestroyer = Symlink("./link")
 
-// RemoveAll implements Destroyer.
+// RemoveAll implements [Destroyer].
 func (s Symlink) RemoveAll() error {
 	return os.RemoveAll(string(s))
 }

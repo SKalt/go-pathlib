@@ -96,18 +96,17 @@ type InfallibleBeholder[PathKind Kind] interface {
 }
 
 type Maker[T any] interface {
-	// Creates the object on-disk. The first file mode is the permissions for the object itself.
-	// If zero permissions are passed, a sensible default is used. If more than one permission is passed,
-	// parent directories are created with the remaining permissions.
-	Make(permissions ...fs.FileMode) (T, error)
+	Make(perm fs.FileMode) (T, error)
+	MakeAll(perm, parentPerm fs.FileMode) (T, error)
 }
 
 type InfallibleMaker[T any] interface {
 	// Panics if Make fails.
-	MustMake(permissions ...fs.FileMode) T
+	MustMake(perm fs.FileMode) T
+	MakeAll(perm, parentPerm fs.FileMode) (T, error)
 }
 
-type Manipulator[PathKind Kind] interface { // ~Fallible x3 + 1
+type Manipulator[PathKind Kind] interface {
 	// see [os.Remove].
 	Remove() error
 	// see [os.Chmod].
