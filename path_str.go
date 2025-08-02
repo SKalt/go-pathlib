@@ -6,7 +6,6 @@ import (
 	"iter"
 	"os"
 	"path/filepath"
-	"slices"
 )
 
 type PathStr string
@@ -66,18 +65,31 @@ func (p PathStr) Join(segments ...string) PathStr {
 	return PathStr(filepath.Join(append([]string{string(p)}, segments...)...))
 }
 func (p PathStr) Parts() (parts []string) {
-	if p == "" {
+	input := string(p)
+	vol := filepath.VolumeName(input)
+	if vol != "" {
+		parts = append(parts, vol)
+		input = input[len(vol):]
+	}
+	if input == "" {
 		return
 	}
-	var dir, file string
-	for {
-		dir, file = filepath.Split(dir)
-		parts = append(parts, file)
-		if dir == "" {
-			break
-		}
+	var i, last = 1, 0
+	if os.IsPathSeparator(input[0]) {
+		parts = append(parts, input[:1])
+		last = 1
 	}
-	slices.Reverse(parts)
+	for i < len(input) {
+		if os.IsPathSeparator(input[i]) {
+			parts = append(parts, input[last:i])
+			last = i + 1
+		}
+		i++
+	}
+	if last < i {
+		parts = append(parts, input[last:])
+	}
+
 	return
 }
 
@@ -311,7 +323,7 @@ func (p PathStr) Eq(q PathStr) bool {
 		return p == q
 	}
 	// TODO: check that this still works with UNC strings on windows
-	return p.MustMakeAbs().MustLocalize() == q.MustMakeAbs().MustLocalize()
+	return p.MustMakeAbs() == q.MustMakeAbs()
 }
 
 // Destroyer -------------------------------------------------------------------
