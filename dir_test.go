@@ -30,12 +30,12 @@ func ExampleDir_Join() {
 }
 
 func ExampleDir_Glob() {
-	demoDir := pathlib.TempDir().Join("glob-example").AsDir().MustMake()
+	demoDir := pathlib.TempDir().Join("glob-example").AsDir().MustMake(0o777)
 	defer demoDir.MustRemoveAll()
 
 	for _, name := range []string{"x", "y", "z", "a", "b", "c"} {
 		f := demoDir.Join(name + ".txt").AsFile()
-		if err := f.Touch(); err != nil {
+		if err := f.MustMake(0o777); err != nil {
 			panic(err)
 		}
 	}

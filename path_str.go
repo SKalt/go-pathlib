@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"time"
 )
 
 type PathStr string
@@ -21,7 +20,7 @@ var _ InfallibleBeholder[PathStr] = PathStr(".")
 // Stat implements [Beholder].
 func (p PathStr) Stat() (OnDisk[PathStr], error) {
 	info, err := os.Stat(string(p))
-	return onDisk[PathStr]{info, time.Now()}, err
+	return onDisk[PathStr]{info}, err
 }
 
 // Lstat implements [Beholder].
@@ -35,11 +34,9 @@ func (p PathStr) OnDisk() (actual OnDisk[PathStr], err error) {
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
-	actual = onDisk[PathStr]{info, time.Now()}
+	actual = onDisk[PathStr]{info}
 	return
 }
-
-// Note: single-field structs have the same size as their field
 
 func (p PathStr) Exists() (exists bool) {
 	_, err := p.OnDisk()
@@ -64,16 +61,7 @@ func (p PathStr) MustStat() OnDisk[PathStr] {
 // PurePath --------------------------------------------------------------------
 var _ PurePath = PathStr(".")
 
-// A wrapper around [path/filepath.Join]:
-//
-// > Join joins any number of path elements into a single path, separating them with an OS
-// specific [path/filepath.Separator]. Empty elements are ignored. The result passed
-// through [path/filepath.Clean]. However, if the argument list is empty or all its
-// elements are empty, Join returns an empty string. On Windows, the result will only be
-// a UNC path if the first non-empty element is a UNC path.
-//
-// Note that this method inherits [path/filepath.Join]'s behavior of ignoring leading
-// path separators.
+// A wrapper around [path/filepath.Join].
 func (p PathStr) Join(segments ...string) PathStr {
 	return PathStr(filepath.Join(append([]string{string(p)}, segments...)...))
 }
@@ -93,11 +81,7 @@ func (p PathStr) Parts() (parts []string) {
 	return
 }
 
-// a wrapper around [path/filepath.Dir]:
-//
-// > returns all but the last element of path [...]  If the path is empty, Dir returns ".".
-// If the path consists entirely of separators, [path/filepath.Dir] returns a single separator. The
-// returned path does not end in a separator unless it is the root directory.
+// a wrapper around [path/filepath.Dir].
 func (p PathStr) Parent() Dir {
 	return Dir(filepath.Dir(string(p)))
 }

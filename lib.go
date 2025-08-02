@@ -3,7 +3,6 @@ package pathlib
 import (
 	"io/fs"
 	"os"
-	"time"
 )
 
 type Kind interface {
@@ -70,10 +69,6 @@ type OnDisk[PathKind Kind] interface {
 	fs.FileInfo
 	PurePath
 	Transformer[PathKind]
-
-	// The time that the path was observed on-disk. Should never change after the
-	// initial observation.
-	Observed() time.Time
 }
 
 type Beholder[PathKind Kind] interface {

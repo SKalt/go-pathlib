@@ -2,7 +2,6 @@ package pathlib
 
 import (
 	"os"
-	"time"
 )
 
 type Symlink PathStr
@@ -99,7 +98,7 @@ func (s Symlink) OnDisk() (OnDisk[Symlink], error) {
 	if !isSymLink(actual.Mode()) {
 		return nil, WrongTypeOnDisk[Symlink]{actual}
 	}
-	return onDisk[Symlink]{actual, time.Now()}, nil
+	return onDisk[Symlink]{actual, }, nil
 }
 
 // Exists implements [Beholder].

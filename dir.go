@@ -4,7 +4,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 type Dir PathStr
@@ -173,7 +172,7 @@ func (d Dir) OnDisk() (OnDisk[Dir], error) {
 	if !actual.IsDir() {
 		return nil, WrongTypeOnDisk[Dir]{actual}
 	}
-	return onDisk[Dir]{actual, time.Now()}, nil
+	return onDisk[Dir]{actual, }, nil
 }
 
 // Exists implements [Beholder].
@@ -197,7 +196,7 @@ func (d Dir) Stat() (result OnDisk[Dir], err error) {
 		err = WrongTypeOnDisk[Dir]{info}
 		return
 	}
-	result = onDisk[Dir]{info, time.Now()}
+	result = onDisk[Dir]{info, }
 	return
 }
 
@@ -220,47 +219,38 @@ func (d Dir) MustStat() OnDisk[Dir] {
 var _ InfallibleMaker[Dir] = Dir("/example")
 var _ Maker[Dir] = Dir("/example")
 
-func (d Dir) makeAll(permissions ...fs.FileMode) (err error) {
-	// this could probably be optimized to avoid recursion overhead
-	if d.Exists() {
-		return
+// Make implements [Maker].
+func (d Dir) Make(perm fs.FileMode) (result Dir, err error) {
+	err = os.Mkdir(string(d), perm)
+	if err != nil {
+		result = d
 	}
-	if len(permissions) == 0 {
-		panic("Dir.makeAll called with no permissions")
-	}
-	parentPermissions := permissions[1:]
-	if len(parentPermissions) == 0 {
-		parentPermissions = append(parentPermissions, permissions[0])
-	}
-	if err = d.Parent().makeAll(parentPermissions...); err != nil {
-		return
-	}
-	err = os.Mkdir(string(d), permissions[0])
 	return
 }
 
-// Make implements [Maker].
-// FIXME: document
-func (d Dir) Make(perm ...fs.FileMode) (result Dir, err error) {
-	const defaultMode fs.FileMode = 0o775
-	if len(perm) == 0 {
-		perm = append(perm, defaultMode)
-	} else if len(perm) > 1 {
-		if parent := d.Parent(); !parent.Exists() {
-			if err = parent.makeAll(perm[1:]...); err != nil {
-				return
-			}
-		}
-	}
-	if err = os.Mkdir(string(d), perm[0]); err != nil {
+// MakeAll implements [Maker]
+func (d Dir) MakeAll(perm, parentPerm fs.FileMode) (result Dir, err error) {
+	if d.Exists() {
+		result = d
 		return
 	}
-	return d, nil
+	_, err = d.Parent().MakeAll(parentPerm, parentPerm)
+	if err != nil {
+		return
+	}
+	return d.Make(perm)
 }
 
 // MustMake implements [InfallibleMaker].
-func (root Dir) MustMake(perm ...fs.FileMode) Dir {
-	return expect(root.Make(perm...))
+func (root Dir) MustMake(perm fs.FileMode) Dir {
+	return expect(root.Make(perm))
+}
+
+// Panics if [Dir.MakeAll].returns an error.
+//
+// MustMakeAll implements [InfallibleMaker]
+func (d Dir) MustMakeAll(perm, parentPerm fs.FileMode) Dir {
+	return expect(d.MakeAll(perm, parentPerm))
 }
 
 // Manipulator -----------------------------------------------------------------

@@ -3,22 +3,17 @@ package pathlib
 import (
 	"io/fs"
 	"os"
-	"time"
 )
 
+// Note: single-field structs have the same size as their field
 type onDisk[P Kind] struct {
 	fs.FileInfo
-	observed time.Time
 }
 
 var _ OnDisk[PathStr] = onDisk[PathStr]{}
 
 func (p onDisk[P]) Path() P {
 	return P(p.Name())
-}
-
-func (p onDisk[P]) Observed() time.Time {
-	return p.observed
 }
 
 var _ fs.FileInfo = onDisk[PathStr]{}

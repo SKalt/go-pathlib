@@ -3,7 +3,6 @@ package pathlib
 import (
 	"io/fs"
 	"os"
-	"time"
 )
 
 type File PathStr
@@ -121,7 +120,7 @@ func (f File) Exists() bool {
 // Lstat implements [Beholder].
 func (f File) Lstat() (OnDisk[File], error) {
 	info, err := os.Lstat(string(f))
-	return onDisk[File]{info, time.Now()}, err
+	return onDisk[File]{info, }, err
 }
 
 // OnDisk implements [Beholder].
@@ -132,7 +131,7 @@ func (f File) OnDisk() (OnDisk[File], error) {
 // Stat implements [Beholder].
 func (f File) Stat() (OnDisk[File], error) {
 	info, err := os.Stat(string(f))
-	return onDisk[File]{info, time.Now()}, err
+	return onDisk[File]{info, }, err
 }
 
 // MustBeOnDisk implements [InfallibleBeholder].
@@ -199,23 +198,22 @@ var _ Maker[*os.File] = File("./example")
 var _ InfallibleMaker[*os.File] = File("./example")
 
 // Make implements [Maker].
-func (f File) Make(perm ...fs.FileMode) (handle *os.File, err error) {
-	const defaultMode fs.FileMode = 0o666
-	if len(perm) == 0 {
-		perm = append(perm, defaultMode)
-	} else if len(perm) > 1 {
-		if parent := f.Parent(); !parent.Exists() {
-			if _, err := parent.Make(perm[1:]...); err != nil {
-				return nil, err
-			}
-		}
+func (f File) Make(perm fs.FileMode) (handle *os.File, err error) {
+	return f.Open(os.O_RDWR|os.O_CREATE, perm)
+}
+
+// MakeAll implements [Maker].
+func (f File) MakeAll(perm, parentPerm fs.FileMode) (handle *os.File, err error) {
+	_, err = f.Parent().MakeAll(parentPerm, parentPerm)
+	if err != nil {
+		return
 	}
-	return f.Open(os.O_RDWR|os.O_CREATE, perm[0])
+	return f.Make(perm)
 }
 
 // MustMake implements [Maker].
-func (f File) MustMake(perm ...fs.FileMode) *os.File {
-	return expect(f.Make(perm...))
+func (f File) MustMake(perm fs.FileMode) *os.File {
+	return expect(f.Make(perm))
 }
 
 // Readable --------------------------------------------------------------------
