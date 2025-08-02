@@ -83,13 +83,21 @@ func ExamplePathStr_Ancestors_relative() {
 	// .
 }
 
-// func ExamplePathStr_Ancestors_unc() {
-// 	// an UNC path:
-// 	for d := range pathlib.PathStr("//foo/bar/baz").Ancestors() {
-// 		fmt.Println(d)
-// 	}
-// 	// output:
-// 	// /foo/bar
-// 	// /foo
-// 	// /
-// }
+func ExamplePathStr_Parts() {
+	example := func(p pathlib.PathStr) {
+		fmt.Printf("%q => %#v\n", p, p.Parts())
+	}
+	fmt.Println("On Unix:")
+	example("/a/b")
+	example("./a/b")
+	example("a/b")
+	example("a/../b")
+	example("a//b")
+	// output:
+	// On Unix:
+	// "/a/b" => []string{"/", "a", "b"}
+	// "./a/b" => []string{".", "a", "b"}
+	// "a/b" => []string{"a", "b"}
+	// "a/../b" => []string{"a", "..", "b"}
+	// "a//b" => []string{"a", "b"}
+}

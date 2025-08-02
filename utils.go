@@ -9,7 +9,7 @@ import (
 // when transforming fallible `Method() (T, error)`s into infallible `MustMethod() T`s.
 func expect[T any](t T, err error) T {
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 	return t
 }

@@ -115,9 +115,13 @@ func (d Dir) Abs() (Dir, error) {
 	abs, err := PathStr(d).Abs()
 	return Dir(abs), err
 }
+
+// Eq implements [Transformer].
 func (d Dir) Eq(other Dir) (equivalent bool) {
 	return PathStr(d).Eq(PathStr(other))
 }
+
+// Clean implements [Transformer].
 func (d Dir) Clean() Dir {
 	return Dir(filepath.Clean(string(d)))
 }
@@ -164,6 +168,7 @@ func (d Dir) MustMakeRel(target Dir) Dir {
 var _ Beholder[Dir] = Dir(".")
 var _ InfallibleBeholder[Dir] = Dir(".")
 
+// OnDisk implements [Beholder]
 func (d Dir) OnDisk() (OnDisk[Dir], error) {
 	actual, err := PathStr(d).OnDisk()
 	if err != nil {
@@ -172,7 +177,7 @@ func (d Dir) OnDisk() (OnDisk[Dir], error) {
 	if !actual.IsDir() {
 		return nil, WrongTypeOnDisk[Dir]{actual}
 	}
-	return onDisk[Dir]{actual, }, nil
+	return onDisk[Dir]{actual}, nil
 }
 
 // Exists implements [Beholder].
@@ -196,7 +201,7 @@ func (d Dir) Stat() (result OnDisk[Dir], err error) {
 		err = WrongTypeOnDisk[Dir]{info}
 		return
 	}
-	result = onDisk[Dir]{info, }
+	result = onDisk[Dir]{info}
 	return
 }
 
@@ -238,7 +243,11 @@ func (d Dir) MakeAll(perm, parentPerm fs.FileMode) (result Dir, err error) {
 	if err != nil {
 		return
 	}
-	return d.Make(perm)
+	err = os.MkdirAll(string(d), perm)
+	if err == nil {
+		result = d
+	}
+	return
 }
 
 // MustMake implements [InfallibleMaker].

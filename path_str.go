@@ -81,7 +81,10 @@ func (p PathStr) Parts() (parts []string) {
 	}
 	for i < len(input) {
 		if os.IsPathSeparator(input[i]) {
-			parts = append(parts, input[last:i])
+			part := input[last:i]
+			if part != "" {
+				parts = append(parts, part)
+			}
 			last = i + 1
 		}
 		i++
@@ -344,12 +347,17 @@ func (p PathStr) MustRemoveAll() {
 
 // casts -----------------------------------------------------------------------
 
+// Utility function to declare that the PathStr represents a directory
 func (p PathStr) AsDir() Dir {
 	return Dir(p)
 }
+
+// Utility function to declare that the PathStr represents a file
 func (p PathStr) AsFile() File {
 	return File(p)
 }
+
+// Utility function to declare that the PathStr represents a symlink.
 func (p PathStr) AsSymlink() Symlink {
 	return Symlink(p)
 }

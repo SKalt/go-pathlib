@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// Any type constraint: any string type that represents a path
 type Kind interface {
 	PurePath
 	~string
