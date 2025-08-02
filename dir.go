@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 )
 
+// A string that represents a directory. The directory may or may not exist on-disk,
+// and the string may or may not end in an [os.PathSeparator].
 type Dir PathStr
 
 // A wrapper around [path/filepath.WalkDir], which has the following properties:

@@ -72,6 +72,7 @@ type OnDisk[PathKind Kind] interface {
 	Transformer[PathKind]
 }
 
+// Behaviors for inspecting a path on-disk.
 type Beholder[PathKind Kind] interface {
 	// Observe the file info of the path on-disk. Does not follow symlinks. See [os.Lstat].
 	OnDisk() (OnDisk[PathKind], error)
@@ -82,6 +83,8 @@ type Beholder[PathKind Kind] interface {
 	// Returns true if the path exists on-disk.
 	Exists() bool
 }
+
+// Infallible version of [Beholder].
 type InfallibleBeholder[PathKind Kind] interface {
 	// Panics if the path does not exist on-disk.
 	MustBeOnDisk() OnDisk[PathKind]

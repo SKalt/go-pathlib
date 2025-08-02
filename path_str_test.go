@@ -2,6 +2,7 @@ package pathlib_test
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/skalt/go-pathlib"
 )
@@ -100,4 +101,65 @@ func ExamplePathStr_Parts() {
 	// "a/b" => []string{"a", "b"}
 	// "a/../b" => []string{"a", "..", "b"}
 	// "a//b" => []string{"a", "b"}
+}
+
+func ExamplePathStr_Ext() {
+	example := func(p pathlib.PathStr) {
+		fmt.Printf("%q => %q\n", p, p.Ext())
+	}
+	example("index")
+	example("index.js")
+	example("main.test.js")
+	// Output:
+	// "index" => ""
+	// "index.js" => ".js"
+	// "main.test.js" => ".js"
+}
+
+func ExamplePathStr_BaseName() {
+	example := func(p pathlib.PathStr) {
+		fmt.Printf("%q => %q\n", p, p.BaseName())
+	}
+	fmt.Println("On Unix:")
+	example("/foo/bar/baz.js")
+	example("/foo/bar/baz")
+	example("/foo/bar/baz/")
+	example("dev.txt")
+	example("../todo.txt")
+	example("..")
+	example(".")
+	example("/")
+	example("")
+	// Output:
+	// On Unix:
+	// "/foo/bar/baz.js" => "baz.js"
+	// "/foo/bar/baz" => "baz"
+	// "/foo/bar/baz/" => "baz"
+	// "dev.txt" => "dev.txt"
+	// "../todo.txt" => "todo.txt"
+	// ".." => ".."
+	// "." => "."
+	// "/" => "/"
+	// "" => "."
+}
+
+func ExamplePathStr_ExpandUser() {
+	home, _ := pathlib.UserHomeDir()
+	example := func(p pathlib.PathStr) {
+		expanded, _ := p.ExpandUser()
+		fmt.Printf(
+			"%q => %q\n",
+			p,
+			strings.Replace(string(expanded), string(home), "$HOME", 1),
+		)
+	}
+	fmt.Println("On Unix:")
+	example("~")
+	example("~/foo/bar.txt")
+	example("foo/~/bar")
+	// Output:
+	// On Unix:
+	// "~" => "$HOME"
+	// "~/foo/bar.txt" => "$HOME/foo/bar.txt"
+	// "foo/~/bar" => "foo/~/bar"
 }
