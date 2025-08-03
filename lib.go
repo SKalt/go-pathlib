@@ -102,7 +102,7 @@ type Maker[T any] interface {
 type InfallibleMaker[T any] interface {
 	// Panics if Make fails.
 	MustMake(perm fs.FileMode) T
-	MakeAll(perm, parentPerm fs.FileMode) (T, error)
+	MustMakeAll(perm, parentPerm fs.FileMode) T
 }
 
 type Manipulator[PathKind Kind] interface {

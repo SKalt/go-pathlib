@@ -211,9 +211,18 @@ func (f File) MakeAll(perm, parentPerm fs.FileMode) (handle *os.File, err error)
 	return f.Make(perm)
 }
 
+// Panics if [File.Make] returns an error.
+//
 // MustMake implements [Maker].
 func (f File) MustMake(perm fs.FileMode) *os.File {
 	return expect(f.Make(perm))
+}
+
+// Panics if [File.Make] returns an error.
+//
+// MustMake implements [Maker].
+func (f File) MustMakeAll(perm, parentPerm fs.FileMode) *os.File {
+	return expect(f.MakeAll(perm, parentPerm))
 }
 
 // Readable --------------------------------------------------------------------
