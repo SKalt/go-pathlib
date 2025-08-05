@@ -325,6 +325,7 @@ var _ Destroyer = Dir(".")
 var _ InfallibleDestroyer = Dir(".")
 
 // See [os.RemoveAll].
+//
 // RemoveAll implements [Destroyer].
 func (d Dir) RemoveAll() error {
 	return os.RemoveAll(string(d))

@@ -70,6 +70,8 @@ type OnDisk[PathKind Kind] interface {
 	fs.FileInfo
 	PurePath
 	Transformer[PathKind]
+	// the typed version of [fs.FileInfo.Name]
+	Path() PathKind
 }
 
 // Behaviors for inspecting a path on-disk.
