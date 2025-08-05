@@ -3,7 +3,7 @@ package pathlib_test
 import (
 	"fmt"
 
-	"github.com/skalt/go-pathlib"
+	"github.com/skalt/pathlib.go"
 )
 
 func ExampleDir_Eq() {

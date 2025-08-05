@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/skalt/go-pathlib"
+	"github.com/skalt/pathlib.go"
 )
 
 func ExamplePathStr_IsLocal() {
