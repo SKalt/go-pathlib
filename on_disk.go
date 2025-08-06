@@ -12,6 +12,7 @@ type onDisk[P Kind] struct {
 
 var _ OnDisk[PathStr] = onDisk[PathStr]{}
 
+// Path implements [OnDisk].
 func (p onDisk[P]) Path() P {
 	return P(p.Name())
 }
@@ -21,7 +22,7 @@ var _ fs.FileInfo = onDisk[PathStr]{}
 // PurePath --------------------------------------------------------------------
 var _ PurePath = onDisk[PathStr]{}
 
-// implements [PurePath]
+// Parent implements [PurePath]
 func (p onDisk[P]) Parent() Dir {
 	return p.Path().Parent()
 }
@@ -51,14 +52,10 @@ func (p onDisk[P]) Join(parts ...string) PathStr {
 	return p.Path().Join(parts...)
 }
 
+// Parts implements [PurePath].
 func (p onDisk[P]) Parts() []string {
 	return p.Path().Parts()
 }
-
-// func typeIs[A, B kind]() (typesAreEqual bool) {
-// 	_, typesAreEqual = any((*A)(nil)).(*B)
-// 	return
-// }
 
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = onDisk[PathStr]{}
@@ -70,30 +67,26 @@ func (p onDisk[P]) Eq(q P) bool {
 
 // Clean implements [Transformer]
 func (p onDisk[P]) Clean() P {
-	return P(PathStr(p.Path()).Clean())
+	return clean(p.Path())
 }
 
 // Abs implements [Transformer].
 func (p onDisk[P]) Abs() (P, error) {
-	abs, err := PathStr(p.Path()).Abs()
-	return P(abs), err
+	return abs(p.Path())
 }
 
 // Localize implements [Transformer].
 func (p onDisk[P]) Localize() (P, error) {
-	q, err := PathStr(p.Path()).Localize()
-	return P(q), err
+	return localize(p.Path())
 }
 
 // Rel implements [Transformer].
 func (p onDisk[P]) Rel(target Dir) (P, error) {
-	q, err := PathStr(p.Path()).Rel(target)
-	return P(q), err
+	return rel(p.Path(), target)
 }
 
 func (p onDisk[P]) ExpandUser() (P, error) {
-	q, err := PathStr(p.Path()).ExpandUser()
-	return P(q), err
+	return expandUser(p.Path())
 }
 
 // MustExpandUser implements [InfallibleTransformer].
@@ -127,21 +120,15 @@ func (p onDisk[P]) Remove() error {
 
 // Rename implements [Manipulator].
 func (p onDisk[P]) Rename(destination PathStr) (result P, err error) {
-	result = P(destination)
-	err = os.Rename(p.Name(), string(destination))
-	return
+	return rename(p.Path(), destination)
 }
 
 func (p onDisk[P]) Chmod(mode fs.FileMode) (result P, err error) {
-	result = p.Path()
-	err = os.Chmod(string(result), mode)
-	return
+	return chmod(p.Path(), mode)
 }
 
 func (p onDisk[P]) Chown(uid, gid int) (result P, err error) {
-	result = p.Path()
-	err = os.Lchown(string(result), uid, gid)
-	return
+	return chown(p.Path(), uid, gid)
 }
 
 // MustChmod implements [InfallibleManipulator].

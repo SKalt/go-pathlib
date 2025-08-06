@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// A path that represents a file.
 type File PathStr
 
 // See [os.OpenFile].
@@ -17,32 +18,32 @@ var _ PurePath = File("./example.txt")
 
 // BaseName implements [PurePath].
 func (f File) BaseName() string {
-	return PathStr(f).BaseName()
+	return baseName(f)
 }
 
 // Ext implements [PurePath].
 func (f File) Ext() string {
-	return PathStr(f).Ext()
+	return ext(f)
 }
 
 // IsAbsolute implements [PurePath].
 func (f File) IsAbsolute() bool {
-	return PathStr(f).IsAbsolute()
+	return isAbsolute(f)
 }
 
 // IsLocal implements [PurePath].
 func (f File) IsLocal() bool {
-	return PathStr(f).IsLocal()
+	return isLocal(f)
 }
 
 // Join implements [PurePath].
 func (f File) Join(parts ...string) PathStr {
-	return PathStr(f).Join(parts...)
+	return join(f, parts...)
 }
 
 // Parent implements [PurePath].
 func (f File) Parent() Dir {
-	return PathStr(f).Parent()
+	return parent(f)
 }
 
 // Parts implements [PurePath].
@@ -56,13 +57,12 @@ var _ InfallibleTransformer[File] = File("./example")
 
 // Abs implements [Transformer].
 func (f File) Abs() (File, error) {
-	q, err := PathStr(f).Abs()
-	return File(q), err
+	return abs(f)
 }
 
 // Clean implements [Transformer].
 func (f File) Clean() File {
-	return File(PathStr(f).Clean())
+	return clean(f)
 }
 
 // Eq implements [Transformer].
@@ -72,20 +72,17 @@ func (f File) Eq(other File) bool {
 
 // ExpandUser implements [Transformer].
 func (f File) ExpandUser() (File, error) {
-	q, err := PathStr(f).ExpandUser()
-	return File(q), err
+	return expandUser(f)
 }
 
 // Localize implements [Transformer].
 func (f File) Localize() (File, error) {
-	q, err := PathStr(f).Localize()
-	return File(q), err
+	return localize(f)
 }
 
 // Rel implements [Transformer].
 func (f File) Rel(target Dir) (File, error) {
-	q, err := PathStr(f).Rel(target)
-	return File(q), err
+	return rel(f, target)
 }
 
 // MustExpandUser implements [InfallibleTransformer].
@@ -119,19 +116,17 @@ func (f File) Exists() bool {
 
 // Lstat implements [Beholder].
 func (f File) Lstat() (OnDisk[File], error) {
-	info, err := os.Lstat(string(f))
-	return onDisk[File]{info}, err
+	return lstat(f)
 }
 
 // OnDisk implements [Beholder].
 func (f File) OnDisk() (OnDisk[File], error) {
-	return f.Lstat()
+	return lstat(f)
 }
 
 // Stat implements [Beholder].
 func (f File) Stat() (OnDisk[File], error) {
-	info, err := os.Stat(string(f))
-	return onDisk[File]{info}, err
+	return stat(f)
 }
 
 // MustBeOnDisk implements [InfallibleBeholder].
@@ -155,12 +150,12 @@ var _ InfallibleManipulator[File] = File("./example")
 
 // Chmod implements [Manipulator].
 func (f File) Chmod(mode os.FileMode) (File, error) {
-	return f, os.Chmod(string(f), mode)
+	return chmod(f, mode)
 }
 
 // Chown implements [Manipulator].
 func (f File) Chown(uid int, gid int) (File, error) {
-	return f, os.Chown(string(f), uid, gid)
+	return chown(f, uid, gid)
 }
 
 // Remove implements [Manipulator].
@@ -170,7 +165,7 @@ func (f File) Remove() error {
 
 // Rename implements [Manipulator].
 func (f File) Rename(newPath PathStr) (File, error) {
-	return f, os.Rename(string(f), string(newPath))
+	return rename(f, newPath)
 }
 
 // MustChmod implements [InfallibleManipulator].
