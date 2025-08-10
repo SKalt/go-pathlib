@@ -23,19 +23,33 @@ func ExamplePathStr_IsLocal() {
 }
 func ExamplePathStr_Join() {
 	fmt.Println("On Unix:")
-	fmt.Println(pathlib.PathStr("a").Join("b", "c"))
-	fmt.Println(pathlib.PathStr("a").Join("b/c"))
-	fmt.Println(pathlib.PathStr("a/b").Join("c"))
-	fmt.Println(pathlib.PathStr("a/b").Join("/c"))
+	example := func(p pathlib.PathStr, segments ...string) {
+		q := p.Join(segments...)
+		x := fmt.Sprintf("%q", segments)
+		fmt.Printf("%T(%q).Join(%s) => %q\n", p, p, x[1:len(x)-1], q)
+	}
+	example(pathlib.PathStr("a"), "b", "c")
+	example(pathlib.PathStr("a"), "b/c")
+	example(pathlib.PathStr("a/b"), "c")
+	example(pathlib.PathStr("a/b"), "/c")
 
-	fmt.Println(pathlib.PathStr("a/b").Join("../../../xyz"))
+	example(pathlib.PathStr("a/b"), "../../../xyz")
 	// Output:
 	// On Unix:
-	// a/b/c
-	// a/b/c
-	// a/b/c
-	// a/b/c
-	// ../xyz
+	// pathlib.PathStr("a").Join("b" "c") => "a/b/c"
+	// pathlib.PathStr("a").Join("b/c") => "a/b/c"
+	// pathlib.PathStr("a/b").Join("c") => "a/b/c"
+	// pathlib.PathStr("a/b").Join("/c") => "a/b/c"
+	// pathlib.PathStr("a/b").Join("../../../xyz") => "../xyz"
+}
+
+func ExamplePathStr_Rel() {
+	example := func(a pathlib.PathStr, b pathlib.Dir) {
+		fmt.Printf("%q.Rel(%q) => %q\n", a, b, a.Rel(b).Unwrap())
+	}
+	example("a/b/c", "a/b")
+	// Output:
+	// "a/b/c".Rel("a/b") => "c"
 }
 
 func ExamplePathStr_IsAbsolute() {
@@ -144,7 +158,7 @@ func ExamplePathStr_BaseName() {
 }
 
 func ExamplePathStr_ExpandUser() {
-	home, _ := pathlib.UserHomeDir()
+	home := pathlib.UserHomeDir().Unwrap()
 	example := func(p pathlib.PathStr) {
 		expanded := p.ExpandUser().Unwrap()
 		fmt.Printf(
