@@ -59,7 +59,6 @@ func (p onDisk[P]) Parts() []string {
 
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = onDisk[PathStr]{}
-var _ InfallibleTransformer[PathStr] = onDisk[PathStr]{}
 
 func (p onDisk[P]) Eq(q P) bool {
 	return PathStr(p.Path()).Eq(PathStr(q))
@@ -71,47 +70,26 @@ func (p onDisk[P]) Clean() P {
 }
 
 // Abs implements [Transformer].
-func (p onDisk[P]) Abs() (P, error) {
+func (p onDisk[P]) Abs() Result[P] {
 	return abs(p.Path())
 }
 
 // Localize implements [Transformer].
-func (p onDisk[P]) Localize() (P, error) {
+func (p onDisk[P]) Localize() Result[P] {
 	return localize(p.Path())
 }
 
 // Rel implements [Transformer].
-func (p onDisk[P]) Rel(target Dir) (P, error) {
+func (p onDisk[P]) Rel(target Dir) Result[P] {
 	return rel(p.Path(), target)
 }
 
-func (p onDisk[P]) ExpandUser() (P, error) {
+func (p onDisk[P]) ExpandUser() Result[P] {
 	return expandUser(p.Path())
-}
-
-// MustExpandUser implements [InfallibleTransformer].
-func (p onDisk[P]) MustExpandUser() P {
-	return expect(p.ExpandUser())
-}
-
-// MustLocalize implements [InfallibleTransformer].
-func (p onDisk[P]) MustLocalize() P {
-	return expect(p.Localize())
-}
-
-// MustMakeAbs implements [InfallibleTransformer].
-func (p onDisk[P]) MustMakeAbs() P {
-	return expect(p.Abs())
-}
-
-// MustMakeRel implements [InfallibleTransformer].
-func (p onDisk[P]) MustMakeRel(target Dir) P {
-	return expect(p.Rel(target))
 }
 
 // Manipulator -----------------------------------------------------------------
 var _ Manipulator[PathStr] = onDisk[PathStr]{}
-var _ InfallibleManipulator[PathStr] = onDisk[PathStr]{}
 
 // Remove implements [Manipulator].
 func (p onDisk[P]) Remove() error {
@@ -119,34 +97,14 @@ func (p onDisk[P]) Remove() error {
 }
 
 // Rename implements [Manipulator].
-func (p onDisk[P]) Rename(destination PathStr) (result P, err error) {
+func (p onDisk[P]) Rename(destination PathStr) Result[P] {
 	return rename(p.Path(), destination)
 }
 
-func (p onDisk[P]) Chmod(mode fs.FileMode) (result P, err error) {
+func (p onDisk[P]) Chmod(mode fs.FileMode) Result[P] {
 	return chmod(p.Path(), mode)
 }
 
-func (p onDisk[P]) Chown(uid, gid int) (result P, err error) {
+func (p onDisk[P]) Chown(uid, gid int) Result[P] {
 	return chown(p.Path(), uid, gid)
-}
-
-// MustChmod implements [InfallibleManipulator].
-func (p onDisk[P]) MustChmod(mode os.FileMode) P {
-	return expect(p.Chmod(mode))
-}
-
-// MustChown implements [InfallibleManipulator].
-func (p onDisk[P]) MustChown(uid int, gid int) P {
-	return expect(p.Chown(uid, gid))
-}
-
-// MustRemove implements [InfallibleManipulator].
-func (p onDisk[P]) MustRemove() {
-	expect[any](nil, p.Remove())
-}
-
-// MustRename implements [InfallibleManipulator].
-func (p onDisk[P]) MustRename(newPath PathStr) P {
-	return expect(p.Rename(newPath))
 }

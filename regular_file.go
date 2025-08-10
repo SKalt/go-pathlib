@@ -9,8 +9,9 @@ import (
 type File PathStr
 
 // See [os.OpenFile].
-func (f File) Open(flag int, perm fs.FileMode) (*os.File, error) {
-	return os.OpenFile(string(f), flag, perm)
+func (f File) Open(flag int, perm fs.FileMode) Result[*os.File] {
+	handle, err := os.OpenFile(string(f), flag, perm)
+	return Result[*os.File]{handle, err}
 }
 
 // PurePath --------------------------------------------------------------------
@@ -53,10 +54,9 @@ func (f File) Parts() []string {
 
 // Transformer -----------------------------------------------------------------
 var _ Transformer[File] = File("./example")
-var _ InfallibleTransformer[File] = File("./example")
 
 // Abs implements [Transformer].
-func (f File) Abs() (File, error) {
+func (f File) Abs() Result[File] {
 	return abs(f)
 }
 
@@ -71,43 +71,22 @@ func (f File) Eq(other File) bool {
 }
 
 // ExpandUser implements [Transformer].
-func (f File) ExpandUser() (File, error) {
+func (f File) ExpandUser() Result[File] {
 	return expandUser(f)
 }
 
 // Localize implements [Transformer].
-func (f File) Localize() (File, error) {
+func (f File) Localize() Result[File] {
 	return localize(f)
 }
 
 // Rel implements [Transformer].
-func (f File) Rel(target Dir) (File, error) {
+func (f File) Rel(target Dir) Result[File] {
 	return rel(f, target)
-}
-
-// MustExpandUser implements [InfallibleTransformer].
-func (f File) MustExpandUser() File {
-	return expect(f.ExpandUser())
-}
-
-// MustLocalize implements [InfallibleTransformer].
-func (f File) MustLocalize() File {
-	return expect(f.Localize())
-}
-
-// MustMakeAbs implements [InfallibleTransformer].
-func (f File) MustMakeAbs() File {
-	return expect(f.Abs())
-}
-
-// MustMakeRel implements [InfallibleTransformer].
-func (f File) MustMakeRel(target Dir) File {
-	return expect(f.Rel(target))
 }
 
 // Beholder --------------------------------------------------------------------
 var _ Beholder[File] = File("./example")
-var _ InfallibleBeholder[File] = File("./example")
 
 // Exists implements [Beholder].
 func (f File) Exists() bool {
@@ -115,46 +94,30 @@ func (f File) Exists() bool {
 }
 
 // Lstat implements [Beholder].
-func (f File) Lstat() (OnDisk[File], error) {
+func (f File) Lstat() Result[OnDisk[File]] {
 	return lstat(f)
 }
 
 // OnDisk implements [Beholder].
-func (f File) OnDisk() (OnDisk[File], error) {
+func (f File) OnDisk() Result[OnDisk[File]] {
 	return lstat(f)
 }
 
 // Stat implements [Beholder].
-func (f File) Stat() (OnDisk[File], error) {
+func (f File) Stat() Result[OnDisk[File]] {
 	return stat(f)
-}
-
-// MustBeOnDisk implements [InfallibleBeholder].
-func (f File) MustBeOnDisk() OnDisk[File] {
-	return expect(f.OnDisk())
-}
-
-// MustLstat implements [InfallibleBeholder].
-func (f File) MustLstat() OnDisk[File] {
-	return expect(f.Lstat())
-}
-
-// MustStat implements [InfallibleBeholder].
-func (f File) MustStat() OnDisk[File] {
-	return expect(f.Stat())
 }
 
 // Manipulator -----------------------------------------------------------------
 var _ Manipulator[File] = File("./example")
-var _ InfallibleManipulator[File] = File("./example")
 
 // Chmod implements [Manipulator].
-func (f File) Chmod(mode os.FileMode) (File, error) {
+func (f File) Chmod(mode os.FileMode) Result[File] {
 	return chmod(f, mode)
 }
 
 // Chown implements [Manipulator].
-func (f File) Chown(uid int, gid int) (File, error) {
+func (f File) Chown(uid int, gid int) Result[File] {
 	return chown(f, uid, gid)
 }
 
@@ -164,82 +127,38 @@ func (f File) Remove() error {
 }
 
 // Rename implements [Manipulator].
-func (f File) Rename(newPath PathStr) (File, error) {
+func (f File) Rename(newPath PathStr) Result[File] {
 	return rename(f, newPath)
-}
-
-// MustChmod implements [InfallibleManipulator].
-func (f File) MustChmod(perm os.FileMode) File {
-	return expect(f.Chmod(perm))
-}
-
-// MustChown implements [InfallibleManipulator].
-func (f File) MustChown(uid int, gid int) File {
-	return expect(f.Chown(uid, gid))
-}
-
-// MustRemove implements [InfallibleManipulator].
-func (f File) MustRemove() {
-	expect[any](nil, f.Remove())
-}
-
-// MustRename implements [InfallibleManipulator].
-func (f File) MustRename(newPath PathStr) File {
-	return expect(f.Rename(newPath))
 }
 
 // Maker -----------------------------------------------------------------------
 var _ Maker[*os.File] = File("./example")
-var _ InfallibleMaker[*os.File] = File("./example")
 
 // Make implements [Maker].
-func (f File) Make(perm fs.FileMode) (handle *os.File, err error) {
+func (f File) Make(perm fs.FileMode) Result[*os.File] {
 	return f.Open(os.O_RDWR|os.O_CREATE, perm)
 }
 
 // MakeAll implements [Maker].
-func (f File) MakeAll(perm, parentPerm fs.FileMode) (handle *os.File, err error) {
-	_, err = f.Parent().MakeAll(parentPerm, parentPerm)
-	if err != nil {
+func (f File) MakeAll(perm, parentPerm fs.FileMode) (result Result[*os.File]) {
+	result.Err = f.Parent().MakeAll(parentPerm, parentPerm).Err
+	if !result.IsOk() {
 		return
 	}
-	return f.Make(perm)
-}
-
-// Panics if [File.Make] returns an error.
-//
-// MustMake implements [Maker].
-func (f File) MustMake(perm fs.FileMode) *os.File {
-	return expect(f.Make(perm))
-}
-
-// Panics if [File.Make] returns an error.
-//
-// MustMake implements [Maker].
-func (f File) MustMakeAll(perm, parentPerm fs.FileMode) *os.File {
-	return expect(f.MakeAll(perm, parentPerm))
+	result = f.Make(perm)
+	return
 }
 
 // Readable --------------------------------------------------------------------
 var _ Readable[[]byte] = File("./example")
-var _ InfallibleReader[[]byte] = File("./example")
 
-func (f File) Read() (data []byte, err error) {
-	return os.ReadFile(string(f))
-}
-
-func (f File) MustRead() []byte {
-	return expect(f.Read())
+func (f File) Read() Result[[]byte] {
+	data, err := os.ReadFile(string(f))
+	return Result[[]byte]{data, err}
 }
 
 // Destroyer -------------------------------------------------------------------
 var _ Destroyer = File("./example")
-var _ InfallibleDestroyer = File("./example")
-
-// MustRemoveAll implements [InfallibleDestroyer].
-func (f File) MustRemoveAll() {
-	PathStr(f).MustRemoveAll()
-}
 
 // RemoveAll implements [Destroyer].
 func (f File) RemoveAll() error {

@@ -39,21 +39,16 @@ func (d Dir) Walk(
 // the [path/filepath.Separator] is '/').
 //
 // > Glob ignores file system errors such as I/O errors reading directories. The only possible returned error is [path/filepath.ErrBadPattern], when pattern is malformed.
-func (d Dir) Glob(pattern string) ([]PathStr, error) {
+func (d Dir) Glob(pattern string) Result[[]PathStr] {
 	matches, err := filepath.Glob(filepath.Join(string(d), pattern))
 	if err != nil {
-		return nil, d.failure(err, "glob")
+		return Result[[]PathStr]{nil, d.failure(err, "glob")}
 	}
 	result := make([]PathStr, len(matches))
 	for i, m := range matches {
 		result[i] = PathStr(m)
 	}
-	return result, err
-}
-
-// Panics if [path/filepath.Glob] returns an error.
-func (d Dir) MustGlob(pattern string) []PathStr {
-	return expect(d.Glob(pattern))
+	return Result[[]PathStr]{result, nil}
 }
 
 // CHange DIRectory. See [os.Chdir].
@@ -73,17 +68,12 @@ var _ Readable[[]fs.DirEntry] = Dir(".")
 // > [os.ReadDir] returns all the entries of the directory sorted
 // by filename. If an error occurred reading the directory, ReadDir returns the entries it was
 // able to read before the error, along with the error.
-func (d Dir) Read() (result []fs.DirEntry, err error) {
-	result, err = os.ReadDir(string(d))
+func (d Dir) Read() Result[[]fs.DirEntry] {
+	result, err := os.ReadDir(string(d))
 	if err != nil {
 		err = d.failure(err, "read")
 	}
-	return
-}
-
-// See [os.ReadDir].
-func (d Dir) MustRead() []fs.DirEntry {
-	return expect(d.Read())
+	return Result[[]fs.DirEntry]{result, err}
 }
 
 // PurePath --------------------------------------------------------------------
@@ -130,10 +120,9 @@ func (d Dir) Ext() string {
 
 // Transformer -----------------------------------------------------------------
 var _ Transformer[Dir] = Dir(".")
-var _ InfallibleTransformer[Dir] = Dir(".")
 
 // Abs implements [Transformer].
-func (d Dir) Abs() (Dir, error) {
+func (d Dir) Abs() Result[Dir] {
 	return abs(d)
 }
 
@@ -148,152 +137,88 @@ func (d Dir) Clean() Dir {
 }
 
 // Localize implements [Transformer].
-func (d Dir) Localize() (Dir, error) {
+func (d Dir) Localize() Result[Dir] {
 	return localize(d)
 }
 
 // Rel implements [Transformer].
-func (d Dir) Rel(target Dir) (Dir, error) {
+func (d Dir) Rel(target Dir) Result[Dir] {
 	return rel(d, target)
 }
 
 // ExpandUser implements [Transformer].
-func (d Dir) ExpandUser() (Dir, error) {
+func (d Dir) ExpandUser() Result[Dir] {
 	return expandUser(d)
-}
-
-// MustExpandUser implements [InfallibleTransformer].
-func (d Dir) MustExpandUser() Dir {
-	return expect(d.ExpandUser())
-}
-
-// MustLocalize implements [InfallibleTransformer].
-func (d Dir) MustLocalize() Dir {
-	return expect(d.Localize())
-}
-
-// MustMakeAbs implements [InfallibleTransformer].
-func (d Dir) MustMakeAbs() Dir {
-	return expect(d.Abs())
-}
-
-// MustMakeRel implements [InfallibleTransformer].
-func (d Dir) MustMakeRel(target Dir) Dir {
-	return expect(d.Rel(target))
 }
 
 // Beholder --------------------------------------------------------------------
 var _ Beholder[Dir] = Dir(".")
-var _ InfallibleBeholder[Dir] = Dir(".")
 
 // OnDisk implements [Beholder]
-func (d Dir) OnDisk() (OnDisk[Dir], error) {
-	actual, err := PathStr(d).OnDisk()
-	if err != nil {
-		return nil, d.failure(err, "observe on-disk")
+func (d Dir) OnDisk() (result Result[OnDisk[Dir]]) {
+	result = lstat(d)
+	if result.IsOk() && !result.Val.IsDir() {
+		result.Err = WrongTypeOnDisk[Dir]{onDisk[Dir]{result.Val}}
 	}
-	if !actual.IsDir() {
-		return nil, WrongTypeOnDisk[Dir]{onDisk[Dir]{actual}}
-	}
-	return onDisk[Dir]{actual}, nil
+	return
+
 }
 
 // Exists implements [Beholder].
 func (d Dir) Exists() bool {
-	return PathStr(d).Exists()
+	return d.Lstat().IsOk()
 }
 
 // Lstat implements [Beholder].
-func (d Dir) Lstat() (OnDisk[Dir], error) {
+func (d Dir) Lstat() Result[OnDisk[Dir]] {
 	return lstat(d)
 }
 
 // Stat implements [Beholder].
-func (d Dir) Stat() (result OnDisk[Dir], err error) {
-	result, err = stat(d)
-	if err != nil {
-		return
-	}
-	if !result.IsDir() {
-		err = WrongTypeOnDisk[Dir]{result}
-		return
+func (d Dir) Stat() (result Result[OnDisk[Dir]]) {
+	result = stat(d)
+	if result.IsOk() && !result.Val.IsDir() {
+		result.Err = WrongTypeOnDisk[Dir]{result.Val}
 	}
 	return
 }
 
-// MustLstat implements [InfallibleBeholder].
-func (d Dir) MustLstat() OnDisk[Dir] {
-	return expect(d.Lstat())
-}
-
-// MustOnDisk implements [InfallibleBeholder].
-func (d Dir) MustBeOnDisk() OnDisk[Dir] {
-	return expect(d.OnDisk())
-}
-
-// MustStat implements [InfallibleBeholder].
-func (d Dir) MustStat() OnDisk[Dir] {
-	return expect(d.Stat())
-}
-
 // Maker -----------------------------------------------------------------------
-var _ InfallibleMaker[Dir] = Dir("/example")
 var _ Maker[Dir] = Dir("/example")
 
 // Make implements [Maker].
-func (d Dir) Make(perm fs.FileMode) (result Dir, err error) {
-	result = d
-	err = os.Mkdir(string(d), perm)
-	if err != nil {
-		err = d.failure(err, "make")
-	}
+func (d Dir) Make(perm fs.FileMode) (result Result[Dir]) {
+	result = Result[Dir]{d, os.Mkdir(string(d), perm)}
 	return
 }
 
 // MakeAll implements [Maker]
-func (d Dir) MakeAll(perm, parentPerm fs.FileMode) (result Dir, err error) {
-	result = d
+func (d Dir) MakeAll(perm, parentPerm fs.FileMode) (result Result[Dir]) {
+	result = Result[Dir]{Val: d}
 	if d.Exists() {
 		return
 	}
-	_, err = d.Parent().MakeAll(parentPerm, parentPerm)
-	if err != nil {
-		err = d.failure(err, "make parents of")
+	result.Err = d.Parent().MakeAll(parentPerm, parentPerm).Err
+	if !result.IsOk() {
 		return
 	}
-	err = os.MkdirAll(string(d), perm)
-	if err != nil {
-		err = d.failure(err, "make all of")
-	}
+	result.Err = os.MkdirAll(string(d), perm)
 	return
-}
-
-// MustMake implements [InfallibleMaker].
-func (root Dir) MustMake(perm fs.FileMode) Dir {
-	return expect(root.Make(perm))
-}
-
-// Panics if [Dir.MakeAll].returns an error.
-//
-// MustMakeAll implements [InfallibleMaker]
-func (d Dir) MustMakeAll(perm, parentPerm fs.FileMode) Dir {
-	return expect(d.MakeAll(perm, parentPerm))
 }
 
 // Manipulator -----------------------------------------------------------------
 var _ Manipulator[Dir] = Dir(".")
-var _ InfallibleManipulator[Dir] = Dir(".")
 
 // See [os.Chmod].
 // Chmod implements [Manipulator].
-func (d Dir) Chmod(mode os.FileMode) (Dir, error) {
+func (d Dir) Chmod(mode os.FileMode) Result[Dir] {
 	return chmod(d, mode)
 }
 
 // See [os.Chown].
 //
 // Chown implements [Manipulator].
-func (d Dir) Chown(uid int, gid int) (Dir, error) {
+func (d Dir) Chown(uid int, gid int) Result[Dir] {
 	return chown(d, uid, gid)
 }
 
@@ -307,55 +232,16 @@ func (d Dir) Remove() error {
 // See [os.Rename].
 //
 // Rename implements [Manipulator].
-func (d Dir) Rename(newPath PathStr) (Dir, error) {
+func (d Dir) Rename(newPath PathStr) Result[Dir] {
 	return rename(d, newPath)
-}
-
-// Panics if [Dir.Chmod] returns an error.
-// See [os.Chmod].
-//
-// MustChmod implements [InfallibleManipulator].
-func (d Dir) MustChmod(mode os.FileMode) Dir {
-	return expect(d.Chmod(mode))
-}
-
-// Panics if [Dir.Chown] returns an error.
-// See [os.Chown].
-//
-// MustChown implements [InfallibleManipulator].
-func (d Dir) MustChown(uid int, gid int) Dir {
-	return expect(d.Chown(uid, gid))
-}
-
-// Panics if [Dir.Remove] returns an error.
-// See [os.Remove].
-//
-// MustRemove implements [InfallibleManipulator].
-func (d Dir) MustRemove() {
-	expect[any](nil, d.Remove())
-}
-
-// Panics if [Dir.Rename] returns an error. See also: [os.Rename].
-//
-// MustRename implements [InfallibleManipulator].
-func (d Dir) MustRename(newPath PathStr) Dir {
-	return expect(d.Rename(newPath))
 }
 
 // Destroyer -------------------------------------------------------------------
 var _ Destroyer = Dir(".")
-var _ InfallibleDestroyer = Dir(".")
 
 // See [os.RemoveAll].
 //
 // RemoveAll implements [Destroyer].
 func (d Dir) RemoveAll() error {
 	return os.RemoveAll(string(d))
-}
-
-// Panics if [PathStr.RemoveAll] returns an error. See also: [os.RemoveAll].
-//
-// MustRemoveAll implements [InfallibleDestroyer].
-func (d Dir) MustRemoveAll() {
-	PathStr(d).MustRemoveAll()
 }

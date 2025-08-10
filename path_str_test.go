@@ -146,7 +146,7 @@ func ExamplePathStr_BaseName() {
 func ExamplePathStr_ExpandUser() {
 	home, _ := pathlib.UserHomeDir()
 	example := func(p pathlib.PathStr) {
-		expanded, _ := p.ExpandUser()
+		expanded := p.ExpandUser().Unwrap()
 		fmt.Printf(
 			"%q => %q\n",
 			p,

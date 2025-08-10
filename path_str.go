@@ -12,54 +12,31 @@ type PathStr string
 
 // Beholder --------------------------------------------------------------------
 var _ Beholder[PathStr] = PathStr(".")
-var _ InfallibleBeholder[PathStr] = PathStr(".")
 
 // Note: go's `os.Stat/Lstat` imitates `stat(2)` from POSIX's libc spec.
 
 // See [os.Stat].
 //
 // Stat implements [Beholder].
-func (p PathStr) Stat() (OnDisk[PathStr], error) {
+func (p PathStr) Stat() Result[OnDisk[PathStr]] {
 	return stat(p)
 }
 
 // See [os.Lstat].
 //
 // Lstat implements [Beholder].
-func (p PathStr) Lstat() (OnDisk[PathStr], error) {
+func (p PathStr) Lstat() Result[OnDisk[PathStr]] {
 	return lstat(p)
 }
 
 // OnDisk implements [Beholder].
-func (p PathStr) OnDisk() (actual OnDisk[PathStr], err error) {
+func (p PathStr) OnDisk() Result[OnDisk[PathStr]] {
 	return lstat(p)
 }
 
 // Exists implements [Beholder].
 func (p PathStr) Exists() (exists bool) {
-	_, err := p.OnDisk()
-	return !errors.Is(err, fs.ErrNotExist)
-}
-
-// Panics if [PathStr.OnDisk] returns an error.
-//
-// MustBeOnDisk implements [InfallibleBeholder].
-func (p PathStr) MustBeOnDisk() OnDisk[PathStr] {
-	return expect(p.OnDisk())
-}
-
-// Panics if [PathStr.Lstat] returns an error.
-//
-// MustLstat implements [InfallibleBeholder].
-func (p PathStr) MustLstat() OnDisk[PathStr] {
-	return expect(p.Lstat())
-}
-
-// Panics if [PathStr.Stat] returns an error.
-//
-// MustStat implements [InfallibleBeholder].
-func (p PathStr) MustStat() OnDisk[PathStr] {
-	return expect(p.Stat())
+	return !errors.Is(p.OnDisk().Err, fs.ErrExist)
 }
 
 // PurePath --------------------------------------------------------------------
@@ -148,46 +125,40 @@ func (p PathStr) IsLocal() bool {
 
 // Readable --------------------------------------------------------------------
 var _ Readable[any] = PathStr(".")
-var _ InfallibleReader[any] = PathStr(".")
 
 // Read attempts to read what the path represents. See [File.Read], [Dir.Read], and
 // [Symlink.Read] for the possibilities.
 //
 // Read implements [Readable].
-func (p PathStr) Read() (result any, err error) {
+func (p PathStr) Read() Result[any] {
 	// can't define this switch as a method of OnDisk[P] since OnDisk[P] has to handle
 	// any kind of path
-	var actual OnDisk[PathStr]
-	actual, err = p.OnDisk()
+	var actual os.FileInfo
+	var val any
+	var err error
+	actual, err = p.OnDisk().Unpack()
 	if err != nil {
-		return
+		return Result[any]{nil, err}
 	}
 
 	if actual.Mode().IsDir() {
-		result, err = Dir(p).Read()
+		val, err = Dir(p).Read().Unpack()
 	} else if isSymLink(actual.Mode()) {
-		result, err = Symlink(p).Read()
+		val, err = Symlink(p).Read().Unpack()
 	} else {
-		result, err = os.ReadFile(string(p))
+		val, err = File(p).Read().Unpack()
 	}
-	return
-}
-
-// Panics if [PathStr.Read] returns an error.
-//
-// MustRead implements [InfallibleReader].
-func (p PathStr) MustRead() any {
-	return expect(p.Read())
+	return Result[any]{val, err}
 }
 
 // See [os.Open].
-func (p PathStr) Open() (*os.File, error) {
-	return os.Open(string(p))
+func (p PathStr) Open() Result[*os.File] {
+	handle, err := os.Open(string(p))
+	return Result[*os.File]{handle, err}
 }
 
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = PathStr(".")
-var _ InfallibleTransformer[PathStr] = PathStr(".")
 
 // See [path/filepath.Clean].
 //
@@ -198,62 +169,41 @@ func (p PathStr) Clean() PathStr {
 
 // Abs implements [Transformer].
 // See [path/filepath.Abs] for more details.
-func (p PathStr) Abs() (PathStr, error) {
+func (p PathStr) Abs() Result[PathStr] {
 	return abs(p)
 }
 
 // See [path/filepath.Localize].
 // Localize implements [Transformer].
-func (p PathStr) Localize() (PathStr, error) {
+func (p PathStr) Localize() Result[PathStr] {
 	return localize(p)
 }
 
 // Rel implements [Transformer]. See [path/filepath.Rel]:
 //
 // See [path/filepath.Rel].
-func (p PathStr) Rel(target Dir) (PathStr, error) {
+func (p PathStr) Rel(target Dir) Result[PathStr] {
 	return rel(p, target)
 }
 
 // Expand a leading "~" into the user's home directory. If the home directory cannot be
 // determined, the path is returned unchanged.
-func (p PathStr) ExpandUser() (result PathStr, err error) {
+func (p PathStr) ExpandUser() Result[PathStr] {
 	return expandUser(p)
-}
-
-// MustExpandUser implements [InfallibleTransformer].
-func (p PathStr) MustExpandUser() PathStr {
-	return expect(p.ExpandUser())
-}
-
-// MustLocalize implements [InfallibleTransformer].
-func (p PathStr) MustLocalize() PathStr {
-	return expect(p.Localize())
-}
-
-// MustMakeAbs implements [InfallibleTransformer].
-func (p PathStr) MustMakeAbs() PathStr {
-	return expect(p.Abs())
-}
-
-// MustMakeRel implements [InfallibleTransformer].
-func (p PathStr) MustMakeRel(target Dir) PathStr {
-	return expect(p.Rel(target))
 }
 
 // Manipulator -----------------------------------------------------------------
 var _ Manipulator[PathStr] = PathStr(".")
-var _ InfallibleManipulator[PathStr] = PathStr(".")
 
 // Chmod implements [Manipulator].
-func (p PathStr) Chmod(mode os.FileMode) (result PathStr, err error) {
+func (p PathStr) Chmod(mode os.FileMode) Result[PathStr] {
 	return chmod(p, mode)
 }
 
 // Change Ownership of the path.
 //
 // Chown implements [Manipulator].
-func (p PathStr) Chown(uid int, gid int) (result PathStr, err error) {
+func (p PathStr) Chown(uid int, gid int) Result[PathStr] {
 	return chown(p, uid, gid)
 }
 
@@ -263,30 +213,8 @@ func (p PathStr) Remove() error {
 }
 
 // Rename implements [Manipulator].
-func (p PathStr) Rename(newPath PathStr) (result PathStr, err error) {
+func (p PathStr) Rename(newPath PathStr) Result[PathStr] {
 	return rename(p, newPath)
-}
-
-// MustChmod implements [InfallibleManipulator].
-func (p PathStr) MustChmod(mode os.FileMode) PathStr {
-	return expect(p.Chmod(mode))
-}
-
-// MustChown implements [InfallibleManipulator].
-func (p PathStr) MustChown(uid int, gid int) PathStr {
-	return expect(p.Chown(uid, gid))
-}
-
-// MustRemove implements [InfallibleManipulator].
-func (p PathStr) MustRemove() {
-	if err := p.Remove(); err != nil {
-		panic(err)
-	}
-}
-
-// MustRename implements [InfallibleManipulator].
-func (p PathStr) MustRename(newPath PathStr) PathStr {
-	return expect(p.Rename(newPath))
 }
 
 // -----------------------------------------------------------------------------
@@ -297,27 +225,17 @@ func (p PathStr) Eq(q PathStr) bool {
 		return p == q
 	}
 	// TODO: check that this still works with UNC strings on windows
-	return p.MustMakeAbs() == q.MustMakeAbs()
+	return p.Abs().Unwrap() == q.Abs().Unwrap()
 }
 
 // Destroyer -------------------------------------------------------------------
 var _ Destroyer = PathStr(".")
-var _ InfallibleDestroyer = PathStr(".")
 
 // See [os.RemoveAll].
 //
 // RemoveAll implements [Destroyer].
 func (p PathStr) RemoveAll() error {
 	return os.RemoveAll(string(p))
-}
-
-// Panics if [PathStr.RemoveAll] returns an error.
-//
-// MustRemoveAll implements [InfallibleDestroyer].
-func (p PathStr) MustRemoveAll() {
-	if err := p.RemoveAll(); err != nil {
-		panic(err)
-	}
 }
 
 // casts -----------------------------------------------------------------------

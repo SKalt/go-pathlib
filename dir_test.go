@@ -34,15 +34,15 @@ func ExampleDir_Glob() {
 		TempDir().
 		Join("glob-example").
 		AsDir().
-		MustMakeAll(0o777, 0o777)
+		MakeAll(0o777, 0o777).Unwrap()
 
-	defer demoDir.MustRemoveAll()
+	defer demoDir.RemoveAll()
 
 	for _, name := range []string{"x", "y", "z", "a", "b", "c"} {
-		demoDir.Join(name + ".txt").AsFile().MustMake(0o777)
+		demoDir.Join(name + ".txt").AsFile().Make(0o777).Unwrap()
 	}
 
-	for _, match := range demoDir.MustGlob("*.txt") {
+	for _, match := range demoDir.Glob("*.txt").Unwrap() {
 		fmt.Println(match)
 	}
 

@@ -8,19 +8,17 @@ import (
 	"path/filepath"
 )
 
-func stat[P Kind](p P) (OnDisk[P], error) {
+func stat[P Kind](p P) Result[OnDisk[P]] {
 	info, err := os.Stat(string(p))
-	return onDisk[P]{info}, err
+	return Result[OnDisk[P]]{onDisk[P]{info}, err}
 }
 
-func lstat[P Kind](p P) (actual OnDisk[P], err error) {
-	var info os.FileInfo
-	info, err = os.Lstat(string(p))
+func lstat[P Kind](p P) Result[OnDisk[P]] {
+	info, err := os.Lstat(string(p))
 	if errors.Is(err, fs.ErrNotExist) {
-		return nil, err
+		return Result[OnDisk[P]]{nil, err}
 	}
-	actual = onDisk[P]{info}
-	return
+	return Result[OnDisk[P]]{onDisk[P]{info}, err}
 }
 
 func join[P Kind](p P, segments ...string) PathStr {
@@ -67,56 +65,49 @@ func clean[P Kind](p P) P {
 	return P(filepath.Clean(string(p)))
 }
 
-func abs[P Kind](p P) (P, error) {
+func abs[P Kind](p P) Result[P] {
 	q, err := filepath.Abs(string(p))
-	return P(q), err
+	return Result[P]{P(q), err}
 }
 
-func localize[P Kind](p P) (P, error) {
+func localize[P Kind](p P) Result[P] {
 	q, err := filepath.Localize(string(p))
-	return P(q), err
+	return Result[P]{P(q), err}
 }
 
-func rel[P Kind](p P, target Dir) (P, error) {
+func rel[P Kind](p P, target Dir) Result[P] {
 	result, err := filepath.Rel(string(p), string(target))
 	if err != nil {
-		return "", errors.Join(err, errors.New("unable to make relative path"))
+		return Result[P]{"", errors.Join(err, errors.New("unable to make relative path"))}
 	}
-	return P(result), nil
+	return Result[P]{P(result), nil}
 }
 
-func expandUser[P Kind](p P) (result P, err error) {
+func expandUser[P Kind](p P) Result[P] {
 	if len(p) == 0 || p[0] != '~' || (len(p) > 1 && !os.IsPathSeparator(p[1])) {
-		result = p
-		return
+		return Result[P]{p, nil}
 	}
 
 	var home Dir
-	home, err = UserHomeDir()
+	home, err := UserHomeDir()
 	if err != nil {
-		return
+		return Result[P]{"", err}
 	}
-
-	result = P(P(home) + p[1:])
-	return
+	return Result[P]{P(P(home) + p[1:]), nil}
 }
 
-func chmod[P Kind](p P, mode os.FileMode) (result P, err error) {
-	return p, os.Chmod(string(p), mode)
+func chmod[P Kind](p P, mode os.FileMode) Result[P] {
+	return Result[P]{p, os.Chmod(string(p), mode)}
 }
 
-func chown[P Kind](p P, uid int, gid int) (result P, err error) {
-	result = p
-	err = os.Chown(string(p), uid, gid)
-	return
+func chown[P Kind](p P, uid int, gid int) Result[P] {
+	return Result[P]{p, os.Chown(string(p), uid, gid)}
 }
 
-func rename[P Kind](p P, newPath PathStr) (result P, err error) {
-	result = p
-	err = os.Rename(string(p), string(newPath))
+func rename[P Kind](p P, newPath PathStr) Result[P] {
+	err := os.Rename(string(p), string(newPath))
 	if err != nil {
-		return
+		return Result[P]{"", err}
 	}
-	result = P(newPath)
-	return
+	return Result[P]{p, nil}
 }
