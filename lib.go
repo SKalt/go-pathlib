@@ -90,7 +90,7 @@ type Manipulator[P Kind] interface {
 	Rename(newPath PathStr) Result[P]
 }
 
-type Destroyer interface {
+type Destroyer[P Kind] interface {
 	// see [os.RemoveAll].
-	RemoveAll() error
+	RemoveAll() Result[P]
 }

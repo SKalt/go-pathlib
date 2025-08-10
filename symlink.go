@@ -1,6 +1,7 @@
 package pathlib
 
 import (
+	"io/fs"
 	"os"
 )
 
@@ -145,9 +146,9 @@ func (s Symlink) Rename(newPath PathStr) Result[Symlink] {
 }
 
 // Destroyer -------------------------------------------------------------------
-var _ Destroyer = Symlink("./link")
+var _ Destroyer[Symlink] = Symlink("./link")
 
 // RemoveAll implements [Destroyer].
-func (s Symlink) RemoveAll() error {
-	return os.RemoveAll(string(s))
+func (s Symlink) RemoveAll() Result[Symlink] {
+	return removeAll(s)
 }

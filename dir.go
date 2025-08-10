@@ -242,11 +242,11 @@ func (d Dir) Rename(newPath PathStr) Result[Dir] {
 }
 
 // Destroyer -------------------------------------------------------------------
-var _ Destroyer = Dir(".")
+var _ Destroyer[Dir] = Dir(".")
 
 // See [os.RemoveAll].
 //
 // RemoveAll implements [Destroyer].
-func (d Dir) RemoveAll() error {
-	return os.RemoveAll(string(d))
+func (d Dir) RemoveAll() Result[Dir] {
+	return removeAll(d)
 }

@@ -111,3 +111,8 @@ func rename[P Kind](p P, newPath PathStr) Result[P] {
 	}
 	return Result[P]{p, nil}
 }
+
+// See [os.RemoveAll]
+func removeAll[P Kind](p P) Result[P] {
+	return Result[P]{p, os.RemoveAll(string(p))}
+}

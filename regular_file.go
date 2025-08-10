@@ -163,9 +163,9 @@ func (f File) Read() Result[[]byte] {
 }
 
 // Destroyer -------------------------------------------------------------------
-var _ Destroyer = File("./example")
+var _ Destroyer[File] = File("./example")
 
 // RemoveAll implements [Destroyer].
-func (f File) RemoveAll() error {
-	return os.RemoveAll(string(f))
+func (f File) RemoveAll() Result[File] {
+	return removeAll(f)
 }

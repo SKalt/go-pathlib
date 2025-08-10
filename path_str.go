@@ -233,13 +233,13 @@ func (p PathStr) Eq(q PathStr) bool {
 }
 
 // Destroyer -------------------------------------------------------------------
-var _ Destroyer = PathStr(".")
+var _ Destroyer[PathStr] = PathStr(".")
 
 // See [os.RemoveAll].
 //
 // RemoveAll implements [Destroyer].
-func (p PathStr) RemoveAll() error {
-	return os.RemoveAll(string(p))
+func (p PathStr) RemoveAll() Result[PathStr] {
+	return Result[PathStr]{p, os.RemoveAll(string(p))}
 }
 
 // casts -----------------------------------------------------------------------
