@@ -50,6 +50,7 @@ type Transformer[P Kind] interface {
 	Clean() P
 	// Returns true if the two paths represent the same path.
 	Eq(other P) bool
+	String() string
 }
 
 // An observation of a path on-disk, including a constant observation timestamp.

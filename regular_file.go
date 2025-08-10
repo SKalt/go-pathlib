@@ -55,6 +55,11 @@ func (f File) Parts() []string {
 // Transformer -----------------------------------------------------------------
 var _ Transformer[File] = File("./example")
 
+// String implements [Transformer].
+func (f File) String() string {
+	return string(f)
+}
+
 // Abs implements [Transformer].
 func (f File) Abs() Result[File] {
 	return abs(f)

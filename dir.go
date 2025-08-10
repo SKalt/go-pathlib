@@ -121,6 +121,11 @@ func (d Dir) Ext() string {
 // Transformer -----------------------------------------------------------------
 var _ Transformer[Dir] = Dir(".")
 
+// String implements [Transformer].
+func (d Dir) String() string {
+	return string(d)
+}
+
 // Abs implements [Transformer].
 func (d Dir) Abs() Result[Dir] {
 	return abs(d)

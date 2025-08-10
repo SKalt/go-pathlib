@@ -15,6 +15,11 @@ func (s Symlink) Read() Result[PathStr] {
 	return Result[PathStr]{PathStr(link), err}
 }
 
+// See [os.Symlink]
+func (s Symlink) LinkTo(target PathStr) Result[Symlink] {
+	return Result[Symlink]{s, os.Symlink(target.String(), s.String())}
+}
+
 // -----------------------------------------------------------------------------
 var _ PurePath = Symlink("./link")
 
@@ -49,6 +54,11 @@ func (s Symlink) Parent() Dir {
 
 // -----------------------------------------------------------------------------
 var _ Transformer[Symlink] = Symlink("./link")
+
+// String implements [Transformer].
+func (s Symlink) String() string {
+	return string(s)
+}
 
 func (s Symlink) Eq(other Symlink) bool {
 	return PathStr(s).Eq(PathStr(other))

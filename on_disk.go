@@ -60,6 +60,10 @@ func (p onDisk[P]) Parts() []string {
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = onDisk[PathStr]{}
 
+func (p onDisk[P]) String() string {
+	return p.Name()
+}
+
 func (p onDisk[P]) Eq(q P) bool {
 	return PathStr(p.Path()).Eq(PathStr(q))
 }

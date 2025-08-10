@@ -160,6 +160,10 @@ func (p PathStr) Open() Result[*os.File] {
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = PathStr(".")
 
+func (p PathStr) String() string {
+	return string(p)
+}
+
 // See [path/filepath.Clean].
 //
 // Clean implements [Transformer].
