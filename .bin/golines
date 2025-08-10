@@ -1,7 +1,0 @@
-#!/bin/sh
-go tool golines \
-    --base-formatter="go tool goimports" \
-    --chain-split-dots \
-    --max-len=90 \
-    --reformat-tags \
-    --tab-len=4

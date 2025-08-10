@@ -1,15 +1,21 @@
 {
+  "go.lintTool": "golangci-lint-v2",
+  "go.lintFlags": [
+    "--path-mode=abs",
+  ],
   "go.formatTool": "custom",
   "go.alternateTools": {
-        // the binary name if it is in your PATH, or
-        // provide the exact path to your
-        // custom formatter.
-        "customFormatter": "/workspaces/go-pathlib/.bin/golines"
-    },
-    "cSpell.words": [
-      "libc",
-      "pathlib",
-      "stdlib"
-    ],
-    "go.lintTool": "golangci-lint",
+    "customFormatter": "golangci-lint"
+  },
+  "go.formatFlags": [
+    "fmt",
+    "--stdin"
+  ],
+  "cSpell.words": [
+    "goimports",
+    "golines",
+    "libc",
+    "pathlib",
+    "stdlib"
+  ],
 }
