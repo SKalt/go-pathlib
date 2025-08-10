@@ -84,8 +84,8 @@ func (p onDisk[P]) Localize() Result[P] {
 }
 
 // Rel implements [Transformer].
-func (p onDisk[P]) Rel(target Dir) Result[P] {
-	return rel(p.Path(), target)
+func (p onDisk[P]) Rel(base Dir) Result[P] {
+	return rel(base, p.Path())
 }
 
 func (p onDisk[P]) ExpandUser() Result[P] {

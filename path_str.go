@@ -186,8 +186,8 @@ func (p PathStr) Localize() Result[PathStr] {
 // Rel implements [Transformer]. See [path/filepath.Rel]:
 //
 // See [path/filepath.Rel].
-func (p PathStr) Rel(target Dir) Result[PathStr] {
-	return rel(p, target)
+func (p PathStr) Rel(base Dir) Result[PathStr] {
+	return rel(base, p)
 }
 
 // Expand a leading "~" into the user's home directory. If the home directory cannot be

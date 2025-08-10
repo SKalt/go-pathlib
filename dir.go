@@ -147,8 +147,8 @@ func (d Dir) Localize() Result[Dir] {
 }
 
 // Rel implements [Transformer].
-func (d Dir) Rel(target Dir) Result[Dir] {
-	return rel(d, target)
+func (d Dir) Rel(base Dir) Result[Dir] {
+	return rel(base, d)
 }
 
 // ExpandUser implements [Transformer].

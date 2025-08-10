@@ -79,8 +79,8 @@ func (s Symlink) Localize() Result[Symlink] {
 }
 
 // Rel implements [Transformer].
-func (s Symlink) Rel(target Dir) Result[Symlink] {
-	return rel(s, target)
+func (s Symlink) Rel(base Dir) Result[Symlink] {
+	return rel(base, s)
 }
 
 func (s Symlink) ExpandUser() Result[Symlink] {

@@ -86,8 +86,8 @@ func (f File) Localize() Result[File] {
 }
 
 // Rel implements [Transformer].
-func (f File) Rel(target Dir) Result[File] {
-	return rel(f, target)
+func (f File) Rel(base Dir) Result[File] {
+	return rel(base, f)
 }
 
 // Beholder --------------------------------------------------------------------
