@@ -97,8 +97,8 @@ var _ Beholder[Symlink] = Symlink("./link")
 // OnDisk implements [Beholder].
 func (s Symlink) OnDisk() (result Result[OnDisk[Symlink]]) {
 	result = lstat(s)
-	if result.IsOk() && !isSymLink(result.Val.Mode()) {
-		result.Err = WrongTypeOnDisk[Symlink]{result.Val}
+	if result.IsOk() && ((result.val.Mode() & fs.ModeSymlink) != fs.ModeSymlink) {
+		result.err = WrongTypeOnDisk[Symlink]{result.val}
 	}
 	return
 }

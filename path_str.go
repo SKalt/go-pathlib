@@ -143,7 +143,7 @@ func (p PathStr) Read() Result[any] {
 
 	if actual.Mode().IsDir() {
 		val, err = Dir(p).Read().Unpack()
-	} else if isSymLink(actual.Mode()) {
+	} else if actual.Mode()&fs.ModeSymlink == fs.ModeSymlink {
 		val, err = Symlink(p).Read().Unpack()
 	} else {
 		val, err = File(p).Read().Unpack()
