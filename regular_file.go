@@ -127,8 +127,8 @@ func (f File) Chown(uid int, gid int) Result[File] {
 }
 
 // Remove implements [Manipulator].
-func (f File) Remove() error {
-	return os.Remove(string(f))
+func (f File) Remove() Result[File] {
+	return remove(f)
 }
 
 // Rename implements [Manipulator].

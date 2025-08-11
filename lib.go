@@ -2,7 +2,6 @@ package pathlib
 
 import (
 	"io/fs"
-	"os"
 )
 
 // Any type constraint: any string type that represents a path
@@ -81,9 +80,9 @@ type Maker[T any] interface {
 
 type Manipulator[P Kind] interface {
 	// see [os.Remove].
-	Remove() error
+	Remove() Result[P]
 	// see [os.Chmod].
-	Chmod(os.FileMode) Result[P]
+	Chmod(fs.FileMode) Result[P]
 	// see [os.Chown].
 	Chown(uid, gid int) Result[P]
 	// see [os.Rename].

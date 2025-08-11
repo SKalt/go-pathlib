@@ -212,8 +212,8 @@ func (p PathStr) Chown(uid int, gid int) Result[PathStr] {
 }
 
 // Remove implements [Manipulator].
-func (p PathStr) Remove() error {
-	return os.Remove(string(p))
+func (p PathStr) Remove() Result[PathStr] {
+	return remove(p)
 }
 
 // Rename implements [Manipulator].
@@ -225,6 +225,8 @@ func (p PathStr) Rename(newPath PathStr) Result[PathStr] {
 
 func (p PathStr) Eq(q PathStr) bool {
 	// try to avoid panicking if Cwd() can't be obtained
+	p = p.Clean()
+	q = q.Clean()
 	if p.IsLocal() && q.IsLocal() {
 		return p == q
 	}

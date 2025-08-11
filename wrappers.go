@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 )
 
+// SEe [os.Stat].
 func stat[P Kind](p P) Result[OnDisk[P]] {
 	info, err := os.Stat(string(p))
 	return Result[OnDisk[P]]{onDisk[P]{p, info}, err}
@@ -75,12 +76,10 @@ func localize[P Kind](p P) Result[P] {
 	return Result[P]{P(q), err}
 }
 
+// See [path/filepath.Rel]
 func rel[P Kind](base Dir, p P) Result[P] {
 	result, err := filepath.Rel(string(base), string(p))
-	if err != nil {
-		return Result[P]{"", errors.Join(err, errors.New("unable to make relative path"))}
-	}
-	return Result[P]{P(result), nil}
+	return Result[P]{P(result), err}
 }
 
 func expandUser[P Kind](p P) Result[P] {
@@ -103,12 +102,18 @@ func chown[P Kind](p P, uid int, gid int) Result[P] {
 	return Result[P]{p, os.Chown(string(p), uid, gid)}
 }
 
-func rename[P Kind](p P, newPath PathStr) Result[P] {
-	err := os.Rename(string(p), string(newPath))
-	if err != nil {
-		return Result[P]{"", err}
+func rename[P Kind](p P, newPath PathStr) (result Result[P]) {
+	result.err = os.Rename(string(p), string(newPath))
+	if result.IsOk() {
+		result.val = P(newPath)
+	} else {
+		result.val = p
 	}
-	return Result[P]{p, nil}
+	return
+}
+
+func remove[P Kind](p P) Result[P] {
+	return Result[P]{p, os.Remove(string(p))}
 }
 
 // See [os.RemoveAll]

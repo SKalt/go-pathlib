@@ -10,14 +10,6 @@ import (
 // and the string may or may not end in an [os.PathSeparator].
 type Dir PathStr
 
-func (d Dir) failure(err error, op string) error {
-	return Error[Dir]{
-		Path: d,
-		Op:   op,
-		Err:  err,
-	}
-}
-
 // A wrapper around [path/filepath.WalkDir], which has the following properties:
 //
 // > The files are walked in lexical order, which makes the output deterministic but [reading the] entire directory into memory before proceeding to walk that directory.
@@ -26,9 +18,11 @@ func (d Dir) failure(err error, op string) error {
 //
 // > WalkDir calls [callback] with paths that use the separator character appropriate for the operating system.
 func (d Dir) Walk(
-	callback func(path string, d fs.DirEntry, err error) error,
+	callback func(path PathStr, d fs.DirEntry, err error) error,
 ) error {
-	return filepath.WalkDir(string(d), callback)
+	return filepath.WalkDir(string(d), func(path string, d fs.DirEntry, err error) error {
+		return callback(PathStr(path), d, err)
+	})
 }
 
 // See [path/filepath.Glob]:
@@ -42,7 +36,7 @@ func (d Dir) Walk(
 func (d Dir) Glob(pattern string) Result[[]PathStr] {
 	matches, err := filepath.Glob(filepath.Join(string(d), pattern))
 	if err != nil {
-		return Result[[]PathStr]{nil, d.failure(err, "glob")}
+		return Result[[]PathStr]{nil, err}
 	}
 	result := make([]PathStr, len(matches))
 	for i, m := range matches {
@@ -52,15 +46,11 @@ func (d Dir) Glob(pattern string) Result[[]PathStr] {
 }
 
 // CHange DIRectory. See [os.Chdir].
-func (d Dir) Chdir() error {
-	return os.Chdir(string(d))
+func (d Dir) Chdir() Result[Dir] {
+	return Result[Dir]{d, os.Chdir(string(d))}
 }
 
 // Readable --------------------------------------------------------------------
-type DirEntry[P Kind] struct {
-	fs.DirEntry
-}
-
 var _ Readable[[]fs.DirEntry] = Dir(".")
 
 // a wrapper around [os.ReadDir]:
@@ -70,9 +60,6 @@ var _ Readable[[]fs.DirEntry] = Dir(".")
 // able to read before the error, along with the error.
 func (d Dir) Read() Result[[]fs.DirEntry] {
 	result, err := os.ReadDir(string(d))
-	if err != nil {
-		err = d.failure(err, "read")
-	}
 	return Result[[]fs.DirEntry]{result, err}
 }
 
@@ -141,14 +128,18 @@ func (d Dir) Clean() Dir {
 	return clean(d)
 }
 
+// See [path/filepath.Localize]
+//
 // Localize implements [Transformer].
 func (d Dir) Localize() Result[Dir] {
 	return localize(d)
 }
 
+// See [path/filepath.Rel]
+//
 // Rel implements [Transformer].
 func (d Dir) Rel(base Dir) Result[Dir] {
-	return rel(base, d)
+	return rel(base, d.Clean())
 }
 
 // ExpandUser implements [Transformer].
@@ -161,12 +152,7 @@ var _ Beholder[Dir] = Dir(".")
 
 // OnDisk implements [Beholder]
 func (d Dir) OnDisk() (result Result[OnDisk[Dir]]) {
-	result = lstat(d)
-	if result.IsOk() && !result.val.IsDir() {
-		result.err = WrongTypeOnDisk[Dir]{onDisk[Dir]{d, result.val}}
-	}
-	return
-
+	return d.Stat()
 }
 
 // Exists implements [Beholder].
@@ -174,6 +160,8 @@ func (d Dir) Exists() bool {
 	return d.Lstat().IsOk()
 }
 
+// See [os.Lstat].
+//
 // Lstat implements [Beholder].
 func (d Dir) Lstat() (result Result[OnDisk[Dir]]) {
 	result = lstat(d)
@@ -183,6 +171,8 @@ func (d Dir) Lstat() (result Result[OnDisk[Dir]]) {
 	return
 }
 
+// See [os.Stat].
+//
 // Stat implements [Beholder].
 func (d Dir) Stat() (result Result[OnDisk[Dir]]) {
 	result = stat(d)
@@ -234,8 +224,8 @@ func (d Dir) Chown(uid int, gid int) Result[Dir] {
 // See [os.Remove].
 //
 // Remove implements [Manipulator].
-func (d Dir) Remove() error {
-	return os.Remove(string(d))
+func (d Dir) Remove() Result[Dir] {
+	return remove(d)
 }
 
 // See [os.Rename].

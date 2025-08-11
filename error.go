@@ -15,18 +15,18 @@ func (w WrongTypeOnDisk[P]) Error() string {
 	)
 }
 
-type Error[P Kind] struct {
-	Path P
-	Op   string
-	Err  error
-}
+// type Error[P Kind] struct {
+// 	Path P
+// 	Op   string
+// 	Err  error
+// }
 
-func (err Error[P]) Error() string {
-	return fmt.Sprintf("%T(%q): %s: %s", err.Path, err.Path, err.Op, err.Err.Error())
-}
+// func (err Error[P]) Error() string {
+// 	return fmt.Sprintf("%T(%q): %s: %s", err.Path, err.Path, err.Op, err.Err.Error())
+// }
 
-func (err Error[P]) Unwrap() error {
-	return err.Err
-}
+// func (err Error[P]) Unwrap() error {
+// 	return err.Err
+// }
 
 // TODO: figure out errors.Is() semantics

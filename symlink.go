@@ -136,8 +136,8 @@ func (s Symlink) Chown(uid int, gid int) Result[Symlink] {
 }
 
 // Remove implements [Manipulator].
-func (s Symlink) Remove() error {
-	return os.Remove(string(s))
+func (s Symlink) Remove() Result[Symlink] {
+	return remove(s)
 }
 
 // Rename implements [Manipulator].

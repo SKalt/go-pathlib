@@ -45,11 +45,22 @@ func ExamplePathStr_Join() {
 
 func ExamplePathStr_Rel() {
 	example := func(a pathlib.PathStr, b pathlib.Dir) {
-		fmt.Printf("%q.Rel(%q) => %q\n", a, b, a.Rel(b).Unwrap())
+		val, err := a.Rel(b).Unpack()
+		if err == nil {
+			fmt.Printf("%T(%q).Rel(%q) => %T(%q)\n", a, a, b, val, val)
+		} else {
+			fmt.Printf("%T(%q).Rel(%q) => Err(%v)\n", a, a, b, err)
+		}
 	}
-	example("a/b/c", "a/b")
+	fmt.Println("On Unix")
+	example("/a/b/c", "/a")
+	example("/b/c", "/a")
+	example("./b/c", "/a")
 	// Output:
-	// "a/b/c".Rel("a/b") => "c"
+	// On Unix
+	// pathlib.PathStr("/a/b/c").Rel("/a") => pathlib.PathStr("b/c")
+	// pathlib.PathStr("/b/c").Rel("/a") => pathlib.PathStr("../b/c")
+	// pathlib.PathStr("./b/c").Rel("/a") => Err(Rel: can't make ./b/c relative to /a)
 }
 
 func ExamplePathStr_IsAbsolute() {
@@ -176,4 +187,22 @@ func ExamplePathStr_ExpandUser() {
 	// "~" => "$HOME"
 	// "~/foo/bar.txt" => "$HOME/foo/bar.txt"
 	// "foo/~/bar" => "foo/~/bar"
+}
+
+func ExamplePathStr_beholder() {
+	temp := pathlib.TempDir().Join("path-str-beholder").AsDir().Make(0777).Unwrap()
+	defer temp.RemoveAll()
+
+	file := temp.Join("file.txt")
+	file.AsFile().Make(0666).Unwrap()
+
+	rel := file.Rel(temp).Unwrap()
+	fmt.Printf("OnDisk: %q %s\n", rel, file.OnDisk().Unwrap().Mode())
+	fmt.Printf(" Lstat: %q %s\n", rel, file.Lstat().Unwrap().Mode())
+	fmt.Printf("  Stat: %q %s\n", rel, file.Stat().Unwrap().Mode())
+
+	// Output:
+	// OnDisk: "file.txt" -rw-rw-r--
+	//  Lstat: "file.txt" -rw-rw-r--
+	//   Stat: "file.txt" -rw-rw-r--
 }

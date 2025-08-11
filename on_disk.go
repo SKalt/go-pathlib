@@ -2,7 +2,6 @@ package pathlib
 
 import (
 	"io/fs"
-	"os"
 )
 
 type onDisk[P Kind] struct {
@@ -97,8 +96,8 @@ func (p onDisk[P]) ExpandUser() Result[P] {
 var _ Manipulator[PathStr] = onDisk[PathStr]{}
 
 // Remove implements [Manipulator].
-func (p onDisk[P]) Remove() error {
-	return os.Remove(p.Name())
+func (p onDisk[P]) Remove() Result[P] {
+	return remove(p.Path())
 }
 
 // Rename implements [Manipulator].
