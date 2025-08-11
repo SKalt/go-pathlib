@@ -162,8 +162,8 @@ var _ Beholder[Dir] = Dir(".")
 // OnDisk implements [Beholder]
 func (d Dir) OnDisk() (result Result[OnDisk[Dir]]) {
 	result = lstat(d)
-	if result.IsOk() && !result.Val.IsDir() {
-		result.Err = WrongTypeOnDisk[Dir]{onDisk[Dir]{result.Val}}
+	if result.IsOk() && !result.val.IsDir() {
+		result.err = WrongTypeOnDisk[Dir]{onDisk[Dir]{d, result.val}}
 	}
 	return
 

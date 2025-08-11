@@ -5,8 +5,9 @@ import (
 	"os"
 )
 
-// Note: single-field structs have the same size as their field
 type onDisk[P Kind] struct {
+	// type path associated with the file info
+	p P
 	fs.FileInfo
 }
 
@@ -14,7 +15,7 @@ var _ OnDisk[PathStr] = onDisk[PathStr]{}
 
 // Path implements [OnDisk].
 func (p onDisk[P]) Path() P {
-	return P(p.Name())
+	return p.p
 }
 
 var _ fs.FileInfo = onDisk[PathStr]{}

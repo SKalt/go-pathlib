@@ -10,7 +10,7 @@ import (
 
 func stat[P Kind](p P) Result[OnDisk[P]] {
 	info, err := os.Stat(string(p))
-	return Result[OnDisk[P]]{onDisk[P]{info}, err}
+	return Result[OnDisk[P]]{onDisk[P]{p, info}, err}
 }
 
 func lstat[P Kind](p P) Result[OnDisk[P]] {
@@ -18,7 +18,7 @@ func lstat[P Kind](p P) Result[OnDisk[P]] {
 	if errors.Is(err, fs.ErrNotExist) {
 		return Result[OnDisk[P]]{nil, err}
 	}
-	return Result[OnDisk[P]]{onDisk[P]{info}, err}
+	return Result[OnDisk[P]]{onDisk[P]{p, info}, err}
 }
 
 func join[P Kind](p P, segments ...string) PathStr {
