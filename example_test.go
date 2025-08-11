@@ -8,9 +8,9 @@ import (
 
 func Example() {
 	dir := pathlib.TempDir().Join("pathlib-example").AsDir()
-	defer dir.RemoveAll()
+	defer dir.RemoveAll().Unwrap()
 	if dir.Exists() {
-		dir.RemoveAll()
+		dir.RemoveAll().Unwrap()
 	}
 
 	onDisk := dir.Make(0o777).Unwrap().OnDisk().Unwrap()

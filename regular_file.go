@@ -146,7 +146,7 @@ func (f File) Make(perm fs.FileMode) Result[*os.File] {
 
 // MakeAll implements [Maker].
 func (f File) MakeAll(perm, parentPerm fs.FileMode) (result Result[*os.File]) {
-	result.Err = f.Parent().MakeAll(parentPerm, parentPerm).Err
+	result.err = f.Parent().MakeAll(parentPerm, parentPerm).err
 	if !result.IsOk() {
 		return
 	}

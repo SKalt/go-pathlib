@@ -36,7 +36,7 @@ func (p PathStr) OnDisk() Result[OnDisk[PathStr]] {
 
 // Exists implements [Beholder].
 func (p PathStr) Exists() (exists bool) {
-	return !errors.Is(p.OnDisk().Err, fs.ErrExist)
+	return !errors.Is(p.OnDisk().err, fs.ErrNotExist)
 }
 
 // PurePath --------------------------------------------------------------------

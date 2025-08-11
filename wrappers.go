@@ -75,8 +75,8 @@ func localize[P Kind](p P) Result[P] {
 	return Result[P]{P(q), err}
 }
 
-func rel[P Kind](p P, target Dir) Result[P] {
-	result, err := filepath.Rel(string(p), string(target))
+func rel[P Kind](base Dir, p P) Result[P] {
+	result, err := filepath.Rel(string(base), string(p))
 	if err != nil {
 		return Result[P]{"", errors.Join(err, errors.New("unable to make relative path"))}
 	}
@@ -88,12 +88,11 @@ func expandUser[P Kind](p P) Result[P] {
 		return Result[P]{p, nil}
 	}
 
-	var home Dir
-	home, err := UserHomeDir()
-	if err != nil {
-		return Result[P]{"", err}
+	home := UserHomeDir()
+	if home.err != nil {
+		return Result[P]{"", home.err}
 	}
-	return Result[P]{P(P(home) + p[1:]), nil}
+	return Result[P]{P(P(home.val) + p[1:]), nil}
 }
 
 func chmod[P Kind](p P, mode os.FileMode) Result[P] {

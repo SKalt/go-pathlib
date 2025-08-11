@@ -175,15 +175,19 @@ func (d Dir) Exists() bool {
 }
 
 // Lstat implements [Beholder].
-func (d Dir) Lstat() Result[OnDisk[Dir]] {
-	return lstat(d)
+func (d Dir) Lstat() (result Result[OnDisk[Dir]]) {
+	result = lstat(d)
+	if result.IsOk() && !result.val.IsDir() {
+		result.err = WrongTypeOnDisk[Dir]{result.val}
+	}
+	return
 }
 
 // Stat implements [Beholder].
 func (d Dir) Stat() (result Result[OnDisk[Dir]]) {
 	result = stat(d)
-	if result.IsOk() && !result.Val.IsDir() {
-		result.Err = WrongTypeOnDisk[Dir]{result.Val}
+	if result.IsOk() && !result.val.IsDir() {
+		result.err = WrongTypeOnDisk[Dir]{result.val}
 	}
 	return
 }
@@ -199,15 +203,15 @@ func (d Dir) Make(perm fs.FileMode) (result Result[Dir]) {
 
 // MakeAll implements [Maker]
 func (d Dir) MakeAll(perm, parentPerm fs.FileMode) (result Result[Dir]) {
-	result = Result[Dir]{Val: d}
+	result = Result[Dir]{val: d}
 	if d.Exists() {
 		return
 	}
-	result.Err = d.Parent().MakeAll(parentPerm, parentPerm).Err
+	result.err = d.Parent().MakeAll(parentPerm, parentPerm).err
 	if !result.IsOk() {
 		return
 	}
-	result.Err = os.MkdirAll(string(d), perm)
+	result.err = os.MkdirAll(string(d), perm)
 	return
 }
 
