@@ -48,7 +48,7 @@ func TestFile_Join(t *testing.T) {
 
 func TestFile_manipulator(t *testing.T) {
 	prevWorkingDirectory := pathlib.Cwd().Unwrap()
-	dir := pathlib.TempDir().Join("file-manipulator-test").AsDir().Make(0777).Unwrap()
+	dir := pathlib.Dir(t.TempDir())
 	dir.Chdir().Unwrap()
 	defer func() {
 		prevWorkingDirectory.Chdir()

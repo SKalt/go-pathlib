@@ -246,7 +246,7 @@ func TestDir_ExpandUser(t *testing.T) {
 	}
 }
 func TestDir_badStat(t *testing.T) {
-	temp := pathlib.TempDir().Join(t.Name()).AsDir().Make(0777).Unwrap()
+	temp := pathlib.Dir(t.TempDir())
 	defer func() { temp.RemoveAll().Unwrap() }()
 
 	temp.Join("file.txt").AsFile().Make(0666).Unwrap()

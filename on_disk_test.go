@@ -11,9 +11,8 @@ func TestOnDisk_ensemble(t *testing.T) {
 	dir := pathlib.TempDir().
 		Join("test/on-disk/ensemble.dir").
 		AsDir().
-		MakeAll(0755, 0755).
+		MakeAll(0777, 0777).
 		Unwrap()
-	defer func() { dir.RemoveAll().Unwrap() }()
 
 	assertEq := func(a, b any) {
 		if a != b {
