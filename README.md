@@ -11,7 +11,7 @@ String types for path manipulation.
 
 ## Prior art
 
-Inspired by Python's ergonomic [`pathlib`][python-pathlib] and Go useful filesystem methods scattered throughout the <abbr title="Standard library">stdlib</abbr>.
+Inspired by Python's [`pathlib`][python-pathlib] and Go's filesystem methods scattered throughout the <abbr title="Standard library">stdlib</abbr>.
 
 There are plenty of [other][other] ports of `pathlib` to go, but only one other package [one other][forerunner] uses string types to represent paths.
 
@@ -19,6 +19,12 @@ There are plenty of [other][other] ports of `pathlib` to go, but only one other 
 
 Using this library adds some overhead compared to using the stdlib functions directly.
 Rough measurements on my x86_64 machine indicated that linking `pathlib` adds around a kilobyte to the size of a binary that does nothing except links `path/filepath`.
+
+This library also returns a `Result[T]` type instead of a more-idiomatic `(*T, error)` tuple.
+While this makes tab-completing scripts easier, it also side-steps `errcheck` lints when neither method is called.
+Not calling those methods is effectively equivalent to `_, _ = someFallibleOperation()`.
+Since the result's fields are only accessible through the `Result.Unwrap() T` or `Result.Unpack() (T, error)` methods, the result type doesn't introduce any particularly new ways to shoot yourself in the foot.
+
 
 
 [python-pathlib]: https://docs.python.org/3/library/pathlib.html
