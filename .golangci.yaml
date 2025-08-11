@@ -3,5 +3,8 @@ linters:
   default: standard
 formatters:
   enable:
-  - goimports
-  - golines
+    - goimports
+    - golines
+  settings:
+    golines:
+       max-len: 90
