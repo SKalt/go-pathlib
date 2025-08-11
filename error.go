@@ -30,14 +30,3 @@ func (err Error[P]) Unwrap() error {
 }
 
 // TODO: figure out errors.Is() semantics
-// func (err Error[P]) Is(target error) bool {
-// 	if t, ok := target.(Error[P]); ok {
-// 		result := t.Op == err.Op
-// 		if inner, ok := err.Err.(interface {Is(error) bool}); ok {
-// 			result = result && inner.Is(t.Err)
-// 		}
-// 		return result
-// 	}
-// 	return false
-
-// }
