@@ -70,9 +70,7 @@ func ExampleDir_Lstat() {
 		AsDir().
 		MakeAll(0o777, 0o777).
 		Unwrap()
-	defer func() {
-		tmpDir.RemoveAll()
-	}()
+	defer func() { tmpDir.RemoveAll() }()
 
 	nonExistent := tmpDir.Join("dir").AsDir()
 	_, err := nonExistent.Lstat().Unpack()
@@ -81,26 +79,32 @@ func ExampleDir_Lstat() {
 	}
 
 	dir := nonExistent.Make(0o777).Unwrap()
-	onDisk := dir.Lstat().Unwrap()
-	fmt.Printf("%T(%q) created with mode %s\n", dir, dir, onDisk.Mode())
 
 	file := tmpDir.Join("file.txt").AsFile()
 	file.Make(0o755).Unwrap()
 
 	_, err = pathlib.Dir(file.String()).Lstat().Unpack()
-
 	if e, ok := err.(pathlib.WrongTypeOnDisk[pathlib.Dir]); ok {
 		fmt.Println(e.Error())
 	}
 
 	link := tmpDir.Join("link").AsSymlink().LinkTo(pathlib.PathStr(dir)).Unwrap()
 	disguised := pathlib.Dir(link)
-	fmt.Printf("%q -> %q\n", disguised, disguised.OnDisk().Unwrap().Name())
+	unmasked := disguised.OnDisk().Unwrap() // works
+	for _, name := range []string{"a", "b", "c"} {
+		dir.Join(name).AsFile().Make(0666).Unwrap()
+	}
+	fmt.Println(unmasked.Path())
+	for _, entry := range unmasked.Path().Read().Unwrap() {
+		fmt.Println(entry)
+	}
 	// Output:
 	// pathlib.Dir("/tmp/dir-lstat-example/dir").Lstat() => fs.ErrNotExist
-	// pathlib.Dir("/tmp/dir-lstat-example/dir") created with mode drwxr-xr-x
 	// pathlib.Dir("/tmp/dir-lstat-example/file.txt") unexpectedly has mode -rwxr-xr-x on-disk
-	// "/tmp/dir-lstat-example/link" -> "dir"
+	// /tmp/dir-lstat-example/link
+	// - a
+	// - b
+	// - c
 }
 
 func ExampleDir_Walk() {
