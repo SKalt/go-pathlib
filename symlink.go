@@ -97,11 +97,7 @@ var _ Beholder[Symlink] = Symlink("./link")
 
 // OnDisk implements [Beholder].
 func (s Symlink) OnDisk() (result Result[OnDisk[Symlink]]) {
-	result = lstat(s)
-	if result.IsOk() && ((result.val.Mode() & fs.ModeSymlink) != fs.ModeSymlink) {
-		result.err = WrongTypeOnDisk[Symlink]{result.val}
-	}
-	return
+	return s.Lstat()
 }
 
 // Exists implements [Beholder].
@@ -110,8 +106,12 @@ func (s Symlink) Exists() bool {
 }
 
 // Lstat implements [Beholder].
-func (s Symlink) Lstat() Result[OnDisk[Symlink]] {
-	return lstat(s)
+func (s Symlink) Lstat() (result Result[OnDisk[Symlink]]) {
+	result = lstat(s)
+	if result.IsOk() && ((result.val.Mode() & fs.ModeSymlink) != fs.ModeSymlink) {
+		result.err = WrongTypeOnDisk[Symlink]{result.val}
+	}
+	return
 }
 
 // Stat implements [Beholder].

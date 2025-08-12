@@ -262,11 +262,12 @@ func TestDir_badStat(t *testing.T) {
 }
 
 func TestDir_remove(t *testing.T) {
-	pathlib.TempDir().
+	dir := pathlib.Dir(t.TempDir())
+	dir.
 		Join(t.Name()).
 		AsDir().
 		Make(0777).Unwrap().
-		Rename(pathlib.PathStr(t.Name() + "__foo")).Unwrap().
+		Rename(dir.Join(t.Name() + "__foo")).Unwrap().
 		Remove().Unwrap()
 }
 

@@ -194,7 +194,7 @@ func ExamplePathStr_beholder() {
 	defer temp.RemoveAll()
 
 	file := temp.Join("file.txt")
-	file.AsFile().Make(0666).Unwrap()
+	file.AsFile().Make(0644).Unwrap()
 
 	rel := file.Rel(temp).Unwrap()
 	fmt.Printf("OnDisk: %q %s\n", rel, file.OnDisk().Unwrap().Mode())
@@ -202,7 +202,7 @@ func ExamplePathStr_beholder() {
 	fmt.Printf("  Stat: %q %s\n", rel, file.Stat().Unwrap().Mode())
 
 	// Output:
-	// OnDisk: "file.txt" -rw-rw-r--
-	//  Lstat: "file.txt" -rw-rw-r--
-	//   Stat: "file.txt" -rw-rw-r--
+	// OnDisk: "file.txt" -rw-r--r--
+	//  Lstat: "file.txt" -rw-r--r--
+	//   Stat: "file.txt" -rw-r--r--
 }

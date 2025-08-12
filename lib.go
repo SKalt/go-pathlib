@@ -57,6 +57,7 @@ type OnDisk[PathKind Kind] interface {
 	fs.FileInfo
 	PurePath
 	Transformer[PathKind]
+	Manipulator[PathKind]
 	// the typed version of [fs.FileInfo.Name]
 	Path() PathKind
 }
