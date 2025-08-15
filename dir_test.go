@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/user"
+	"runtime"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/skalt/pathlib.go"
@@ -276,4 +280,88 @@ func TestDir_chmod(t *testing.T) {
 	if dir.Chmod(0777).Unwrap().Stat().Unwrap().Mode()&fs.ModePerm != 0777 {
 		t.Fail()
 	}
+}
+
+func TestDir_chown(t *testing.T) {
+	_, err := pathlib.Dir(t.TempDir()).
+		Join(t.Name()).
+		AsDir().
+		Make(0755).Unwrap().
+		Chown(0, 0).Unpack()
+
+	if err != nil {
+		if _, ok := err.(*fs.PathError); !ok {
+			t.Fatalf("expected *fs.PathError, got %T", err)
+		}
+	}
+
+}
+
+func TestDir_chown_self(t *testing.T) {
+	dir := pathlib.Dir(t.TempDir()).
+		Join(t.Name()).
+		AsDir().
+		Make(0755).Unwrap()
+	switch strings.Split(runtime.GOOS, "/")[0] {
+	case "windows", "plan9":
+		t.Skip()
+	}
+	user, err := user.Current()
+	if err != nil {
+		t.Fatal(err)
+	}
+	uid, err := strconv.Atoi(user.Uid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gid, err := strconv.Atoi(user.Gid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir.Chown(uid, gid).Unwrap()
+}
+
+func TestOnDisk_chown(t *testing.T) {
+	_, err := pathlib.Dir(t.TempDir()).
+		Join(t.Name()).
+		AsDir().
+		Make(0755).Unwrap().
+		OnDisk().Unwrap().
+		Chown(0, 0).Unpack()
+	if err != nil {
+		if _, ok := err.(*fs.PathError); !ok {
+			t.Fatalf("expected *fs.PathError, got %T", err)
+		}
+	}
+}
+
+func TestOnDisk_chown_self(t *testing.T) {
+	dir := pathlib.Dir(t.TempDir()).
+		Join(t.Name()).
+		AsDir().
+		Make(0755).Unwrap().
+		OnDisk().Unwrap()
+	switch strings.Split(runtime.GOOS, "/")[0] {
+	case "windows", "plan9":
+		t.Skip()
+	}
+	user, err := user.Current()
+	if err != nil {
+		t.Fatal(err)
+	}
+	uid, err := strconv.Atoi(user.Uid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gid, err := strconv.Atoi(user.Gid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir.Chown(uid, gid).Unwrap()
 }

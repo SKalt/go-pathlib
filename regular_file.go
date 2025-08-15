@@ -14,6 +14,16 @@ func (f File) Open(flag int, perm fs.FileMode) Result[*os.File] {
 	return Result[*os.File]{handle, err}
 }
 
+// func (f File) Write([]byte) (int, error) {
+// 	handle, err := f.Open(os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600).Unpack()
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	os.WriteFile()
+// 	defer func() { handle.Close() }()
+
+// }
+
 // PurePath --------------------------------------------------------------------
 var _ PurePath = File("./example.txt")
 
@@ -161,3 +171,5 @@ func (f File) Read() Result[[]byte] {
 	data, err := os.ReadFile(string(f))
 	return Result[[]byte]{data, err}
 }
+
+// FIXME: file handle wrapper type

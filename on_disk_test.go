@@ -62,6 +62,9 @@ func TestOnDisk_Transformer(t *testing.T) {
 	if onDisk.Rel(onDisk.Parent()).Unwrap().String() != onDisk.BaseName() {
 		t.Fail()
 	}
+	if onDisk.Localize().IsOk() { // localize fails when paths start with a /
+		t.Fail()
+	}
 }
 
 func TestOnDisk_manipulator(t *testing.T) {

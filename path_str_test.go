@@ -2,6 +2,7 @@ package pathlib_test
 
 import (
 	"fmt"
+	"io/fs"
 	"strings"
 
 	"github.com/skalt/pathlib.go"
@@ -205,4 +206,36 @@ func ExamplePathStr_beholder() {
 	// OnDisk: "file.txt" -rw-r--r--
 	//  Lstat: "file.txt" -rw-r--r--
 	//   Stat: "file.txt" -rw-r--r--
+}
+
+func ExamplePathStr_read() {
+	tmpDir := pathlib.TempDir().Join("example-pathStr-read").AsDir().Make(0777).Unwrap()
+	var example = tmpDir.Join("example")
+
+	{
+		example.AsDir().Make(0777).Unwrap()
+		example.Join("foo").AsFile().Make(0644).Unwrap()
+		example.Join("bar").AsDir().Make(0777).Unwrap()
+		entries := example.Read().Unwrap().([]fs.DirEntry)
+		for entry := range entries {
+			fmt.Println(entry)
+		}
+		example.Remove().Unwrap()
+	}
+	{
+		_, err := example.AsFile().Make(0644).Unwrap().WriteString("text")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(example.Read().Unwrap())
+		example.Remove().Unwrap()
+	}
+	{
+		target := tmpDir.Join("target")
+		if _, err := target.AsFile().Make(0644).Unwrap().WriteString("target"); err != nil {
+			panic(err)
+		}
+		example.AsSymlink().LinkTo(target).Unwrap()
+		fmt.Println(example.Read().Unwrap())
+	}
 }
