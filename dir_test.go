@@ -15,7 +15,7 @@ import (
 )
 
 func ExampleDir_Eq() {
-	cwd := pathlib.Cwd().Unwrap()
+	cwd := expect(pathlib.Cwd())
 	fmt.Println(cwd.Eq("."))
 	fmt.Println(pathlib.Dir("/foo").Eq("/foo"))
 	fmt.Println(cwd.Join("./relative").Eq("relative"))
@@ -38,16 +38,16 @@ func ExampleDir_Glob() {
 	demoDir := pathlib.
 		TempDir().
 		Join("glob-example").
-		AsDir().
-		MakeAll(0o777, 0o777).Unwrap()
+		AsDir()
+	demoDir = expect(demoDir.MakeAll(0o777, 0o777))
 
-	defer func() { _ = demoDir.RemoveAll() }()
+	defer func() { _, _ = demoDir.RemoveAll() }()
 
 	for _, name := range []string{"x", "y", "z", "a", "b", "c"} {
-		demoDir.Join(name + ".txt").AsFile().Make(0o777).Unwrap()
+		expect(demoDir.Join(name + ".txt").AsFile().Make(0o777))
 	}
 
-	for _, match := range demoDir.Glob("*.txt").Unwrap() {
+	for _, match := range expect(demoDir.Glob("*.txt")) {
 		fmt.Println(match)
 	}
 
@@ -61,45 +61,43 @@ func ExampleDir_Glob() {
 }
 
 func TestDir_glob(t *testing.T) {
-	_, err := pathlib.
-		TempDir().Glob("[*").Unpack()
+	_, err := pathlib.TempDir().Glob("[*")
 	if err == nil {
 		t.Fatal("somehow, invalid glob syntax made it through")
 	}
 }
 
 func ExampleDir_Lstat() {
-	tmpDir := pathlib.TempDir().
+	tmpDir := expect(pathlib.TempDir().
 		Join("dir-lstat-example").
 		AsDir().
-		MakeAll(0o777, 0o777).
-		Unwrap()
-	defer func() { tmpDir.RemoveAll() }()
+		MakeAll(0o777, 0o777))
+	defer func() { _, _ = tmpDir.RemoveAll() }()
 
 	nonExistent := tmpDir.Join("dir").AsDir()
-	_, err := nonExistent.Lstat().Unpack()
+	_, err := nonExistent.Lstat()
 	if errors.Is(err, fs.ErrNotExist) {
 		fmt.Printf("%T(%q).Lstat() => fs.ErrNotExist\n", nonExistent, nonExistent)
 	}
 
-	dir := nonExistent.Make(0o777).Unwrap()
+	dir := expect(nonExistent.Make(0o777))
 
 	file := tmpDir.Join("file.txt").AsFile()
-	file.Make(0o755).Unwrap()
+	expect(file.Make(0o755))
 
-	_, err = pathlib.Dir(file.String()).Lstat().Unpack()
+	_, err = pathlib.Dir(file.String()).Lstat()
 	if e, ok := err.(pathlib.WrongTypeOnDisk[pathlib.Dir]); ok {
 		fmt.Println(e.Error())
 	}
 
-	link := tmpDir.Join("link").AsSymlink().LinkTo(pathlib.PathStr(dir)).Unwrap()
+	link := expect(tmpDir.Join("link").AsSymlink().LinkTo(pathlib.PathStr(dir)))
 	disguised := pathlib.Dir(link)
-	unmasked := disguised.OnDisk().Unwrap() // works
+	unmasked := expect(disguised.OnDisk()) // works
 	for _, name := range []string{"a", "b", "c"} {
-		dir.Join(name).AsFile().Make(0666).Unwrap()
+		expect(dir.Join(name).AsFile().Make(0666))
 	}
 	fmt.Println(unmasked.Path())
-	for _, entry := range unmasked.Path().Read().Unwrap() {
+	for _, entry := range expect(unmasked.Path().Read()) {
 		fmt.Println(entry)
 	}
 	// Output:
@@ -112,14 +110,14 @@ func ExampleDir_Lstat() {
 }
 
 func ExampleDir_Walk() {
-	dir := pathlib.TempDir().Join("dir-walk-example").AsDir().Make(0755).Unwrap()
-	defer func() { dir.RemoveAll().Unwrap() }()
+	dir := expect(pathlib.TempDir().Join("dir-walk-example").AsDir().Make(0755))
+	defer func() { _, _ = dir.RemoveAll() }()
 
-	dir.Join("foo/bar/baz").AsDir().MakeAll(0755, 0755).Unwrap()
-	dir.Join("a/b/c").AsDir().MakeAll(0755, 0755)
+	_ = expect(dir.Join("foo/bar/baz").AsDir().MakeAll(0755, 0755))
+	_ = expect(dir.Join("a/b/c").AsDir().MakeAll(0755, 0755))
 
 	err := dir.Walk(func(path pathlib.PathStr, d fs.DirEntry, err error) error {
-		fmt.Println(path.Rel(dir).Unwrap())
+		fmt.Println(expect(path.Rel(dir)))
 		return nil
 	})
 	if err != nil {
@@ -138,28 +136,29 @@ func ExampleDir_Walk() {
 
 // TODO: find a reliably unreadable directory to test
 // func TestDir_failRead(t *testing.T) {
-// 	dir := pathlib.TempDir().Join("dir-walk-example").AsDir().Make(0333).Unwrap()
-// 	defer func() { dir.RemoveAll().Unwrap() }()
+// 	dir := pathlib.TempDir().Join("dir-walk-example").AsDir().Make(0333))
+// 	defer func() { dir.RemoveAll()) }()
 
-// 	dir.Join("foo/bar/baz").AsDir().MakeAll(0755, 0755).Unwrap()
+// 	dir.Join("foo/bar/baz").AsDir().MakeAll(0755, 0755))
 // 	dir.Join("a/b/c").AsDir().MakeAll(0755, 0755)
 
-// 	_, err := dir.Read().Unpack()
+// 	_, err := dir.Read()
 // 	if err == nil {
 // 		t.Fatal("expected read error")
 // 	}
 // }
 
 func TestDir_Chdir(t *testing.T) {
-	cwd := pathlib.Cwd().Unwrap()
-	defer func() { cwd.Chdir().Unwrap() }()
-	dir := pathlib.TempDir().
-		Join("chdir-example/a/b/c").
-		AsDir().
-		MakeAll(0755, 0755).
-		Unwrap()
+	cwd := expect(pathlib.Cwd())
+	defer func() { expect(cwd.Chdir()) }()
+	dir := expect(
+		pathlib.TempDir().
+			Join("chdir-example/a/b/c").
+			AsDir().
+			MakeAll(0755, 0755),
+	)
 
-	dir.Chdir().Unwrap()
+	expect(dir.Chdir())
 	newCwd, _ := os.Getwd()
 	if newCwd != dir.String() {
 		t.Fatal("failed to chdir into " + dir)
@@ -181,8 +180,8 @@ func ExampleDir_purePath() {
 	method("Parent", d.Parent())
 	method("Parts", d.Parts())
 	method("Clean", d.Clean())
-	// method("Abs().Unwrap", d.Abs().Unwrap())
-	// method("ExpandUser().Unwrap", d.ExpandUser().Unwrap())
+	// method("Abs().Unwrap", d.Abs()))
+	// method("ExpandUser().Unwrap", d.ExpandUser()))
 
 	// Output:
 	// On Unix
@@ -207,7 +206,7 @@ func ExampleDir_purePath() {
 
 // 	fmt.Println("On Unix:")
 // 	for _, d := range dirs {
-// 		rel, err := d.Rel(base).Unpack()
+// 		rel, err := d.Rel(base)
 // 		fmt.Printf("%q.Rel(%q) => %q %v\n", d, base, rel, err)
 // 	}
 // 	// Output:
@@ -218,17 +217,17 @@ func ExampleDir_purePath() {
 
 func ExampleDir_transformer() {
 	fmt.Println("On Unix")
-	fmt.Println("Localized", pathlib.Dir("foo/bar/baz").Localize().Unwrap())
+	fmt.Println("Localized", expect(pathlib.Dir("foo/bar/baz").Localize()))
 	// Output:
 	// On Unix
 	// Localized foo/bar/baz
 }
 
 func ExampleDir_Abs() {
-	cwd := pathlib.Cwd().Unwrap()
+	cwd := expect(pathlib.Cwd())
 	roundTrip := func(d pathlib.Dir) {
-		abs := d.Abs().Unwrap()
-		rel := abs.Rel(cwd).Unwrap()
+		abs := expect(d.Abs())
+		rel := expect(abs.Rel(cwd))
 		if rel.Clean() != d.Clean() {
 			fmt.Printf("dir=%q\nabs=%q\nrel=%q\n\n", d, abs, rel)
 		} else {
@@ -244,50 +243,49 @@ func ExampleDir_Abs() {
 }
 
 func TestDir_ExpandUser(t *testing.T) {
-	roundTrip := pathlib.Dir("~/foo/bar").
-		ExpandUser().
-		Unwrap().
-		Rel(pathlib.UserHomeDir().Unwrap()).
-		Unwrap()
+	dir := pathlib.Dir("~/foo/bar")
+	intermediate := expect(dir.ExpandUser())
+	roundTrip := expect(intermediate.Rel(expect(pathlib.UserHomeDir())))
 	if roundTrip != "foo/bar" {
 		t.Fail()
 	}
 }
 func TestDir_badStat(t *testing.T) {
 	temp := pathlib.Dir(t.TempDir())
-	defer func() { temp.RemoveAll().Unwrap() }()
+	defer func() { expect(temp.RemoveAll()) }()
 
-	temp.Join("file.txt").AsFile().Make(0666).Unwrap()
-	temp.Join("link").AsSymlink().LinkTo(temp.Join("file.txt")).Unwrap()
-	_, err := temp.Join("link").AsDir().OnDisk().Unpack()
+	expect(temp.Join("file.txt").AsFile().Make(0666))
+	expect(temp.Join("link").AsSymlink().LinkTo(temp.Join("file.txt")))
+	_, err := temp.Join("link").AsDir().OnDisk()
 	if _, ok := err.(pathlib.WrongTypeOnDisk[pathlib.Dir]); !ok {
 		t.Fail()
 	}
 }
 
 func TestDir_remove(t *testing.T) {
-	dir := pathlib.Dir(t.TempDir())
-	dir.
-		Join(t.Name()).
-		AsDir().
-		Make(0777).Unwrap().
-		Rename(dir.Join(t.Name() + "__foo")).Unwrap().
-		Remove().Unwrap()
+	temp := pathlib.Dir(t.TempDir())
+	dir := expect(temp.Join("foo").AsDir().Make(0777))
+	renamed := expect(dir.Rename(temp.Join("bar")))
+	if dir.Exists() {
+		t.Fail()
+	}
+	expect(renamed.Remove())
 }
 
 func TestDir_chmod(t *testing.T) {
-	dir := pathlib.Dir(t.TempDir()).Join("dir").AsDir().Make(0755).Unwrap()
-	if dir.Chmod(0777).Unwrap().Stat().Unwrap().Mode()&fs.ModePerm != 0777 {
+	dir := expect(pathlib.Dir(t.TempDir()).Join("dir").AsDir().Make(0755))
+	dir = expect(dir.Chmod(0777))
+	if expect(dir.Stat()).Mode()&fs.ModePerm != 0777 {
 		t.Fail()
 	}
 }
 
 func TestDir_chown(t *testing.T) {
-	_, err := pathlib.Dir(t.TempDir()).
+	_, err := expect(pathlib.Dir(t.TempDir()).
 		Join(t.Name()).
 		AsDir().
-		Make(0755).Unwrap().
-		Chown(0, 0).Unpack()
+		Make(0755)).
+		Chown(0, 0)
 
 	if err != nil {
 		if _, ok := err.(*fs.PathError); !ok {
@@ -298,10 +296,10 @@ func TestDir_chown(t *testing.T) {
 }
 
 func TestDir_chown_self(t *testing.T) {
-	dir := pathlib.Dir(t.TempDir()).
+	dir := expect(pathlib.Dir(t.TempDir()).
 		Join(t.Name()).
 		AsDir().
-		Make(0755).Unwrap()
+		Make(0755))
 	switch strings.Split(runtime.GOOS, "/")[0] {
 	case "windows", "plan9":
 		t.Skip()
@@ -321,16 +319,17 @@ func TestDir_chown_self(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	dir.Chown(uid, gid).Unwrap()
+	expect(dir.Chown(uid, gid))
 }
 
 func TestOnDisk_chown(t *testing.T) {
-	_, err := pathlib.Dir(t.TempDir()).
+	dir := expect(pathlib.Dir(t.TempDir()).
 		Join(t.Name()).
 		AsDir().
-		Make(0755).Unwrap().
-		OnDisk().Unwrap().
-		Chown(0, 0).Unpack()
+		Make(0755))
+	_, err := expect(dir.
+		OnDisk()).
+		Chown(0, 0)
 	if err != nil {
 		if _, ok := err.(*fs.PathError); !ok {
 			t.Fatalf("expected *fs.PathError, got %T", err)
@@ -338,12 +337,19 @@ func TestOnDisk_chown(t *testing.T) {
 	}
 }
 
+func expect[T any](val T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
 func TestOnDisk_chown_self(t *testing.T) {
 	dir := pathlib.Dir(t.TempDir()).
 		Join(t.Name()).
-		AsDir().
-		Make(0755).Unwrap().
-		OnDisk().Unwrap()
+		AsDir()
+	dir = expect(dir.Make(0755))
+	onDisk := expect(dir.OnDisk())
 	switch strings.Split(runtime.GOOS, "/")[0] {
 	case "windows", "plan9":
 		t.Skip()
@@ -363,5 +369,5 @@ func TestOnDisk_chown_self(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	dir.Chown(uid, gid).Unwrap()
+	expect(onDisk.Chown(uid, gid))
 }

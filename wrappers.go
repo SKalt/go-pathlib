@@ -9,17 +9,22 @@ import (
 )
 
 // SEe [os.Stat].
-func stat[P Kind](p P) Result[OnDisk[P]] {
+func stat[P Kind](p P) (OnDisk[P], error) {
 	info, err := os.Stat(string(p))
-	return Result[OnDisk[P]]{onDisk[P]{p, info}, err}
+	return onDisk[P]{p, info}, err
 }
 
-func lstat[P Kind](p P) Result[OnDisk[P]] {
+func lstat[P Kind](p P) (OnDisk[P], error) {
 	info, err := os.Lstat(string(p))
 	if errors.Is(err, fs.ErrNotExist) {
-		return Result[OnDisk[P]]{nil, err}
+		return nil, err
 	}
-	return Result[OnDisk[P]]{onDisk[P]{p, info}, err}
+	return onDisk[P]{p, info}, err
+}
+
+func exists[P Kind](p P) bool {
+	_, err := lstat(p)
+	return !errors.Is(err, fs.ErrNotExist)
 }
 
 func join[P Kind](p P, segments ...string) PathStr {
@@ -66,57 +71,56 @@ func clean[P Kind](p P) P {
 	return P(filepath.Clean(string(p)))
 }
 
-func abs[P Kind](p P) Result[P] {
+func abs[P Kind](p P) (P, error) {
 	q, err := filepath.Abs(string(p))
-	return Result[P]{P(q), err}
+	return P(q), err
 }
 
-func localize[P Kind](p P) Result[P] {
+func localize[P Kind](p P) (P, error) {
 	q, err := filepath.Localize(string(p))
-	return Result[P]{P(q), err}
+	return P(q), err
 }
 
 // See [path/filepath.Rel]
-func rel[P Kind](base Dir, p P) Result[P] {
+func rel[P Kind](base Dir, p P) (P, error) {
 	result, err := filepath.Rel(string(base), string(p))
-	return Result[P]{P(result), err}
+	return P(result), err
 }
 
-func expandUser[P Kind](p P) Result[P] {
+func expandUser[P Kind](p P) (P, error) {
 	if len(p) == 0 || p[0] != '~' || (len(p) > 1 && !os.IsPathSeparator(p[1])) {
-		return Result[P]{p, nil}
+		return p, nil
 	}
 
-	home := UserHomeDir()
-	if home.err != nil {
-		return Result[P]{"", home.err}
+	home, err := UserHomeDir()
+	if err != nil {
+		return "", err
 	}
-	return Result[P]{P(P(home.val) + p[1:]), nil}
+	return P(P(home) + p[1:]), nil
 }
 
-func chmod[P Kind](p P, mode os.FileMode) Result[P] {
-	return Result[P]{p, os.Chmod(string(p), mode)}
+func chmod[P Kind](p P, mode os.FileMode) (P, error) {
+	return p, os.Chmod(string(p), mode)
 }
 
-func chown[P Kind](p P, uid int, gid int) Result[P] {
-	return Result[P]{p, os.Chown(string(p), uid, gid)}
+func chown[P Kind](p P, uid int, gid int) (P, error) {
+	return p, os.Chown(string(p), uid, gid)
 }
 
-func rename[P Kind](p P, newPath PathStr) (result Result[P]) {
-	result.err = os.Rename(string(p), string(newPath))
-	if result.IsOk() {
-		result.val = P(newPath)
-	} else {
-		result.val = p
+func rename[P Kind](p P, newPath PathStr) (result P, err error) {
+	result = p
+	err = os.Rename(string(p), string(newPath))
+	if err == nil {
+		result = P(newPath)
 	}
 	return
 }
 
-func remove[P Kind](p P) Result[P] {
-	return Result[P]{p, os.Remove(string(p))}
+func remove[P Kind](p P) (P, error) {
+	return p, os.Remove(string(p))
 }
 
 // See [os.RemoveAll]
-func removeAll[P Kind](p P) Result[P] {
-	return Result[P]{p, os.RemoveAll(string(p))}
+func removeAll[P Kind](p P) (P, error) {
+	return p, os.RemoveAll(string(p))
 }

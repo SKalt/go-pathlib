@@ -74,21 +74,21 @@ func (p onDisk[P]) Clean() P {
 }
 
 // Abs implements [Transformer].
-func (p onDisk[P]) Abs() Result[P] {
+func (p onDisk[P]) Abs() (P, error) {
 	return abs(p.Path())
 }
 
 // Localize implements [Transformer].
-func (p onDisk[P]) Localize() Result[P] {
+func (p onDisk[P]) Localize() (P, error) {
 	return localize(p.Path())
 }
 
 // Rel implements [Transformer].
-func (p onDisk[P]) Rel(base Dir) Result[P] {
+func (p onDisk[P]) Rel(base Dir) (P, error) {
 	return rel(base, p.Path())
 }
 
-func (p onDisk[P]) ExpandUser() Result[P] {
+func (p onDisk[P]) ExpandUser() (P, error) {
 	return expandUser(p.Path())
 }
 
@@ -96,19 +96,19 @@ func (p onDisk[P]) ExpandUser() Result[P] {
 var _ Manipulator[PathStr] = onDisk[PathStr]{}
 
 // Remove implements [Manipulator].
-func (p onDisk[P]) Remove() Result[P] {
+func (p onDisk[P]) Remove() (P, error) {
 	return remove(p.Path())
 }
 
 // Rename implements [Manipulator].
-func (p onDisk[P]) Rename(destination PathStr) Result[P] {
+func (p onDisk[P]) Rename(destination PathStr) (P, error) {
 	return rename(p.Path(), destination)
 }
 
-func (p onDisk[P]) Chmod(mode fs.FileMode) Result[P] {
+func (p onDisk[P]) Chmod(mode fs.FileMode) (P, error) {
 	return chmod(p.Path(), mode)
 }
 
-func (p onDisk[P]) Chown(uid, gid int) Result[P] {
+func (p onDisk[P]) Chown(uid, gid int) (P, error) {
 	return chown(p.Path(), uid, gid)
 }

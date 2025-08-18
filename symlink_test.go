@@ -10,16 +10,14 @@ import (
 )
 
 func ExampleSymlink_Lstat() {
-	tempDir := pathlib.Cwd().
-		Unwrap().
+	tempDir := expect(pathlib.Cwd()).
 		Join("temp", "symlink-lstat").
-		AsDir().
-		MakeAll(0o755, 0o755).
-		Unwrap()
-	defer tempDir.RemoveAll()
+		AsDir()
+	expect(tempDir.MakeAll(0o755, 0o755))
+	defer func() { expect(tempDir.RemoveAll()) }()
 
 	file := tempDir.Join("file.txt").AsFile()
-	file.Make(0o666).Unwrap()
+	expect(file.Make(0o666))
 
 	{
 		link := tempDir.Join("link")
@@ -27,16 +25,16 @@ func ExampleSymlink_Lstat() {
 			panic(link)
 		}
 	}
-	link := tempDir.Join("link").
+	link := expect(tempDir.Join("link").
 		AsSymlink().
-		LinkTo(pathlib.PathStr(file.String())).
-		Unwrap()
+		LinkTo(pathlib.PathStr(file.String())))
 
-	onDisk := link.Lstat().Unwrap()
+	onDisk := expect(link.Lstat())
+
 	fmt.Printf(
 		"%s -> %s",
-		onDisk.Path().Rel(tempDir).Unwrap(),
-		link.Read().Unwrap().Rel(tempDir).Unwrap(),
+		expect(onDisk.Path().Rel(tempDir)),
+		expect(expect(link.Read()).Rel(tempDir)),
 	)
 	// Output:
 	// link -> file.txt
@@ -45,28 +43,28 @@ func ExampleSymlink_Lstat() {
 func TestSymlink_beholder(t *testing.T) {
 	temp := pathlib.Dir(t.TempDir())
 	file := temp.Join("file.txt")
-	file.AsFile().Make(0644).Unwrap()
-	symlink := temp.Join("nested/dir").
+	expect(file.AsFile().Make(0644))
+	symlink := expect(temp.Join("nested/dir").
 		AsDir().
-		MakeAll(0777, 0777).Unwrap().
+		MakeAll(0777, 0777)).
 		Join("link").AsSymlink()
 
-	symlink.LinkTo("../../file.txt").Unwrap()
-	stat := symlink.Stat().Unwrap()
+	expect(symlink.LinkTo("../../file.txt"))
+	stat := expect(symlink.Stat())
 	if !stat.Mode().IsRegular() || stat.Mode().Perm() != 0644 {
 		t.Fatalf("stat: %o", stat.Mode())
 	}
-	lstat := symlink.Lstat().Unwrap()
+	lstat := expect(symlink.Lstat())
 	if lstat.Mode().IsRegular() {
 		t.Fail()
 	}
 	if !symlink.Exists() {
 		t.Fail()
 	}
-	if symlink.OnDisk().Unwrap().Mode().IsRegular() {
+	if expect(symlink.OnDisk()).Mode().IsRegular() {
 		t.Fail()
 	}
-	_, err := file.AsSymlink().Lstat().Unpack()
+	_, err := file.AsSymlink().Lstat()
 	if err == nil {
 		t.Fail()
 	}
@@ -78,12 +76,12 @@ func TestSymlink_beholder(t *testing.T) {
 func TestSymlink_transformer(t *testing.T) {
 	dir := pathlib.Dir(t.TempDir())
 	file := dir.Join("file.txt").AsFile()
-	if err := file.Make(0666).Unwrap().Close(); err != nil {
+	if err := expect(file.Make(0666)).Close(); err != nil {
 		panic(err)
 	}
-	link := dir.Join("link.to").AsSymlink().LinkTo(pathlib.PathStr(file)).Unwrap()
+	link := expect(dir.Join("link.to").AsSymlink().LinkTo(pathlib.PathStr(file)))
 
-	_, err := link.Join("foo").Lstat().Unpack()
+	_, err := link.Join("foo").Lstat()
 	if err == nil {
 		t.Fail()
 	}
@@ -94,19 +92,19 @@ func TestSymlink_transformer(t *testing.T) {
 	if link.IsLocal() {
 		t.Fail()
 	}
-	if link.Abs().Unwrap() != link {
+	if expect(link.Abs()) != link {
 		t.Fail()
 	}
-	if link.ExpandUser().Unwrap() != link {
+	if expect(link.ExpandUser()) != link {
 		t.Fail()
 	}
 	if !link.Eq(link.Clean()) {
-		t.Fatal(link.Abs().Unwrap(), link.Clean().Abs().Unwrap())
+		t.Fatal(expect(link.Abs()), expect(link.Clean().Abs()))
 	}
 	if !strings.HasPrefix(link.String(), "/") {
 		t.Fail()
 	}
-	if link.Rel(link.Parent()).Unwrap().String() != link.BaseName() {
+	if expect(link.Rel(link.Parent())).String() != link.BaseName() {
 		t.Fail()
 	}
 }
@@ -114,10 +112,10 @@ func TestSymlink_transformer(t *testing.T) {
 func TestSymlink_purePath(t *testing.T) {
 	dir := pathlib.Dir(t.TempDir())
 	file := dir.Join("file.txt").AsFile()
-	if err := file.Make(0666).Unwrap().Close(); err != nil {
+	if err := expect(file.Make(0666)).Close(); err != nil {
 		panic(err)
 	}
-	link := dir.Join("link.to").AsSymlink().LinkTo(pathlib.PathStr(file)).Unwrap()
+	link := expect(dir.Join("link.to").AsSymlink().LinkTo(pathlib.PathStr(file)))
 	ext := link.Ext()
 	if ext != ".to" {
 		t.Fail()
@@ -125,7 +123,7 @@ func TestSymlink_purePath(t *testing.T) {
 	if filepath.Ext(link.String()) != ext {
 		t.Fail()
 	}
-	_, err := link.Join("foo").Lstat().Unpack()
+	_, err := link.Join("foo").Lstat()
 	if err == nil {
 		t.Fail()
 	}
@@ -136,7 +134,7 @@ func TestSymlink_purePath(t *testing.T) {
 	if link.IsLocal() {
 		t.Fail()
 	}
-	if len(link.Rel(link.Parent()).Unwrap().Parts()) != 1 {
+	if len(expect(link.Rel(link.Parent())).Parts()) != 1 {
 		t.Fail()
 	}
 }

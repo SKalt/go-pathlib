@@ -1,7 +1,6 @@
 package pathlib
 
 import (
-	"errors"
 	"io/fs"
 	"iter"
 	"os"
@@ -18,25 +17,25 @@ var _ Beholder[PathStr] = PathStr(".")
 // See [os.Stat].
 //
 // Stat implements [Beholder].
-func (p PathStr) Stat() Result[OnDisk[PathStr]] {
+func (p PathStr) Stat() (OnDisk[PathStr], error) {
 	return stat(p)
 }
 
 // See [os.Lstat].
 //
 // Lstat implements [Beholder].
-func (p PathStr) Lstat() Result[OnDisk[PathStr]] {
+func (p PathStr) Lstat() (OnDisk[PathStr], error) {
 	return lstat(p)
 }
 
 // OnDisk implements [Beholder].
-func (p PathStr) OnDisk() Result[OnDisk[PathStr]] {
+func (p PathStr) OnDisk() (OnDisk[PathStr], error) {
 	return lstat(p)
 }
 
 // Exists implements [Beholder].
-func (p PathStr) Exists() (exists bool) {
-	return !errors.Is(p.OnDisk().err, fs.ErrNotExist)
+func (p PathStr) Exists() bool {
+	return exists(p)
 }
 
 // PurePath --------------------------------------------------------------------
@@ -130,31 +129,30 @@ var _ Readable[any] = PathStr(".")
 // [Symlink.Read] for the possibilities.
 //
 // Read implements [Readable].
-func (p PathStr) Read() Result[any] {
+func (p PathStr) Read() (any, error) {
 	// can't define this switch as a method of OnDisk[P] since OnDisk[P] has to handle
 	// any kind of path
 	var actual os.FileInfo
 	var val any
 	var err error
-	actual, err = p.OnDisk().Unpack()
+	actual, err = p.OnDisk()
 	if err != nil {
-		return Result[any]{nil, err}
+		return nil, err
 	}
 
 	if actual.Mode().IsDir() {
-		val, err = Dir(p).Read().Unpack()
+		val, err = Dir(p).Read()
 	} else if actual.Mode()&fs.ModeSymlink == fs.ModeSymlink {
-		val, err = Symlink(p).Read().Unpack()
+		val, err = Symlink(p).Read()
 	} else {
-		val, err = File(p).Read().Unpack()
+		val, err = File(p).Read()
 	}
-	return Result[any]{val, err}
+	return val, err
 }
 
 // See [os.Open].
-func (p PathStr) Open() Result[*os.File] {
-	handle, err := os.Open(string(p))
-	return Result[*os.File]{handle, err}
+func (p PathStr) Open() (*os.File, error) {
+	return os.Open(string(p))
 }
 
 // Transformer -----------------------------------------------------------------
@@ -173,26 +171,26 @@ func (p PathStr) Clean() PathStr {
 
 // Abs implements [Transformer].
 // See [path/filepath.Abs] for more details.
-func (p PathStr) Abs() Result[PathStr] {
+func (p PathStr) Abs() (PathStr, error) {
 	return abs(p)
 }
 
 // See [path/filepath.Localize].
 // Localize implements [Transformer].
-func (p PathStr) Localize() Result[PathStr] {
+func (p PathStr) Localize() (PathStr, error) {
 	return localize(p)
 }
 
 // Rel implements [Transformer]. See [path/filepath.Rel]:
 //
 // See [path/filepath.Rel].
-func (p PathStr) Rel(base Dir) Result[PathStr] {
+func (p PathStr) Rel(base Dir) (PathStr, error) {
 	return rel(base, p)
 }
 
 // Expand a leading "~" into the user's home directory. If the home directory cannot be
 // determined, the path is returned unchanged.
-func (p PathStr) ExpandUser() Result[PathStr] {
+func (p PathStr) ExpandUser() (PathStr, error) {
 	return expandUser(p)
 }
 
@@ -200,24 +198,24 @@ func (p PathStr) ExpandUser() Result[PathStr] {
 var _ Manipulator[PathStr] = PathStr(".")
 
 // Chmod implements [Manipulator].
-func (p PathStr) Chmod(mode os.FileMode) Result[PathStr] {
+func (p PathStr) Chmod(mode os.FileMode) (PathStr, error) {
 	return chmod(p, mode)
 }
 
 // Change Ownership of the path.
 //
 // Chown implements [Manipulator].
-func (p PathStr) Chown(uid int, gid int) Result[PathStr] {
+func (p PathStr) Chown(uid int, gid int) (PathStr, error) {
 	return chown(p, uid, gid)
 }
 
 // Remove implements [Manipulator].
-func (p PathStr) Remove() Result[PathStr] {
+func (p PathStr) Remove() (PathStr, error) {
 	return remove(p)
 }
 
 // Rename implements [Manipulator].
-func (p PathStr) Rename(newPath PathStr) Result[PathStr] {
+func (p PathStr) Rename(newPath PathStr) (PathStr, error) {
 	return rename(p, newPath)
 }
 
@@ -230,8 +228,16 @@ func (p PathStr) Eq(q PathStr) bool {
 	if p.IsLocal() && q.IsLocal() {
 		return p == q
 	}
+	x, err := p.Abs()
+	if err != nil {
+		return false
+	}
+	y, err := q.Abs()
+	if err != nil {
+		return false
+	}
 	// TODO: check that this still works with UNC strings on windows
-	return p.Abs().Unwrap() == q.Abs().Unwrap()
+	return x == y
 }
 
 // Destroyer -------------------------------------------------------------------
@@ -240,8 +246,8 @@ var _ Destroyer[PathStr] = PathStr(".")
 // See [os.RemoveAll].
 //
 // RemoveAll implements [Destroyer].
-func (p PathStr) RemoveAll() Result[PathStr] {
-	return Result[PathStr]{p, os.RemoveAll(string(p))}
+func (p PathStr) RemoveAll() (PathStr, error) {
+	return p, os.RemoveAll(string(p))
 }
 
 // casts -----------------------------------------------------------------------

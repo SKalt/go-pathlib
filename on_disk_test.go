@@ -8,18 +8,17 @@ import (
 )
 
 func TestOnDisk_ensemble(t *testing.T) {
-	dir := pathlib.TempDir().
+	dir := expect(pathlib.TempDir().
 		Join("test/on-disk/ensemble.dir").
 		AsDir().
-		MakeAll(0777, 0777).
-		Unwrap()
+		MakeAll(0777, 0777))
 
 	assertEq := func(a, b any) {
 		if a != b {
 			t.Fatalf("- %#v\n+ %#v\n", a, b)
 		}
 	}
-	info := dir.OnDisk().Unwrap()
+	info := expect(dir.OnDisk())
 	assertEq(info.Parent(), pathlib.TempDir().Join("test/on-disk").AsDir())
 	assertEq(info.BaseName(), "ensemble.dir")
 	assertEq(info.Ext(), ".dir")
@@ -42,39 +41,37 @@ func TestOnDisk_ensemble(t *testing.T) {
 }
 
 func TestOnDisk_Transformer(t *testing.T) {
-	onDisk := pathlib.Dir(t.TempDir()).OnDisk().Unwrap()
+	onDisk := expect(pathlib.Dir(t.TempDir()).OnDisk())
 
 	if !onDisk.IsAbsolute() {
 		t.Fail()
 	}
-	if onDisk.Abs().Unwrap() != onDisk.Path() {
+	if expect(onDisk.Abs()) != onDisk.Path() {
 		t.Fail()
 	}
-	if onDisk.ExpandUser().Unwrap() != onDisk.Path() {
+	if expect(onDisk.ExpandUser()) != onDisk.Path() {
 		t.Fail()
 	}
 	if !onDisk.Eq(onDisk.Clean()) {
-		t.Fatal(onDisk.Abs().Unwrap(), onDisk.Clean().Abs().Unwrap())
+		t.Fatal(expect(onDisk.Abs()), expect(onDisk.Clean().Abs()))
 	}
 	if !strings.HasPrefix(onDisk.String(), "/") {
 		t.Fail()
 	}
-	if onDisk.Rel(onDisk.Parent()).Unwrap().String() != onDisk.BaseName() {
+	if expect(onDisk.Rel(onDisk.Parent())).String() != onDisk.BaseName() {
 		t.Fail()
 	}
-	if onDisk.Localize().IsOk() { // localize fails when paths start with a /
+	if _, err := onDisk.Localize(); err == nil { // localize fails when paths start with a /
 		t.Fail()
 	}
 }
 
 func TestOnDisk_manipulator(t *testing.T) {
-	dir := pathlib.Dir(t.TempDir())
-	onDisk := dir.Join(t.Name()).
-		AsDir().
-		Make(0777).
-		Unwrap().OnDisk().Unwrap()
-	onDisk.Chmod(0755).Unwrap()
-	onDisk.Rename(dir.Join(t.Name() + "_foo")).Unwrap().
-		OnDisk().Unwrap().
-		Remove().Unwrap()
+	temp := pathlib.Dir(t.TempDir())
+	dir := expect(temp.Join("foo").AsDir().Make(0777))
+	onDisk := expect(dir.OnDisk())
+	expect(onDisk.Chmod(0755))
+	renamed := expect(onDisk.Rename(temp.Join("bar")))
+	onDisk = expect(renamed.OnDisk())
+	expect(onDisk.Remove())
 }

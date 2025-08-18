@@ -46,7 +46,7 @@ func ExamplePathStr_Join() {
 
 func ExamplePathStr_Rel() {
 	example := func(a pathlib.PathStr, b pathlib.Dir) {
-		val, err := a.Rel(b).Unpack()
+		val, err := a.Rel(b)
 		if err == nil {
 			fmt.Printf("%T(%q).Rel(%q) => %T(%q)\n", a, a, b, val, val)
 		} else {
@@ -170,9 +170,9 @@ func ExamplePathStr_BaseName() {
 }
 
 func ExamplePathStr_ExpandUser() {
-	home := pathlib.UserHomeDir().Unwrap()
+	home := expect(pathlib.UserHomeDir())
 	example := func(p pathlib.PathStr) {
-		expanded := p.ExpandUser().Unwrap()
+		expanded := expect(p.ExpandUser())
 		fmt.Printf(
 			"%q => %q\n",
 			p,
@@ -191,16 +191,16 @@ func ExamplePathStr_ExpandUser() {
 }
 
 func ExamplePathStr_beholder() {
-	temp := pathlib.TempDir().Join("path-str-beholder").AsDir().Make(0777).Unwrap()
-	defer temp.RemoveAll()
+	temp := expect(pathlib.TempDir().Join("path-str-beholder").AsDir().Make(0777))
+	defer func() { _, _ = temp.RemoveAll() }()
 
 	file := temp.Join("file.txt")
-	file.AsFile().Make(0644).Unwrap()
+	expect(file.AsFile().Make(0644))
 
-	rel := file.Rel(temp).Unwrap()
-	fmt.Printf("OnDisk: %q %s\n", rel, file.OnDisk().Unwrap().Mode())
-	fmt.Printf(" Lstat: %q %s\n", rel, file.Lstat().Unwrap().Mode())
-	fmt.Printf("  Stat: %q %s\n", rel, file.Stat().Unwrap().Mode())
+	rel := expect(file.Rel(temp))
+	fmt.Printf("OnDisk: %q %s\n", rel, expect(file.OnDisk()).Mode())
+	fmt.Printf(" Lstat: %q %s\n", rel, expect(file.Lstat()).Mode())
+	fmt.Printf("  Stat: %q %s\n", rel, expect(file.Stat()).Mode())
 
 	// Output:
 	// OnDisk: "file.txt" -rw-r--r--
@@ -209,33 +209,33 @@ func ExamplePathStr_beholder() {
 }
 
 func ExamplePathStr_read() {
-	tmpDir := pathlib.TempDir().Join("example-pathStr-read").AsDir().Make(0777).Unwrap()
+	tmpDir := expect(pathlib.TempDir().Join("example-pathStr-read").AsDir().Make(0777))
 	var example = tmpDir.Join("example")
 
 	{
-		example.AsDir().Make(0777).Unwrap()
-		example.Join("foo").AsFile().Make(0644).Unwrap()
-		example.Join("bar").AsDir().Make(0777).Unwrap()
-		entries := example.Read().Unwrap().([]fs.DirEntry)
+		expect(example.AsDir().Make(0777))
+		expect(example.Join("foo").AsFile().Make(0644))
+		expect(example.Join("bar").AsDir().Make(0777))
+		entries := expect(example.Read()).([]fs.DirEntry)
 		for entry := range entries {
 			fmt.Println(entry)
 		}
-		example.Remove().Unwrap()
+		expect(example.Remove())
 	}
 	{
-		_, err := example.AsFile().Make(0644).Unwrap().WriteString("text")
+		_, err := expect(example.AsFile().Make(0644)).WriteString("text")
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(example.Read().Unwrap())
-		example.Remove().Unwrap()
+		fmt.Println(expect(example.Read()))
+		expect(example.Remove())
 	}
 	{
 		target := tmpDir.Join("target")
-		if _, err := target.AsFile().Make(0644).Unwrap().WriteString("target"); err != nil {
+		if _, err := expect(target.AsFile().Make(0644)).WriteString("target"); err != nil {
 			panic(err)
 		}
-		example.AsSymlink().LinkTo(target).Unwrap()
-		fmt.Println(example.Read().Unwrap())
+		expect(example.AsSymlink().LinkTo(target))
+		fmt.Println(expect(example.Read()))
 	}
 }

@@ -11,7 +11,7 @@ type Kind interface {
 }
 
 type Readable[T any] interface {
-	Read() Result[T]
+	Read() (T, error)
 }
 
 // String-only infallible path operations that do not require filesystem access or syscalls.
@@ -37,14 +37,14 @@ type PurePath interface {
 type Transformer[P Kind] interface {
 	// See [path/filepath.Abs].
 	// Returns an absolute path, or an error if the path cannot be made absolute.
-	Abs() Result[P]
+	Abs() (P, error)
 	// See [path/filepath.Rel].
 	// Returns a relative path to the target directory, or an error if the path cannot be made relative.
-	Rel(target Dir) Result[P]
+	Rel(target Dir) (P, error)
 	// See [path/filepath.Localize].
-	Localize() Result[P]
+	Localize() (P, error)
 	// Expand `~` into the home directory of the current user.
-	ExpandUser() Result[P]
+	ExpandUser() (P, error)
 	// See [path/filepath.Clean].
 	Clean() P
 	// Returns true if the two paths represent the same path.
@@ -65,32 +65,32 @@ type OnDisk[PathKind Kind] interface {
 // Behaviors for inspecting a path on-disk.
 type Beholder[PathKind Kind] interface {
 	// Observe the file info of the path on-disk. Does not follow symlinks. See [os.Lstat].
-	OnDisk() Result[OnDisk[PathKind]]
+	OnDisk() (OnDisk[PathKind], error)
 	// See [os.Stat].
-	Stat() Result[OnDisk[PathKind]]
+	Stat() (OnDisk[PathKind], error)
 	// See [os.Lstat].
-	Lstat() Result[OnDisk[PathKind]]
+	Lstat() (OnDisk[PathKind], error)
 	// Returns true if the path exists on-disk.
 	Exists() bool
 }
 
 type Maker[T any] interface {
-	Make(perm fs.FileMode) Result[T]
-	MakeAll(perm, parentPerm fs.FileMode) Result[T]
+	Make(perm fs.FileMode) (T, error)
+	MakeAll(perm, parentPerm fs.FileMode) (T, error)
 }
 
 type Manipulator[P Kind] interface {
 	// see [os.Remove].
-	Remove() Result[P]
+	Remove() (P, error)
 	// see [os.Chmod].
-	Chmod(fs.FileMode) Result[P]
+	Chmod(fs.FileMode) (P, error)
 	// see [os.Chown].
-	Chown(uid, gid int) Result[P]
+	Chown(uid, gid int) (P, error)
 	// see [os.Rename].
-	Rename(newPath PathStr) Result[P]
+	Rename(newPath PathStr) (P, error)
 }
 
 type Destroyer[P Kind] interface {
 	// see [os.RemoveAll].
-	RemoveAll() Result[P]
+	RemoveAll() (P, error)
 }

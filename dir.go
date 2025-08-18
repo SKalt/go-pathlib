@@ -33,21 +33,21 @@ func (d Dir) Walk(
 // the [path/filepath.Separator] is '/').
 //
 // > Glob ignores file system errors such as I/O errors reading directories. The only possible returned error is [path/filepath.ErrBadPattern], when pattern is malformed.
-func (d Dir) Glob(pattern string) Result[[]PathStr] {
+func (d Dir) Glob(pattern string) ([]PathStr, error) {
 	matches, err := filepath.Glob(filepath.Join(string(d), pattern))
 	if err != nil {
-		return Result[[]PathStr]{nil, err}
+		return nil, err
 	}
 	result := make([]PathStr, len(matches))
 	for i, m := range matches {
 		result[i] = PathStr(m)
 	}
-	return Result[[]PathStr]{result, nil}
+	return result, nil
 }
 
 // CHange DIRectory. See [os.Chdir].
-func (d Dir) Chdir() Result[Dir] {
-	return Result[Dir]{d, os.Chdir(string(d))}
+func (d Dir) Chdir() (Dir, error) {
+	return d, os.Chdir(string(d))
 }
 
 // Readable --------------------------------------------------------------------
@@ -58,9 +58,8 @@ var _ Readable[[]fs.DirEntry] = Dir(".")
 // > [os.ReadDir] returns all the entries of the directory sorted
 // by filename. If an error occurred reading the directory, ReadDir returns the entries it was
 // able to read before the error, along with the error.
-func (d Dir) Read() Result[[]fs.DirEntry] {
-	result, err := os.ReadDir(string(d))
-	return Result[[]fs.DirEntry]{result, err}
+func (d Dir) Read() ([]fs.DirEntry, error) {
+	return os.ReadDir(string(d))
 }
 
 // PurePath --------------------------------------------------------------------
@@ -114,7 +113,7 @@ func (d Dir) String() string {
 }
 
 // Abs implements [Transformer].
-func (d Dir) Abs() Result[Dir] {
+func (d Dir) Abs() (Dir, error) {
 	return abs(d)
 }
 
@@ -131,19 +130,19 @@ func (d Dir) Clean() Dir {
 // See [path/filepath.Localize]
 //
 // Localize implements [Transformer].
-func (d Dir) Localize() Result[Dir] {
+func (d Dir) Localize() (Dir, error) {
 	return localize(d)
 }
 
 // See [path/filepath.Rel]
 //
 // Rel implements [Transformer].
-func (d Dir) Rel(base Dir) Result[Dir] {
+func (d Dir) Rel(base Dir) (Dir, error) {
 	return rel(base, d.Clean())
 }
 
 // ExpandUser implements [Transformer].
-func (d Dir) ExpandUser() Result[Dir] {
+func (d Dir) ExpandUser() (Dir, error) {
 	return expandUser(d)
 }
 
@@ -151,22 +150,23 @@ func (d Dir) ExpandUser() Result[Dir] {
 var _ Beholder[Dir] = Dir(".")
 
 // OnDisk implements [Beholder]
-func (d Dir) OnDisk() (result Result[OnDisk[Dir]]) {
+func (d Dir) OnDisk() (result OnDisk[Dir], err error) {
 	return d.Stat()
 }
 
 // Exists implements [Beholder].
 func (d Dir) Exists() bool {
-	return d.Lstat().IsOk()
+	_, err := d.Lstat()
+	return err == nil
 }
 
 // See [os.Lstat].
 //
 // Lstat implements [Beholder].
-func (d Dir) Lstat() (result Result[OnDisk[Dir]]) {
-	result = lstat(d)
-	if result.IsOk() && !result.val.IsDir() {
-		result.err = WrongTypeOnDisk[Dir]{result.val}
+func (d Dir) Lstat() (result OnDisk[Dir], err error) {
+	result, err = lstat(d)
+	if err == nil && !result.IsDir() {
+		err = WrongTypeOnDisk[Dir]{result}
 	}
 	return
 }
@@ -174,10 +174,10 @@ func (d Dir) Lstat() (result Result[OnDisk[Dir]]) {
 // See [os.Stat].
 //
 // Stat implements [Beholder].
-func (d Dir) Stat() (result Result[OnDisk[Dir]]) {
-	result = stat(d)
-	if result.IsOk() && !result.val.IsDir() {
-		result.err = WrongTypeOnDisk[Dir]{result.val}
+func (d Dir) Stat() (result OnDisk[Dir], err error) {
+	result, err = stat(d)
+	if err == nil && !result.IsDir() {
+		err = WrongTypeOnDisk[Dir]{result}
 	}
 	return
 }
@@ -186,22 +186,21 @@ func (d Dir) Stat() (result Result[OnDisk[Dir]]) {
 var _ Maker[Dir] = Dir("/example")
 
 // Make implements [Maker].
-func (d Dir) Make(perm fs.FileMode) (result Result[Dir]) {
-	result = Result[Dir]{d, os.Mkdir(string(d), perm)}
-	return
+func (d Dir) Make(perm fs.FileMode) (result Dir, err error) {
+	return d, os.Mkdir(string(d), perm)
 }
 
 // MakeAll implements [Maker]
-func (d Dir) MakeAll(perm, parentPerm fs.FileMode) (result Result[Dir]) {
-	result = Result[Dir]{val: d}
+func (d Dir) MakeAll(perm, parentPerm fs.FileMode) (result Dir, err error) {
+	result = d
 	if d.Exists() {
 		return
 	}
-	result.err = d.Parent().MakeAll(parentPerm, parentPerm).err
-	if !result.IsOk() {
+	_, err = d.Parent().MakeAll(parentPerm, parentPerm)
+	if err != nil {
 		return
 	}
-	result.err = os.MkdirAll(string(d), perm)
+	err = os.MkdirAll(string(d), perm)
 	return
 }
 
@@ -210,28 +209,28 @@ var _ Manipulator[Dir] = Dir(".")
 
 // See [os.Chmod].
 // Chmod implements [Manipulator].
-func (d Dir) Chmod(mode os.FileMode) Result[Dir] {
+func (d Dir) Chmod(mode os.FileMode) (Dir, error) {
 	return chmod(d, mode)
 }
 
 // See [os.Chown].
 //
 // Chown implements [Manipulator].
-func (d Dir) Chown(uid int, gid int) Result[Dir] {
+func (d Dir) Chown(uid int, gid int) (Dir, error) {
 	return chown(d, uid, gid)
 }
 
 // See [os.Remove].
 //
 // Remove implements [Manipulator].
-func (d Dir) Remove() Result[Dir] {
+func (d Dir) Remove() (Dir, error) {
 	return remove(d)
 }
 
 // See [os.Rename].
 //
 // Rename implements [Manipulator].
-func (d Dir) Rename(newPath PathStr) Result[Dir] {
+func (d Dir) Rename(newPath PathStr) (Dir, error) {
 	return rename(d, newPath)
 }
 
@@ -241,6 +240,6 @@ var _ Destroyer[Dir] = Dir(".")
 // See [os.RemoveAll].
 //
 // RemoveAll implements [Destroyer].
-func (d Dir) RemoveAll() Result[Dir] {
+func (d Dir) RemoveAll() (Dir, error) {
 	return removeAll(d)
 }

@@ -22,8 +22,8 @@ func ExampleFile_purePath() {
 	method("Parent", d.Parent())
 	method("Parts", d.Parts())
 	method("Clean", d.Clean())
-	// method("Abs().Unwrap", d.Abs().Unwrap())
-	// method("ExpandUser().Unwrap", d.ExpandUser().Unwrap())
+	// method("Abs().Unwrap", d.Abs()))
+	// method("ExpandUser().Unwrap", d.ExpandUser()))
 
 	// Output:
 	// On Unix
@@ -47,37 +47,42 @@ func TestFile_Join(t *testing.T) {
 }
 
 func TestFile_manipulator(t *testing.T) {
-	prevWorkingDirectory := pathlib.Cwd().Unwrap()
+	prevWorkingDirectory := expect(pathlib.Cwd())
 	dir := pathlib.Dir(t.TempDir())
-	dir.Chdir().Unwrap()
+	expect(dir.Chdir())
 	defer func() {
-		prevWorkingDirectory.Chdir()
-		dir.RemoveAll().Unwrap()
+		expect(dir.RemoveAll())
+		expect(prevWorkingDirectory.Chdir())
 	}()
 
 	file := dir.Join("foo.txt").AsFile()
-	file.Make(0655).Unwrap()
+	expect(file.Make(0655))
 	if !file.Exists() {
 		t.Fail()
 	}
-	file.Rename("foo.sh").Unwrap().Chmod(0777).Unwrap().Remove()
+	renamed := expect(file.Rename("foo.sh"))
+	renamed = expect(renamed.Chmod(0777))
 	if file.Exists() {
 		t.Fail()
 	}
+	if !renamed.Exists() {
+		t.Fail()
+	}
+	expect(renamed.Remove())
 }
 
 func TestFile_Transformer(t *testing.T) {
 	var file pathlib.Transformer[pathlib.File] = pathlib.File("~/foo/bar/../baz.txt")
-	file.Abs().Unwrap()
-	file.Rel("~").Unwrap()
+	expect(file.Abs())
+	expect(file.Rel("~"))
 	if file.Clean() != "~/foo/baz.txt" {
 		t.Fatal("clean", file.Clean())
 	}
-	if !file.ExpandUser().Unwrap().IsAbsolute() {
-		t.Fatal("ExpandUser", file.ExpandUser().Unwrap())
+	if !expect(file.ExpandUser()).IsAbsolute() {
+		t.Fatal("ExpandUser", expect(file.ExpandUser()))
 	}
 	if !file.Eq(file.Clean()) {
-		t.Fatal(file.Abs().Unwrap(), file.Clean().Abs().Unwrap())
+		t.Fatal(expect(file.Abs()), expect(file.Clean().Abs()))
 	}
 }
 
@@ -88,9 +93,9 @@ func TestFile_Beholder(t *testing.T) {
 		t.Fail()
 	}
 
-	file.Make(0666).Unwrap()
-	file.Stat().Unwrap()
-	file.Lstat().Unwrap()
-	file.OnDisk().Unwrap()
+	expect(file.Make(0666))
+	expect(file.Stat())
+	expect(file.Lstat())
+	expect(file.OnDisk())
 
 }

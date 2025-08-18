@@ -11,14 +11,14 @@ type Symlink PathStr
 var _ Readable[PathStr] = Symlink("./link")
 
 // Read implements [Readable].
-func (s Symlink) Read() Result[PathStr] {
+func (s Symlink) Read() (PathStr, error) {
 	link, err := os.Readlink(string(s))
-	return Result[PathStr]{PathStr(link), err}
+	return PathStr(link), err
 }
 
 // See [os.Symlink]
-func (s Symlink) LinkTo(target PathStr) Result[Symlink] {
-	return Result[Symlink]{s, os.Symlink(target.String(), s.String())}
+func (s Symlink) LinkTo(target PathStr) (Symlink, error) {
+	return s, os.Symlink(target.String(), s.String())
 }
 
 // -----------------------------------------------------------------------------
@@ -70,21 +70,21 @@ func (s Symlink) Clean() Symlink {
 }
 
 // Abs implements [Transformer].
-func (s Symlink) Abs() Result[Symlink] {
+func (s Symlink) Abs() (Symlink, error) {
 	return abs(s)
 }
 
 // Localize implements [Transformer].
-func (s Symlink) Localize() Result[Symlink] {
+func (s Symlink) Localize() (Symlink, error) {
 	return localize(s)
 }
 
 // Rel implements [Transformer].
-func (s Symlink) Rel(base Dir) Result[Symlink] {
+func (s Symlink) Rel(base Dir) (Symlink, error) {
 	return rel(base, s)
 }
 
-func (s Symlink) ExpandUser() Result[Symlink] {
+func (s Symlink) ExpandUser() (Symlink, error) {
 	return expandUser(s)
 }
 
@@ -96,7 +96,7 @@ func (s Symlink) Ext() string {
 var _ Beholder[Symlink] = Symlink("./link")
 
 // OnDisk implements [Beholder].
-func (s Symlink) OnDisk() (result Result[OnDisk[Symlink]]) {
+func (s Symlink) OnDisk() (result OnDisk[Symlink], err error) {
 	return s.Lstat()
 }
 
@@ -106,16 +106,16 @@ func (s Symlink) Exists() bool {
 }
 
 // Lstat implements [Beholder].
-func (s Symlink) Lstat() (result Result[OnDisk[Symlink]]) {
-	result = lstat(s)
-	if result.IsOk() && ((result.val.Mode() & fs.ModeSymlink) != fs.ModeSymlink) {
-		result.err = WrongTypeOnDisk[Symlink]{result.val}
+func (s Symlink) Lstat() (result OnDisk[Symlink], err error) {
+	result, err = lstat(s)
+	if err == nil && ((result.Mode() & fs.ModeSymlink) != fs.ModeSymlink) {
+		err = WrongTypeOnDisk[Symlink]{result}
 	}
 	return
 }
 
 // Stat implements [Beholder].
-func (s Symlink) Stat() Result[OnDisk[Symlink]] {
+func (s Symlink) Stat() (OnDisk[Symlink], error) {
 	return stat(s)
 }
 
@@ -126,22 +126,22 @@ func (s Symlink) Stat() Result[OnDisk[Symlink]] {
 var _ Manipulator[Symlink] = Symlink("./link")
 
 // Chmod implements [Manipulator].
-func (s Symlink) Chmod(mode os.FileMode) Result[Symlink] {
+func (s Symlink) Chmod(mode os.FileMode) (Symlink, error) {
 	return chmod(s, mode)
 }
 
 // Chown implements [Manipulator].
-func (s Symlink) Chown(uid int, gid int) Result[Symlink] {
+func (s Symlink) Chown(uid int, gid int) (Symlink, error) {
 	return chown(s, uid, gid)
 }
 
 // Remove implements [Manipulator].
-func (s Symlink) Remove() Result[Symlink] {
+func (s Symlink) Remove() (Symlink, error) {
 	return remove(s)
 }
 
 // Rename implements [Manipulator].
-func (s Symlink) Rename(newPath PathStr) Result[Symlink] {
+func (s Symlink) Rename(newPath PathStr) (Symlink, error) {
 	return rename(s, newPath)
 }
 
@@ -149,6 +149,6 @@ func (s Symlink) Rename(newPath PathStr) Result[Symlink] {
 var _ Destroyer[Symlink] = Symlink("./link")
 
 // RemoveAll implements [Destroyer].
-func (s Symlink) RemoveAll() Result[Symlink] {
+func (s Symlink) RemoveAll() (Symlink, error) {
 	return removeAll(s)
 }

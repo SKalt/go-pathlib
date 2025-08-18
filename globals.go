@@ -3,27 +3,27 @@ package pathlib
 import "os"
 
 // Gets the Current Working Directory. See [os.Getwd].
-func Cwd() Result[Dir] {
+func Cwd() (Dir, error) {
 	dir, err := os.Getwd()
-	return Result[Dir]{Dir(dir), err}
+	return Dir(dir), err
 }
 
 // See [os.UserHomeDir].
-func UserHomeDir() Result[Dir] {
+func UserHomeDir() (Dir, error) {
 	dir, err := os.UserHomeDir()
-	return Result[Dir]{Dir(dir), err}
+	return Dir(dir), err
 }
 
 // See [os.UserCacheDir].
-func UserCacheDir() Result[Dir] {
+func UserCacheDir() (Dir, error) {
 	dir, err := os.UserCacheDir()
-	return Result[Dir]{Dir(dir), err}
+	return Dir(dir), err
 }
 
 // See [os.UserConfigDir].
-func UserConfigDir() Result[Dir] {
+func UserConfigDir() (Dir, error) {
 	dir, err := os.UserConfigDir()
-	return Result[Dir]{Dir(dir), err}
+	return Dir(dir), err
 }
 
 // returns the process/os-wide temporary directory. See [os.TempDir].

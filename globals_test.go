@@ -9,7 +9,7 @@ import (
 )
 
 func ExampleUserHomeDir() {
-	homeDir := pathlib.UserHomeDir().Unwrap()
+	homeDir := expect(pathlib.UserHomeDir())
 	fmt.Println(os.Getenv("HOME") == string(homeDir))
 	// Output:
 	// true
@@ -27,45 +27,45 @@ func ExampleUserCacheDir() {
 		if err := os.Setenv("XDG_CACHE_HOME", expected); err != nil {
 			panic(err)
 		}
-		actual := pathlib.UserCacheDir().Unwrap()
+		actual := expect(pathlib.UserCacheDir())
 		fmt.Printf("$XDG_CACHE_HOME:       : %q\n", expected)
-		fmt.Printf("UserCacheDir().Unwrap(): %q\n", actual)
+		fmt.Printf("UserCacheDir()): %q\n", actual)
 	}
 
 	{ // if $XDG_CACHE_HOME is unset, return the OS-specific default.
 		if err := os.Unsetenv("XDG_CACHE_HOME"); err != nil {
 			panic(err)
 		}
-		home := pathlib.UserHomeDir().Unwrap()
+		home := expect(pathlib.UserHomeDir())
 		actual := strings.Replace(
-			pathlib.UserCacheDir().Unwrap().String(),
+			expect(pathlib.UserCacheDir()).String(),
 			home.String(),
 			"$HOME",
 			1,
 		)
 		fmt.Printf("$XDG_CACHE_HOME        : %q\n", os.Getenv("XDG_CACHE_HOME"))
-		fmt.Printf("UserCacheDir().Unwrap(): %q\n", actual)
+		fmt.Printf("UserCacheDir()): %q\n", actual)
 
 	}
 
 	// Output:
 	// On Unix:
 	// $XDG_CACHE_HOME:       : "/example/.cache"
-	// UserCacheDir().Unwrap(): "/example/.cache"
+	// UserCacheDir()): "/example/.cache"
 	// $XDG_CACHE_HOME        : ""
-	// UserCacheDir().Unwrap(): "$HOME/.cache"
+	// UserCacheDir()): "$HOME/.cache"
 }
 
 func ExampleUserConfigDir() {
 	stash := os.Getenv("XDG_CONFIG_HOME")
-	home := pathlib.UserHomeDir().Unwrap()
+	home := expect(pathlib.UserHomeDir())
 	defer func() {
 		_ = os.Setenv("XDG_CONFIG_HOME", stash)
 	}()
 
 	checkOutput := func() {
 		xdg_config_home := os.Getenv("XDG_CONFIG_HOME")
-		val, err := pathlib.UserConfigDir().Unpack()
+		val, err := pathlib.UserConfigDir()
 		if err == nil {
 			fmt.Printf(
 				"%q => %q\n",

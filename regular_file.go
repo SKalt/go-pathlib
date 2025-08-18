@@ -9,13 +9,12 @@ import (
 type File PathStr
 
 // See [os.OpenFile].
-func (f File) Open(flag int, perm fs.FileMode) Result[*os.File] {
-	handle, err := os.OpenFile(string(f), flag, perm)
-	return Result[*os.File]{handle, err}
+func (f File) Open(flag int, perm fs.FileMode) (*os.File, error) {
+	return os.OpenFile(string(f), flag, perm)
 }
 
 // func (f File) Write([]byte) (int, error) {
-// 	handle, err := f.Open(os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600).Unpack()
+// 	handle, err := f.Open(os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 // 	if err != nil {
 // 		return 0, err
 // 	}
@@ -71,7 +70,7 @@ func (f File) String() string {
 }
 
 // Abs implements [Transformer].
-func (f File) Abs() Result[File] {
+func (f File) Abs() (File, error) {
 	return abs(f)
 }
 
@@ -86,17 +85,17 @@ func (f File) Eq(other File) bool {
 }
 
 // ExpandUser implements [Transformer].
-func (f File) ExpandUser() Result[File] {
+func (f File) ExpandUser() (File, error) {
 	return expandUser(f)
 }
 
 // Localize implements [Transformer].
-func (f File) Localize() Result[File] {
+func (f File) Localize() (File, error) {
 	return localize(f)
 }
 
 // Rel implements [Transformer].
-func (f File) Rel(base Dir) Result[File] {
+func (f File) Rel(base Dir) (File, error) {
 	return rel(base, f)
 }
 
@@ -109,17 +108,17 @@ func (f File) Exists() bool {
 }
 
 // Lstat implements [Beholder].
-func (f File) Lstat() Result[OnDisk[File]] {
+func (f File) Lstat() (OnDisk[File], error) {
 	return lstat(f)
 }
 
 // OnDisk implements [Beholder].
-func (f File) OnDisk() Result[OnDisk[File]] {
+func (f File) OnDisk() (OnDisk[File], error) {
 	return lstat(f)
 }
 
 // Stat implements [Beholder].
-func (f File) Stat() Result[OnDisk[File]] {
+func (f File) Stat() (OnDisk[File], error) {
 	return stat(f)
 }
 
@@ -127,22 +126,22 @@ func (f File) Stat() Result[OnDisk[File]] {
 var _ Manipulator[File] = File("./example")
 
 // Chmod implements [Manipulator].
-func (f File) Chmod(mode os.FileMode) Result[File] {
+func (f File) Chmod(mode os.FileMode) (File, error) {
 	return chmod(f, mode)
 }
 
 // Chown implements [Manipulator].
-func (f File) Chown(uid int, gid int) Result[File] {
+func (f File) Chown(uid int, gid int) (File, error) {
 	return chown(f, uid, gid)
 }
 
 // Remove implements [Manipulator].
-func (f File) Remove() Result[File] {
+func (f File) Remove() (File, error) {
 	return remove(f)
 }
 
 // Rename implements [Manipulator].
-func (f File) Rename(newPath PathStr) Result[File] {
+func (f File) Rename(newPath PathStr) (File, error) {
 	return rename(f, newPath)
 }
 
@@ -150,26 +149,24 @@ func (f File) Rename(newPath PathStr) Result[File] {
 var _ Maker[*os.File] = File("./example")
 
 // Make implements [Maker].
-func (f File) Make(perm fs.FileMode) Result[*os.File] {
+func (f File) Make(perm fs.FileMode) (*os.File, error) {
 	return f.Open(os.O_RDWR|os.O_CREATE, perm)
 }
 
 // MakeAll implements [Maker].
-func (f File) MakeAll(perm, parentPerm fs.FileMode) (result Result[*os.File]) {
-	result.err = f.Parent().MakeAll(parentPerm, parentPerm).err
-	if !result.IsOk() {
+func (f File) MakeAll(perm, parentPerm fs.FileMode) (result *os.File, err error) {
+	_, err = f.Parent().MakeAll(parentPerm, parentPerm)
+	if err != nil {
 		return
 	}
-	result = f.Make(perm)
-	return
+	return f.Make(perm)
 }
 
 // Readable --------------------------------------------------------------------
 var _ Readable[[]byte] = File("./example")
 
-func (f File) Read() Result[[]byte] {
-	data, err := os.ReadFile(string(f))
-	return Result[[]byte]{data, err}
+func (f File) Read() ([]byte, error) {
+	return os.ReadFile(string(f))
 }
 
 // FIXME: file handle wrapper type

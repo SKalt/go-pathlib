@@ -8,17 +8,17 @@ import (
 
 func Example() {
 	dir := pathlib.TempDir().Join("pathlib-example").AsDir()
-	defer dir.RemoveAll().Unwrap()
+	defer expect(dir.RemoveAll())
 	if dir.Exists() {
-		dir.RemoveAll().Unwrap()
+		expect(dir.RemoveAll())
 	}
-
-	onDisk := dir.Make(0o777).Unwrap().OnDisk().Unwrap()
+	dir = expect(dir.Make(0o777))
+	onDisk := expect(dir.OnDisk())
 	fmt.Printf("Created %s with mode %s\n", dir, onDisk.Mode())
 
 	for i, subPath := range []string{"a.txt", "b.txt", "c/d.txt"} {
 		file := dir.Join(subPath).AsFile()
-		handle := file.MakeAll(0o666, 0o777).Unwrap()
+		handle := expect(file.MakeAll(0o666, 0o777))
 		_, err := fmt.Fprintf(handle, "%d", i)
 		if err != nil {
 			panic(err)
@@ -27,11 +27,11 @@ func Example() {
 			panic(err)
 		}
 
-		fmt.Printf("contents of %s: %q\n", file, string(file.Read().Unwrap()))
+		fmt.Printf("contents of %s: %q\n", file, string(expect(file.Read())))
 	}
 
 	fmt.Printf("contents of %s:\n", dir)
-	for _, entry := range dir.Read().Unwrap() {
+	for _, entry := range expect(dir.Read()) {
 		fmt.Println("  - " + entry.Name())
 	}
 	// Output:
