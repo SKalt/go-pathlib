@@ -10,13 +10,7 @@ import (
 // and the string may or may not end in an [os.PathSeparator].
 type Dir PathStr
 
-// A wrapper around [path/filepath.WalkDir], which has the following properties:
-//
-// > The files are walked in lexical order, which makes the output deterministic but [reading the] entire directory into memory before proceeding to walk that directory.
-//
-// > WalkDir does not follow symbolic links.
-//
-// > WalkDir calls [callback] with paths that use the separator character appropriate for the operating system.
+// See [path/filepath.WalkDir].
 func (d Dir) Walk(
 	callback func(path PathStr, d fs.DirEntry, err error) error,
 ) error {
@@ -25,14 +19,7 @@ func (d Dir) Walk(
 	})
 }
 
-// See [path/filepath.Glob]:
-//
-// > Glob returns the names of all files matching pattern or nil if there is no
-// matching file. The syntax of patterns is the same as in [path/filepath.Match].
-// The pattern may describe hierarchical names such as /usr/*/bin/ed (assuming
-// the [path/filepath.Separator] is '/').
-//
-// > Glob ignores file system errors such as I/O errors reading directories. The only possible returned error is [path/filepath.ErrBadPattern], when pattern is malformed.
+// See [path/filepath.Glob].
 func (d Dir) Glob(pattern string) ([]PathStr, error) {
 	matches, err := filepath.Glob(filepath.Join(string(d), pattern))
 	if err != nil {
@@ -53,11 +40,9 @@ func (d Dir) Chdir() (Dir, error) {
 // Readable --------------------------------------------------------------------
 var _ Readable[[]fs.DirEntry] = Dir(".")
 
-// a wrapper around [os.ReadDir]:
+// See [os.ReadDir].
 //
-// > [os.ReadDir] returns all the entries of the directory sorted
-// by filename. If an error occurred reading the directory, ReadDir returns the entries it was
-// able to read before the error, along with the error.
+// Read implements [Reader].
 func (d Dir) Read() ([]fs.DirEntry, error) {
 	return os.ReadDir(string(d))
 }

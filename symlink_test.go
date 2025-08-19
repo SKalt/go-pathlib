@@ -138,3 +138,12 @@ func TestSymlink_purePath(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestSymlink_chown(t *testing.T) {
+	dir := pathlib.Dir(t.TempDir())
+	file := dir.Join("file.txt")
+	expect(file.AsFile().Make(0666))
+	link := expect(dir.Join("link.to").AsSymlink().LinkTo(pathlib.PathStr(file)))
+
+	testChown(t, link)
+}

@@ -6,13 +6,18 @@ import (
 	"github.com/skalt/pathlib.go"
 )
 
-func Example() {
-	dir := pathlib.TempDir().Join("pathlib-example").AsDir()
-	defer expect(dir.RemoveAll())
-	if dir.Exists() {
-		expect(dir.RemoveAll())
+// This syntactic sugar will be used throughout the examples.
+func expect[T any](val T, err error) T {
+	if err != nil {
+		panic(err)
 	}
-	dir = expect(dir.Make(0o777))
+	return val
+}
+
+func Example() {
+	dir := expect(pathlib.TempDir().Join("pathlib-example").AsDir().Make(0o777))
+	defer func() { expect(dir.RemoveAll()) }()
+
 	onDisk := expect(dir.OnDisk())
 	fmt.Printf("Created %s with mode %s\n", dir, onDisk.Mode())
 

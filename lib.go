@@ -79,7 +79,9 @@ type Maker[T any] interface {
 	MakeAll(perm, parentPerm fs.FileMode) (T, error)
 }
 
-type Manipulator[P Kind] interface {
+type Manipulator[P interface {
+	Kind
+}] interface {
 	// see [os.Remove].
 	Remove() (P, error)
 	// see [os.Chmod].

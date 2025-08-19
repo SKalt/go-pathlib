@@ -126,7 +126,7 @@ func (p PathStr) IsLocal() bool {
 var _ Readable[any] = PathStr(".")
 
 // Read attempts to read what the path represents. See [File.Read], [Dir.Read], and
-// [Symlink.Read] for the possibilities.
+// [Symlink.Read] for the possible return types.
 //
 // Read implements [Readable].
 func (p PathStr) Read() (any, error) {
@@ -148,11 +148,6 @@ func (p PathStr) Read() (any, error) {
 		val, err = File(p).Read()
 	}
 	return val, err
-}
-
-// See [os.Open].
-func (p PathStr) Open() (*os.File, error) {
-	return os.Open(string(p))
 }
 
 // Transformer -----------------------------------------------------------------

@@ -99,3 +99,10 @@ func TestFile_Beholder(t *testing.T) {
 	expect(file.OnDisk())
 
 }
+
+func TestFile_chown(t *testing.T) {
+	temp := pathlib.Dir(t.TempDir())
+	file := temp.Join("file.txt").AsFile()
+	expect(file.Make(0666))
+	testChown(t, file)
+}

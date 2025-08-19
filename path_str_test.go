@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"strings"
+	"testing"
 
 	"github.com/skalt/pathlib.go"
 )
@@ -238,4 +239,93 @@ func ExamplePathStr_read() {
 		expect(example.AsSymlink().LinkTo(target))
 		fmt.Println(expect(example.Read()))
 	}
+}
+
+func ExamplePathStr_Read() {
+	var dir = pathlib.TempDir().Join("PathStr.Read")
+	var file = dir.Join("a.txt")
+	var link = dir.Join("link")
+
+	_, err := expect(file.AsFile().MakeAll(0666, 0777)).WriteString("file text")
+	if err != nil {
+		panic(err)
+	}
+	defer func() { expect(dir.RemoveAll()) }()
+	expect(link.AsSymlink().LinkTo(file))
+
+	var contents any
+	contents = expect(pathlib.PathStr(file).Read())
+	fmt.Printf("file.Read() => %T(%q)\n", contents, contents)
+
+	contents = expect(pathlib.PathStr(dir).Read())
+	fmt.Printf("dir.Read() => %T(%q)\n", contents, contents)
+
+	contents = expect(pathlib.PathStr(link).Read())
+	fmt.Printf("link.Read() => %T(%q)", contents, contents)
+	// Output:
+	// file.Read() => []uint8("file text")
+	// dir.Read() => []fs.DirEntry(["- a.txt" "L link"])
+	// link.Read() => pathlib.PathStr("/tmp/PathStr.Read/a.txt")
+}
+
+func TestPathStr_Rename(t *testing.T) {
+	dir := pathlib.Dir(t.TempDir())
+	a := dir.Join("a")
+	expect(a.AsFile().Make(0666))
+	b := expect(a.Rename(dir.Join("b")))
+	if a.Exists() {
+		t.Fail()
+	}
+	if !b.Exists() {
+		t.Fail()
+	}
+}
+
+func TestPathStr_chmod(t *testing.T) {
+	dir := pathlib.Dir(t.TempDir())
+	f := dir.Join("a")
+	expect(f.AsFile().Make(0666))
+	testChmod(t, f, 0640)
+}
+
+func TestPathStr_chown(t *testing.T) {
+	dir := pathlib.Dir(t.TempDir())
+	f := dir.Join("foo")
+	expect(f.AsFile().Make(0666))
+	testChown(t, pathlib.PathStr(f))
+}
+
+func ExamplePathStr_Remove() {
+	dir := expect(pathlib.TempDir().Join("pathStr-remove").AsDir().Make(0777))
+	defer func() { expect(dir.RemoveAll()) }()
+
+	f := dir.Join("foo.txt")
+	expect(f.AsFile().Make(0666))
+	link := dir.Join("link")
+	expect(link.AsSymlink().LinkTo(f))
+	_, err := pathlib.PathStr(dir).Remove()
+	if err != nil {
+		fmt.Println("Unable to delete non-empty directory " + dir)
+	}
+
+	link = expect(link.Remove())
+	if !link.Exists() {
+		fmt.Println("removed symlink " + link)
+	}
+	if f.Exists() {
+		fmt.Println("removing " + link + " didn't affect link target " + f)
+	} else {
+		panic("removing " + link + " removed " + f)
+	}
+
+	f = expect(f.Remove())
+	if !f.Exists() {
+		fmt.Println("removed file " + f)
+	}
+	// Output:
+	// Unable to delete non-empty directory /tmp/pathStr-remove
+	// removed symlink /tmp/pathStr-remove/link
+	// removing /tmp/pathStr-remove/link didn't affect link target /tmp/pathStr-remove/foo.txt
+	// removed file /tmp/pathStr-remove/foo.txt
+
 }

@@ -272,12 +272,25 @@ func TestDir_remove(t *testing.T) {
 	expect(renamed.Remove())
 }
 
-func TestDir_chmod(t *testing.T) {
-	dir := expect(pathlib.Dir(t.TempDir()).Join("dir").AsDir().Make(0755))
-	dir = expect(dir.Chmod(0777))
-	if expect(dir.Stat()).Mode()&fs.ModePerm != 0777 {
+func testChmod[P interface {
+	pathlib.Kind
+	pathlib.Beholder[P]
+	pathlib.Manipulator[P]
+}](t *testing.T, p P, mode os.FileMode) {
+	expect(p.Chmod(mode))
+	perm := expect(p.Lstat()).Mode() & fs.ModePerm
+	if perm&mode != perm {
 		t.Fail()
 	}
+}
+
+func TestDir_chmod(t *testing.T) {
+	dir := expect(pathlib.Dir(t.TempDir()).Join("dir").AsDir().Make(0755))
+	// dir = expect(dir.Chmod(0777))
+	// if expect(dir.Stat()).Mode()&fs.ModePerm != 0777 {
+	// 	t.Fail()
+	// }
+	testChmod(t, dir, 0777)
 }
 
 func TestDir_chown(t *testing.T) {
@@ -295,11 +308,11 @@ func TestDir_chown(t *testing.T) {
 
 }
 
-func TestDir_chown_self(t *testing.T) {
-	dir := expect(pathlib.Dir(t.TempDir()).
-		Join(t.Name()).
-		AsDir().
-		Make(0755))
+func testChown[P interface {
+	pathlib.Kind
+	pathlib.Manipulator[P]
+	pathlib.Beholder[P]
+}](t *testing.T, p P) {
 	switch strings.Split(runtime.GOOS, "/")[0] {
 	case "windows", "plan9":
 		t.Skip()
@@ -319,7 +332,15 @@ func TestDir_chown_self(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expect(dir.Chown(uid, gid))
+	expect(p.Chown(uid, gid))
+}
+
+func TestDir_chown_self(t *testing.T) {
+	dir := expect(pathlib.Dir(t.TempDir()).
+		Join(t.Name()).
+		AsDir().
+		Make(0755))
+	testChown(t, dir)
 }
 
 func TestOnDisk_chown(t *testing.T) {
@@ -335,13 +356,6 @@ func TestOnDisk_chown(t *testing.T) {
 			t.Fatalf("expected *fs.PathError, got %T", err)
 		}
 	}
-}
-
-func expect[T any](val T, err error) T {
-	if err != nil {
-		panic(err)
-	}
-	return val
 }
 
 func TestOnDisk_chown_self(t *testing.T) {
