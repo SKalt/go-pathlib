@@ -61,14 +61,16 @@ func TestFile_manipulator(t *testing.T) {
 		t.Fail()
 	}
 	renamed := expect(file.Rename("foo.sh"))
-	renamed = expect(renamed.Chmod(0777))
+	if err := renamed.Chmod(0777); err != nil {
+		t.Fatal(err)
+	}
 	if file.Exists() {
 		t.Fail()
 	}
 	if !renamed.Exists() {
 		t.Fail()
 	}
-	expect(renamed.Remove())
+	enforce(renamed.Remove())
 }
 
 func TestFile_Transformer(t *testing.T) {

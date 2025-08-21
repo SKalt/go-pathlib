@@ -17,19 +17,19 @@ var _ Beholder[PathStr] = PathStr(".")
 // See [os.Stat].
 //
 // Stat implements [Beholder].
-func (p PathStr) Stat() (OnDisk[PathStr], error) {
+func (p PathStr) Stat() (Info[PathStr], error) {
 	return stat(p)
 }
 
 // See [os.Lstat].
 //
 // Lstat implements [Beholder].
-func (p PathStr) Lstat() (OnDisk[PathStr], error) {
+func (p PathStr) Lstat() (Info[PathStr], error) {
 	return lstat(p)
 }
 
 // OnDisk implements [Beholder].
-func (p PathStr) OnDisk() (OnDisk[PathStr], error) {
+func (p PathStr) OnDisk() (Info[PathStr], error) {
 	return lstat(p)
 }
 
@@ -189,27 +189,30 @@ func (p PathStr) ExpandUser() (PathStr, error) {
 	return expandUser(p)
 }
 
-// Manipulator -----------------------------------------------------------------
-var _ Manipulator[PathStr] = PathStr(".")
+// Changer ----------------------------------------------------------------------
+var _ Changer = PathStr(".")
 
-// Chmod implements [Manipulator].
-func (p PathStr) Chmod(mode os.FileMode) (PathStr, error) {
+// Chmod implements [Changer].
+func (p PathStr) Chmod(mode os.FileMode) error {
 	return chmod(p, mode)
 }
 
 // Change Ownership of the path.
 //
-// Chown implements [Manipulator].
-func (p PathStr) Chown(uid int, gid int) (PathStr, error) {
+// Chown implements [Changer].
+func (p PathStr) Chown(uid int, gid int) error {
 	return chown(p, uid, gid)
 }
 
-// Remove implements [Manipulator].
-func (p PathStr) Remove() (PathStr, error) {
+// Mover ------------------------------------------------------------------------
+var _ Mover[PathStr] = PathStr(".")
+
+// Remove implements [Mover].
+func (p PathStr) Remove() error {
 	return remove(p)
 }
 
-// Rename implements [Manipulator].
+// Rename implements [Mover].
 func (p PathStr) Rename(newPath PathStr) (PathStr, error) {
 	return rename(p, newPath)
 }
@@ -242,7 +245,7 @@ var _ Destroyer[PathStr] = PathStr(".")
 //
 // RemoveAll implements [Destroyer].
 func (p PathStr) RemoveAll() (PathStr, error) {
-	return p, os.RemoveAll(string(p))
+	return removeAll(p)
 }
 
 // casts -----------------------------------------------------------------------

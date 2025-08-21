@@ -53,23 +53,24 @@ type Transformer[P Kind] interface {
 }
 
 // An observation of a path on-disk, including a constant observation timestamp.
-type OnDisk[PathKind Kind] interface {
+type Info[P Kind] interface {
 	fs.FileInfo
 	PurePath
-	Transformer[PathKind]
-	Manipulator[PathKind]
+	Transformer[P]
+	Changer
+	Mover[P]
 	// the typed version of [fs.FileInfo.Name]
-	Path() PathKind
+	Path() P
 }
 
 // Behaviors for inspecting a path on-disk.
-type Beholder[PathKind Kind] interface {
+type Beholder[P Kind] interface {
 	// Observe the file info of the path on-disk. Does not follow symlinks. See [os.Lstat].
-	OnDisk() (OnDisk[PathKind], error)
+	OnDisk() (Info[P], error)
 	// See [os.Stat].
-	Stat() (OnDisk[PathKind], error)
+	Stat() (Info[P], error)
 	// See [os.Lstat].
-	Lstat() (OnDisk[PathKind], error)
+	Lstat() (Info[P], error)
 	// Returns true if the path exists on-disk.
 	Exists() bool
 }
@@ -79,17 +80,18 @@ type Maker[T any] interface {
 	MakeAll(perm, parentPerm fs.FileMode) (T, error)
 }
 
-type Manipulator[P interface {
-	Kind
-}] interface {
+type Mover[P Kind] interface {
 	// see [os.Remove].
-	Remove() (P, error)
-	// see [os.Chmod].
-	Chmod(fs.FileMode) (P, error)
-	// see [os.Chown].
-	Chown(uid, gid int) (P, error)
+	Remove() error
 	// see [os.Rename].
 	Rename(newPath PathStr) (P, error)
+}
+
+type Changer interface {
+	// see [os.Chmod].
+	Chmod(fs.FileMode) error
+	// see [os.Chown].
+	Chown(uid, gid int) error
 }
 
 type Destroyer[P Kind] interface {

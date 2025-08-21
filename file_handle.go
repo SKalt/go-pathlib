@@ -61,17 +61,17 @@ func (h *Handle) Parts() []string {
 var _ Beholder[File] = &Handle{}
 
 // Lstat implements Beholder.
-func (h *Handle) Lstat() (OnDisk[File], error) {
+func (h *Handle) Lstat() (Info[File], error) {
 	return h.Path().Lstat()
 }
 
 // OnDisk implements Beholder.
-func (h *Handle) OnDisk() (OnDisk[File], error) {
+func (h *Handle) OnDisk() (Info[File], error) {
 	return h.Path().OnDisk()
 }
 
 // Stat implements Beholder.
-func (h *Handle) Stat() (OnDisk[File], error) {
+func (h *Handle) Stat() (Info[File], error) {
 	info, err := h.inner.Stat()
 	if err != nil {
 		return nil, err
@@ -88,22 +88,25 @@ func (h *Handle) Exists() bool {
 	return h.Path().Exists()
 }
 
-// sorta: Manipulator ----------------------------------------------------------
+// Changer ---------------------------------------------------------------------
+var _ Changer = &Handle{}
 
-// Chmod implements Manipulator.
-func (h *Handle) Chmod(mode fs.FileMode) (*Handle, error) {
-	return h, h.inner.Chmod(mode)
+// Chmod implements [Changer].
+func (h *Handle) Chmod(mode fs.FileMode) error {
+	return h.inner.Chmod(mode)
 }
 
-// Chown implements Manipulator.
-func (h *Handle) Chown(uid int, gid int) (*Handle, error) {
-	return h, h.inner.Chown(uid, gid)
+// Chown implements [Changer].
+func (h *Handle) Chown(uid int, gid int) error {
+	return h.inner.Chown(uid, gid)
 }
 
-// Remove implements Manipulator.
-func (h *Handle) Remove() (File, error) {
+// Mover -----------------------------------------------------------------------
+
+// Remove implements [Mover].
+func (h *Handle) Remove() error {
 	if err := h.Close(); err != nil {
-		return h.Path(), err
+		return err
 	}
 	return h.Path().Remove()
 }

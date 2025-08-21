@@ -70,8 +70,10 @@ func TestOnDisk_manipulator(t *testing.T) {
 	temp := pathlib.Dir(t.TempDir())
 	dir := expect(temp.Join("foo").AsDir().Make(0777))
 	onDisk := expect(dir.OnDisk())
-	expect(onDisk.Chmod(0755))
+	if err := onDisk.Chmod(0755); err != nil {
+		t.Fatal(err)
+	}
 	renamed := expect(onDisk.Rename(temp.Join("bar")))
 	onDisk = expect(renamed.OnDisk())
-	expect(onDisk.Remove())
+	enforce(onDisk.Remove())
 }

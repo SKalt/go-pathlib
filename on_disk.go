@@ -10,9 +10,9 @@ type onDisk[P Kind] struct {
 	fs.FileInfo
 }
 
-var _ OnDisk[PathStr] = onDisk[PathStr]{}
+var _ Info[PathStr] = onDisk[PathStr]{}
 
-// Path implements [OnDisk].
+// Path implements [Info].
 func (p onDisk[P]) Path() P {
 	return p.p
 }
@@ -92,23 +92,28 @@ func (p onDisk[P]) ExpandUser() (P, error) {
 	return expandUser(p.Path())
 }
 
-// Manipulator -----------------------------------------------------------------
-var _ Manipulator[PathStr] = onDisk[PathStr]{}
+// Mover --------------------------------------------------------------------
+var _ Mover[PathStr] = onDisk[PathStr]{}
 
-// Remove implements [Manipulator].
-func (p onDisk[P]) Remove() (P, error) {
+// Remove implements [Mover].
+func (p onDisk[P]) Remove() error {
 	return remove(p.Path())
 }
 
-// Rename implements [Manipulator].
+// Rename implements [Mover].
 func (p onDisk[P]) Rename(destination PathStr) (P, error) {
 	return rename(p.Path(), destination)
 }
 
-func (p onDisk[P]) Chmod(mode fs.FileMode) (P, error) {
+// Changer ----------------------------------------------------------------------
+var _ Changer = onDisk[PathStr]{}
+
+// Chmod implements [Changer].
+func (p onDisk[P]) Chmod(mode fs.FileMode) error {
 	return chmod(p.Path(), mode)
 }
 
-func (p onDisk[P]) Chown(uid, gid int) (P, error) {
+// Chown implements [Changer].
+func (p onDisk[P]) Chown(uid, gid int) error {
 	return chown(p.Path(), uid, gid)
 }

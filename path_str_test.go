@@ -211,7 +211,7 @@ func ExamplePathStr_beholder() {
 
 func ExamplePathStr_read() {
 	tmpDir := expect(pathlib.TempDir().Join("example-pathStr-read").AsDir().Make(0777))
-	var example = tmpDir.Join("example")
+	example := tmpDir.Join("example")
 
 	{
 		expect(example.AsDir().Make(0777))
@@ -221,7 +221,7 @@ func ExamplePathStr_read() {
 		for entry := range entries {
 			fmt.Println(entry)
 		}
-		expect(example.Remove())
+		enforce(example.Remove())
 	}
 	{
 		_, err := expect(example.AsFile().Make(0644)).WriteString("text")
@@ -229,7 +229,7 @@ func ExamplePathStr_read() {
 			panic(err)
 		}
 		fmt.Println(expect(example.Read()))
-		expect(example.Remove())
+		enforce(example.Remove())
 	}
 	{
 		target := tmpDir.Join("target")
@@ -303,12 +303,12 @@ func ExamplePathStr_Remove() {
 	expect(f.AsFile().Make(0666))
 	link := dir.Join("link")
 	expect(link.AsSymlink().LinkTo(f))
-	_, err := pathlib.PathStr(dir).Remove()
+	err := pathlib.PathStr(dir).Remove()
 	if err != nil {
 		fmt.Println("Unable to delete non-empty directory " + dir)
 	}
 
-	link = expect(link.Remove())
+	enforce(link.Remove())
 	if !link.Exists() {
 		fmt.Println("removed symlink " + link)
 	}
@@ -318,7 +318,7 @@ func ExamplePathStr_Remove() {
 		panic("removing " + link + " removed " + f)
 	}
 
-	f = expect(f.Remove())
+	enforce(f.Remove())
 	if !f.Exists() {
 		fmt.Println("removed file " + f)
 	}

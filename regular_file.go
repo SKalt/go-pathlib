@@ -102,39 +102,42 @@ func (f File) Exists() bool {
 }
 
 // Lstat implements [Beholder].
-func (f File) Lstat() (OnDisk[File], error) {
+func (f File) Lstat() (Info[File], error) {
 	return lstat(f)
 }
 
 // OnDisk implements [Beholder].
-func (f File) OnDisk() (OnDisk[File], error) {
+func (f File) OnDisk() (Info[File], error) {
 	return lstat(f)
 }
 
 // Stat implements [Beholder].
-func (f File) Stat() (OnDisk[File], error) {
+func (f File) Stat() (Info[File], error) {
 	return stat(f)
 }
 
-// Manipulator -----------------------------------------------------------------
-var _ Manipulator[File] = File("./example")
+// Changer ----------------------------------------------------------------------
+var _ Changer = File("./example")
 
-// Chmod implements [Manipulator].
-func (f File) Chmod(mode os.FileMode) (File, error) {
+// Chmod implements [Changer].
+func (f File) Chmod(mode os.FileMode) error {
 	return chmod(f, mode)
 }
 
-// Chown implements [Manipulator].
-func (f File) Chown(uid int, gid int) (File, error) {
+// Chown implements [Changer].
+func (f File) Chown(uid int, gid int) error {
 	return chown(f, uid, gid)
 }
 
-// Remove implements [Manipulator].
-func (f File) Remove() (File, error) {
+// Mover ------------------------------------------------------------------------
+var _ Mover[File] = File("./example")
+
+// Remove implements [Mover].
+func (f File) Remove() error {
 	return remove(f)
 }
 
-// Rename implements [Manipulator].
+// Rename implements [Mover].
 func (f File) Rename(newPath PathStr) (File, error) {
 	return rename(f, newPath)
 }
@@ -162,5 +165,3 @@ var _ Readable[[]byte] = File("./example")
 func (f File) Read() ([]byte, error) {
 	return os.ReadFile(string(f))
 }
-
-// FIXME: file handle wrapper type

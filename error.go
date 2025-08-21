@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-type WrongTypeOnDisk[P Kind] struct{ OnDisk[P] }
+type WrongTypeOnDisk[P Kind] struct{ Info[P] }
 
 func (w WrongTypeOnDisk[P]) Error() string {
 	path := w.Path()

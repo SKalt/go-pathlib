@@ -6,11 +6,15 @@ import (
 	"github.com/skalt/pathlib.go"
 )
 
-// This syntactic sugar will be used throughout the examples.
-func expect[T any](val T, err error) T {
+func enforce(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// This syntactic sugar will be used throughout the examples.
+func expect[T any](val T, err error) T {
+	enforce(err)
 	return val
 }
 

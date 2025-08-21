@@ -96,7 +96,7 @@ func (s Symlink) Ext() string {
 var _ Beholder[Symlink] = Symlink("./link")
 
 // OnDisk implements [Beholder].
-func (s Symlink) OnDisk() (result OnDisk[Symlink], err error) {
+func (s Symlink) OnDisk() (result Info[Symlink], err error) {
 	return s.Lstat()
 }
 
@@ -106,7 +106,7 @@ func (s Symlink) Exists() bool {
 }
 
 // Lstat implements [Beholder].
-func (s Symlink) Lstat() (result OnDisk[Symlink], err error) {
+func (s Symlink) Lstat() (result Info[Symlink], err error) {
 	result, err = lstat(s)
 	if err == nil && ((result.Mode() & fs.ModeSymlink) != fs.ModeSymlink) {
 		err = WrongTypeOnDisk[Symlink]{result}
@@ -115,32 +115,35 @@ func (s Symlink) Lstat() (result OnDisk[Symlink], err error) {
 }
 
 // Stat implements [Beholder].
-func (s Symlink) Stat() (OnDisk[Symlink], error) {
+func (s Symlink) Stat() (Info[Symlink], error) {
 	return stat(s)
 }
 
 // // https://go.dev/play/p/mWNvcZLrjog
 // // https://godbolt.org/z/1caPfvzfh
 
-// Manipulator -----------------------------------------------------------------
-var _ Manipulator[Symlink] = Symlink("./link")
+// Changer ----------------------------------------------------------------------
+var _ Changer = Symlink("./link")
 
-// Chmod implements [Manipulator].
-func (s Symlink) Chmod(mode os.FileMode) (Symlink, error) {
+// Chmod implements [Changer].
+func (s Symlink) Chmod(mode os.FileMode) error {
 	return chmod(s, mode)
 }
 
-// Chown implements [Manipulator].
-func (s Symlink) Chown(uid int, gid int) (Symlink, error) {
+// Chown implements [Changer].
+func (s Symlink) Chown(uid int, gid int) error {
 	return chown(s, uid, gid)
 }
 
-// Remove implements [Manipulator].
-func (s Symlink) Remove() (Symlink, error) {
+// Mover ------------------------------------------------------------------------
+var _ Mover[Symlink] = Symlink("./link")
+
+// Remove implements [Mover].
+func (s Symlink) Remove() error {
 	return remove(s)
 }
 
-// Rename implements [Manipulator].
+// Rename implements [Mover].
 func (s Symlink) Rename(newPath PathStr) (Symlink, error) {
 	return rename(s, newPath)
 }

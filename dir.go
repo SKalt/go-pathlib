@@ -135,7 +135,7 @@ func (d Dir) ExpandUser() (Dir, error) {
 var _ Beholder[Dir] = Dir(".")
 
 // OnDisk implements [Beholder]
-func (d Dir) OnDisk() (result OnDisk[Dir], err error) {
+func (d Dir) OnDisk() (result Info[Dir], err error) {
 	return d.Stat()
 }
 
@@ -148,7 +148,7 @@ func (d Dir) Exists() bool {
 // See [os.Lstat].
 //
 // Lstat implements [Beholder].
-func (d Dir) Lstat() (result OnDisk[Dir], err error) {
+func (d Dir) Lstat() (result Info[Dir], err error) {
 	result, err = lstat(d)
 	if err == nil && !result.IsDir() {
 		err = WrongTypeOnDisk[Dir]{result}
@@ -159,7 +159,7 @@ func (d Dir) Lstat() (result OnDisk[Dir], err error) {
 // See [os.Stat].
 //
 // Stat implements [Beholder].
-func (d Dir) Stat() (result OnDisk[Dir], err error) {
+func (d Dir) Stat() (result Info[Dir], err error) {
 	result, err = stat(d)
 	if err == nil && !result.IsDir() {
 		err = WrongTypeOnDisk[Dir]{result}
@@ -189,32 +189,34 @@ func (d Dir) MakeAll(perm, parentPerm fs.FileMode) (result Dir, err error) {
 	return
 }
 
-// Manipulator -----------------------------------------------------------------
-var _ Manipulator[Dir] = Dir(".")
+// Changer ----------------------------------------------------------------------
+var _ Changer = Dir(".")
 
 // See [os.Chmod].
-// Chmod implements [Manipulator].
-func (d Dir) Chmod(mode os.FileMode) (Dir, error) {
+// Chmod implements [Changer].
+func (d Dir) Chmod(mode os.FileMode) error {
 	return chmod(d, mode)
 }
 
 // See [os.Chown].
 //
-// Chown implements [Manipulator].
-func (d Dir) Chown(uid int, gid int) (Dir, error) {
+// Chown implements [Changer].
+func (d Dir) Chown(uid int, gid int) error {
 	return chown(d, uid, gid)
 }
 
+// Mover -----------------------------------------------------------------------
+
 // See [os.Remove].
 //
-// Remove implements [Manipulator].
-func (d Dir) Remove() (Dir, error) {
+// Remove implements [Mover].
+func (d Dir) Remove() error {
 	return remove(d)
 }
 
 // See [os.Rename].
 //
-// Rename implements [Manipulator].
+// Rename implements [Mover].
 func (d Dir) Rename(newPath PathStr) (Dir, error) {
 	return rename(d, newPath)
 }

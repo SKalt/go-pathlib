@@ -9,12 +9,12 @@ import (
 )
 
 // SEe [os.Stat].
-func stat[P Kind](p P) (OnDisk[P], error) {
+func stat[P Kind](p P) (Info[P], error) {
 	info, err := os.Stat(string(p))
 	return onDisk[P]{p, info}, err
 }
 
-func lstat[P Kind](p P) (OnDisk[P], error) {
+func lstat[P Kind](p P) (Info[P], error) {
 	info, err := os.Lstat(string(p))
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, err
@@ -99,12 +99,12 @@ func expandUser[P Kind](p P) (P, error) {
 	return P(P(home) + p[1:]), nil
 }
 
-func chmod[P Kind](p P, mode os.FileMode) (P, error) {
-	return p, os.Chmod(string(p), mode)
+func chmod[P Kind](p P, mode os.FileMode) error {
+	return os.Chmod(string(p), mode)
 }
 
-func chown[P Kind](p P, uid int, gid int) (P, error) {
-	return p, os.Chown(string(p), uid, gid)
+func chown[P Kind](p P, uid int, gid int) error {
+	return os.Chown(string(p), uid, gid)
 }
 
 func rename[P Kind](p P, newPath PathStr) (result P, err error) {
@@ -116,8 +116,8 @@ func rename[P Kind](p P, newPath PathStr) (result P, err error) {
 	return
 }
 
-func remove[P Kind](p P) (P, error) {
-	return p, os.Remove(string(p))
+func remove[P Kind](p P) error {
+	return os.Remove(string(p))
 }
 
 // See [os.RemoveAll]
