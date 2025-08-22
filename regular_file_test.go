@@ -2,6 +2,7 @@ package pathlib_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/skalt/pathlib.go"
@@ -107,4 +108,23 @@ func TestFile_chown(t *testing.T) {
 	file := temp.Join("file.txt").AsFile()
 	expect(file.Make(0666))
 	testChown(t, file)
+}
+
+func TestFile_open(t *testing.T) {
+	temp := pathlib.Dir(t.TempDir())
+	file := temp.Join("file.txt").AsFile()
+	if _, err := file.Open(os.O_RDONLY, 0666); err == nil {
+		t.Fatal("expected error opening file that does not exist")
+	}
+
+}
+
+func TestFile_localize(t *testing.T) {
+	temp := pathlib.Dir(t.TempDir())
+	file := expect(temp.Join("file.txt").AsFile().Rel(temp))
+	localized := expect(file.Localize())
+	if localized != file {
+		t.Fatalf("expected %q, got %q", file, localized)
+	}
+
 }

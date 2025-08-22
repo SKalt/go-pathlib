@@ -19,6 +19,8 @@ func (d Dir) Walk(
 	})
 }
 
+// TODO: walk -> iter.Seq[PathStr]?
+
 // See [path/filepath.Glob].
 func (d Dir) Glob(pattern string) ([]PathStr, error) {
 	matches, err := filepath.Glob(filepath.Join(string(d), pattern))

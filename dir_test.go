@@ -282,16 +282,12 @@ func testChmod[P interface {
 	}
 	perm := expect(p.Lstat()).Mode() & fs.ModePerm
 	if perm&mode != perm {
-		t.Fail()
+		t.Fatalf("expected %o, got %o", mode, perm)
 	}
 }
 
 func TestDir_chmod(t *testing.T) {
 	dir := expect(pathlib.Dir(t.TempDir()).Join("dir").AsDir().Make(0755))
-	// dir = expect(dir.Chmod(0777))
-	// if expect(dir.Stat()).Mode()&fs.ModePerm != 0777 {
-	// 	t.Fail()
-	// }
 	testChmod(t, dir, 0777)
 }
 

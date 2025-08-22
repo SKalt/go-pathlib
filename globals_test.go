@@ -3,7 +3,9 @@ package pathlib_test
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
+	"testing"
 
 	"github.com/skalt/pathlib.go"
 )
@@ -88,4 +90,22 @@ func ExampleUserConfigDir() {
 	// "/foo/bar" => "/foo/bar"
 	// "" => "$HOME/.config"
 	// "./my_config" => Err("path in $XDG_CONFIG_HOME is relative")
+}
+
+func TestUserHomeDir(t *testing.T) {
+	homeVar := "HOME"
+	switch runtime.GOOS {
+	case "windows":
+		homeVar = "USERPROFILE"
+	case "plan9":
+		homeVar = "home"
+	case "js", "wasip1":
+		t.Skip("Skipping on " + runtime.GOOS)
+	}
+	t.Setenv(homeVar, "")
+	_, err := pathlib.UserHomeDir()
+	if err == nil {
+		t.Fatal("expected error when $HOME is unset")
+	}
+
 }

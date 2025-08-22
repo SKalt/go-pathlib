@@ -10,7 +10,7 @@ type File PathStr
 
 // See [os.OpenFile].
 func (f File) Open(flag int, perm fs.FileMode) (*Handle, error) {
-	ptr, err := os.OpenFile(string(f), os.O_RDWR|os.O_CREATE, perm)
+	ptr, err := os.OpenFile(string(f), flag, perm)
 	if err != nil {
 		return nil, err
 	}

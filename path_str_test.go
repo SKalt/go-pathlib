@@ -1,6 +1,7 @@
 package pathlib_test
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"strings"
@@ -328,4 +329,34 @@ func ExamplePathStr_Remove() {
 	// removing /tmp/pathStr-remove/link didn't affect link target /tmp/pathStr-remove/foo.txt
 	// removed file /tmp/pathStr-remove/foo.txt
 
+}
+
+func TestPathStr_localize(t *testing.T) {
+	temp := pathlib.Dir(t.TempDir())
+	t.Chdir(temp.String())
+
+	f := temp.Join("file.txt")
+	expect(f.AsFile().Make(0666))
+
+	f = expect(f.Rel(temp))
+	localized := expect(f.Localize())
+	if localized != f {
+		t.Fatalf("expected %q, got %q", f, localized)
+	}
+	// Output:
+	// "/tmp/pathlib_test/link" -> "/tmp/pathlib_test/file.txt"
+}
+
+func TestPathStr_read(t *testing.T) {
+	temp := pathlib.Dir(t.TempDir())
+
+	f := temp.Join("file.txt")
+	_, err := f.OnDisk()
+	if !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("expected fs.ErrNotExist, got %v", err)
+	}
+	_, err = f.Read()
+	if !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("expected fs.ErrNotExist, got %v", err)
+	}
 }

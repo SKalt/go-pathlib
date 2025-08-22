@@ -87,11 +87,17 @@ type Mover[P Kind] interface {
 	Rename(newPath PathStr) (P, error)
 }
 
-type Changer interface {
+type ModeChanger interface {
 	// see [os.Chmod].
 	Chmod(fs.FileMode) error
+}
+type OwnerChanger interface {
 	// see [os.Chown].
 	Chown(uid, gid int) error
+}
+type Changer interface {
+	ModeChanger
+	OwnerChanger
 }
 
 type Destroyer[P Kind] interface {
