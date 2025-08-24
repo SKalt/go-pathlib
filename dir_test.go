@@ -391,6 +391,6 @@ func TestDir_makeAll_fail(t *testing.T) {
 	if err == nil {
 		enforce(d.Remove())
 		enforce(d.Parent().Remove())
-		t.Error("expected error from making /foo/bar")	
+		t.Error("expected error from making /foo/bar")
 	}
 }

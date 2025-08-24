@@ -87,16 +87,17 @@ func rel[P Kind](base Dir, p P) (P, error) {
 	return P(result), err
 }
 
-func expandUser[P Kind](p P) (P, error) {
+func expandUser[P Kind](p P) (q P, err error) {
 	if len(p) == 0 || p[0] != '~' || (len(p) > 1 && !os.IsPathSeparator(p[1])) {
-		return p, nil
+		q = p
+		return
 	}
-
-	home, err := UserHomeDir()
-	if err != nil {
-		return "", err
+	var home Dir
+	if home, err = UserHomeDir(); err != nil {
+		return
 	}
-	return P(P(home) + p[1:]), nil
+	q = P(home) + p[1:]
+	return
 }
 
 func chmod[P Kind](p P, mode os.FileMode) error {
