@@ -35,7 +35,10 @@ func join[P Kind](p P, segments ...string) PathStr {
 //
 // Parent implements [PurePath].
 func parent[P Kind](p P) Dir {
-	return Dir(filepath.Dir(string(p)))
+	s := string(p)
+	s = filepath.Clean(s)
+	s = filepath.Dir(s)
+	return Dir(s)
 }
 
 func ancestors[P Kind](p P) iter.Seq[Dir] {

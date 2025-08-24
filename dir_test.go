@@ -173,49 +173,30 @@ func ExampleDir_purePath() {
 	method := func(name string, val any) {
 		fmt.Printf("\t.%s() => %T(%#v)\n", name, val, val)
 	}
+	method("Parts", d.Parts())
+	method("Clean", d.Clean())
+	method("Parent", d.Parent())
 	method("BaseName", d.BaseName())
 	method("IsAbsolute", d.IsAbsolute())
 	method("IsLocal", d.IsLocal())
 	method("Ext", d.Ext())
-	method("Parent", d.Parent())
-	method("Parts", d.Parts())
-	method("Clean", d.Clean())
 	// method("Abs().Unwrap", d.Abs()))
 	// method("ExpandUser().Unwrap", d.ExpandUser()))
 
 	// Output:
 	// On Unix
 	// pathlib.Dir("~/.config/git/..")
+	// 	.Parts() => []string([]string{"~", ".config", "git", ".."})
+	// 	.Clean() => pathlib.Dir("~/.config")
+	// 	.Parent() => pathlib.Dir("~")
 	// 	.BaseName() => string("..")
 	// 	.IsAbsolute() => bool(false)
 	// 	.IsLocal() => bool(true)
 	// 	.Ext() => string(".")
-	// 	.Parent() => pathlib.Dir("~/.config/git")
-	// 	.Parts() => []string([]string{"~", ".config", "git", ".."})
-	// 	.Clean() => pathlib.Dir("~/.config")
 }
 
-// Adapted from https://pkg.go.dev/path/filepath#example-Rel
-// func TestDir_Rel(t *testing.T) {
-// 	dirs := []pathlib.Dir{
-// 		"/a/b/c",
-// 		"/b/c",
-// 		"./b/c",
-// 	}
-// 	var base pathlib.Dir = "/a"
 
-// 	fmt.Println("On Unix:")
-// 	for _, d := range dirs {
-// 		rel, err := d.Rel(base)
-// 		fmt.Printf("%q.Rel(%q) => %q %v\n", d, base, rel, err)
-// 	}
-// 	// Output:
-// 	// 	"/a/b/c": "b/c" <nil>
-// 	// "/b/c": "../b/c" <nil>
-// 	// "./b/c": "" Rel: can't make ./b/c relative to /a
-// }
-
-func ExampleDir_transformer() {
+func ExampleDir_Localize() {
 	fmt.Println("On Unix")
 	fmt.Println("Localized", expect(pathlib.Dir("foo/bar/baz").Localize()))
 	// Output:

@@ -9,33 +9,33 @@ import (
 )
 
 func ExampleFile_purePath() {
-	d := pathlib.File("~/.config/git/..")
+	f := pathlib.File("~/.config/tool/../other-tool/config.toml")
 
 	fmt.Println("On Unix")
-	fmt.Printf("%T(%q)\n", d, d)
+	fmt.Printf("%T(%q)\n", f, f)
 	method := func(name string, val any) {
 		fmt.Printf("\t.%s() => %T(%#v)\n", name, val, val)
 	}
-	method("BaseName", d.BaseName())
-	method("IsAbsolute", d.IsAbsolute())
-	method("IsLocal", d.IsLocal())
-	method("Ext", d.Ext())
-	method("Parent", d.Parent())
-	method("Parts", d.Parts())
-	method("Clean", d.Clean())
+	method("Parts", f.Parts())
+	method("Clean", f.Clean())
+	method("Parent", f.Parent())
+	method("BaseName", f.BaseName())
+	method("IsAbsolute", f.IsAbsolute())
+	method("IsLocal", f.IsLocal())
+	method("Ext", f.Ext())
 	// method("Abs().Unwrap", d.Abs()))
 	// method("ExpandUser().Unwrap", d.ExpandUser()))
 
 	// Output:
 	// On Unix
-	// pathlib.File("~/.config/git/..")
-	// 	.BaseName() => string("..")
+	// pathlib.File("~/.config/tool/../other-tool/config.toml")
+	// 	.Parts() => []string([]string{"~", ".config", "tool", "..", "other-tool", "config.toml"})
+	// 	.Clean() => pathlib.File("~/.config/other-tool/config.toml")
+	// 	.Parent() => pathlib.Dir("~/.config/other-tool")
+	// 	.BaseName() => string("config.toml")
 	// 	.IsAbsolute() => bool(false)
 	// 	.IsLocal() => bool(true)
-	// 	.Ext() => string(".")
-	// 	.Parent() => pathlib.Dir("~/.config/git")
-	// 	.Parts() => []string([]string{"~", ".config", "git", ".."})
-	// 	.Clean() => pathlib.File("~/.config")
+	// 	.Ext() => string(".toml")
 }
 
 func TestFile_Join(t *testing.T) {

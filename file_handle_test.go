@@ -92,7 +92,6 @@ func TestHandle_purePath(t *testing.T) {
 	assertEq(t, true, handle.IsAbsolute())
 	assertEq(t, false, handle.IsLocal())
 	assertEq(t, ".txt", handle.Ext())
-	// assertEq(t, true, handle.Exists())
 }
 
 func TestHandle_beholder(t *testing.T) {
@@ -137,7 +136,6 @@ func ExampleHandle_Remove() {
 }
 
 func TestHandle_nonexistent_stat(t *testing.T) {
-	// t.Skip() // FIXME: figure out file-handle stat'ing weirdness
 	temp := tempDir(t)
 	f := temp.Join("example.txt").AsFile()
 	handle := expect(f.Make(0644))
