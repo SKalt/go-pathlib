@@ -5,20 +5,19 @@ ripgrep = "latest"
 
 [env]
 # https://mise.jdx.dev/environments/#env-path
-GOBIN="{{config_root}}/bin"
-_.path = [
-  "{{env.GOBIN}}",
-]
+GOBIN = "{{config_root}}/bin"
+_.path = ["{{env.GOBIN}}"]
 
 [tasks]
-  test = "go test -coverprofile=.coverage ./..."
-  lint = "golangci-lint run ./..."
-  fmt-check = "golangci-lint fmt --diff ./..."
+test = "go test -coverprofile=.coverage ./..."
+lint = "golangci-lint run ./..."
+fmt = "golangci-lint fmt ./..."
+fmt-check = "golangci-lint fmt --diff ./..."
 
 [tasks.ci]
-  depends = ["test", "lint", "fmt-check"]
+depends = ["test", "lint", "fmt-check"]
 
 
 [tasks.coverage]
-  depends = ["test"]
-  run = "go tool cover -html=.coverage -o coverage.html"
+depends = ["test"]
+run = "go tool cover -html=.coverage -o coverage.html"
