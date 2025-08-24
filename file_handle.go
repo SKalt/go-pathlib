@@ -1,6 +1,7 @@
 package pathlib
 
 import (
+	"errors"
 	"io"
 	"io/fs"
 	"os"
@@ -66,17 +67,31 @@ var _ Beholder[File] = &Handle{}
 
 // Lstat implements Beholder.
 func (h *Handle) Lstat() (Info[File], error) {
-	return h.Path().Lstat()
+	info, err := h.Path().Lstat()
+	h.closeIfNonexistent(err)
+	// FIXME: handle case where h is one or more symlinks pointing to a regular file?
+	return info, err
 }
 
 // OnDisk implements Beholder.
 func (h *Handle) OnDisk() (Info[File], error) {
-	return h.Path().OnDisk()
+	info, err := h.Path().OnDisk()
+	h.closeIfNonexistent(err)
+	return info, err
+}
+func (h *Handle) closeIfNonexistent(err error) {
+	if errors.Is(err, fs.ErrNotExist) {
+		_ = h.inner.Close()
+	}
 }
 
 // Stat implements Beholder.
 func (h *Handle) Stat() (Info[File], error) {
-	info, err := h.inner.Stat()
+	info, err := h.Path().Stat()
+	// it might be cheaper to use the `h.inner.Stat()` method, but that
+	// seems to erroneously report that the file exists if the file has
+	// been removed since the handle was opened.
+	h.closeIfNonexistent(err)
 	if err != nil {
 		return nil, err
 	}

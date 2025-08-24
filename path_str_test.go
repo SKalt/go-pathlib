@@ -122,6 +122,7 @@ func ExamplePathStr_Parts() {
 	example("a/b")
 	example("a/../b")
 	example("a//b")
+	example("")
 	// output:
 	// On Unix:
 	// "/a/b" => []string{"/", "a", "b"}
@@ -129,6 +130,7 @@ func ExamplePathStr_Parts() {
 	// "a/b" => []string{"a", "b"}
 	// "a/../b" => []string{"a", "..", "b"}
 	// "a//b" => []string{"a", "b"}
+	// "" => []string(nil)
 }
 
 func ExamplePathStr_Ext() {
@@ -358,5 +360,12 @@ func TestPathStr_read(t *testing.T) {
 	_, err = f.Read()
 	if !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("expected fs.ErrNotExist, got %v", err)
+	}
+}
+
+func TestPathStr_ExpandUser_homeless(t *testing.T) {
+	unsetHome(t)
+	if _, err := pathlib.PathStr("~/file.txt").ExpandUser(); err == nil {
+		t.Fatalf("expected error, got nil")
 	}
 }

@@ -92,7 +92,8 @@ func ExampleUserConfigDir() {
 	// "./my_config" => Err("path in $XDG_CONFIG_HOME is relative")
 }
 
-func TestUserHomeDir(t *testing.T) {
+func unsetHome(t *testing.T) {
+	t.Helper()
 	homeVar := "HOME"
 	switch runtime.GOOS {
 	case "windows":
@@ -103,9 +104,12 @@ func TestUserHomeDir(t *testing.T) {
 		t.Skip("Skipping on " + runtime.GOOS)
 	}
 	t.Setenv(homeVar, "")
+}
+
+func TestUserHomeDir(t *testing.T) {
+	unsetHome(t)
 	_, err := pathlib.UserHomeDir()
 	if err == nil {
 		t.Fatal("expected error when $HOME is unset")
 	}
-
 }

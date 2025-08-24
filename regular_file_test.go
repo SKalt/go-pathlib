@@ -128,3 +128,13 @@ func TestFile_localize(t *testing.T) {
 	}
 
 }
+
+func TestFile_makeAll_fail(t *testing.T) {
+	d, err := pathlib.File("/foo/bar.txt").MakeAll(0644, 0755)
+	if err == nil {
+		enforce(d.Remove())
+		enforce(d.Parent().Remove())
+		t.Error("expected error from making /foo/bar.txt")	
+	}
+	
+}

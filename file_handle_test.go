@@ -78,8 +78,6 @@ func assertEq[S comparable](t *testing.T, expected, actual S) {
 	}
 }
 
-
-
 func TestHandle_purePath(t *testing.T) {
 	temp := tempDir(t)
 	handle, err := temp.Join("example.txt").AsFile().Make(0o644)
@@ -104,7 +102,7 @@ func TestHandle_beholder(t *testing.T) {
 	var _ pathlib.Beholder[pathlib.File] = handle
 
 	info := expect(handle.Stat())
-	
+
 	assertEq(t, true, info.Mode().IsRegular())
 	assertEq(t, false, info.Mode().IsDir())
 	assertStrEq(t, "example.txt", info.Name())
@@ -136,4 +134,19 @@ func ExampleHandle_Remove() {
 	fmt.Printf("%s exists: %t\n", handle, handle.Exists())
 	// Output:
 	// /tmp/example.txt exists: false
+}
+
+func TestHandle_nonexistent_stat(t *testing.T) {
+	// t.Skip() // FIXME: figure out file-handle stat'ing weirdness
+	temp := tempDir(t)
+	f := temp.Join("example.txt").AsFile()
+	handle := expect(f.Make(0644))
+	enforce(f.Remove())
+	_, err := handle.Stat()
+	if !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected nonexistent file, got %v", err)
+	}
+	if _, err := (handle.Write([]byte("data"))); err == nil {
+		t.Fatalf("expected write to fail on removed file")
+	}
 }

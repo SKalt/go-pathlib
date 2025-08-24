@@ -385,3 +385,12 @@ func TestOnDisk_chown_self(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestDir_makeAll_fail(t *testing.T) {
+	d, err := pathlib.Dir("/foo/bar").MakeAll(0755, 0755)
+	if err == nil {
+		enforce(d.Remove())
+		enforce(d.Parent().Remove())
+		t.Error("expected error from making /foo/bar")	
+	}
+}
