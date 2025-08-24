@@ -13,14 +13,20 @@
     "--stdin"
   ],
   "cSpell.words": [
+    "coverprofile",
     "devcontainers",
+    "GOBIN",
     "goimports",
+    "golangci",
     "golines",
     "itsmechlark",
     "libc",
     "pathlib",
     "skalt",
-    "stdlib"
+    "stdlib",
+    "syscalls",
+    "USERPROFILE",
+    "usetesting"
   ],
   "[go]": {
     "editor.formatOnSave": true
