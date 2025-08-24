@@ -1,12 +1,15 @@
 .PHONY: test coverage docs
 test:
-	go test -coverprofile=.coverage ./...
+	mise run test
 
 coverage: test
 	go tool cover -html=.coverage
 
-docs:
-	 go tool golang.org/x/pkgsite/cmd/pkgsite .
+bin/pkgsite:
+	go install golang.org/x/pkgsite/cmd/pkgsite@latest
+
+docs: bin/pkgsite
+	pkgsite .
 
 lint:
-	golangci-lint run
+	mise run lint

@@ -2,6 +2,7 @@
 .direnv
 
 .coverage
+coverage.html
 node_modules
 dist
 # scratch

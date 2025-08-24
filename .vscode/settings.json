@@ -5,8 +5,9 @@
   ],
   "go.formatTool": "custom",
   "go.alternateTools": {
-    "customFormatter": "golangci-lint"
-  },
+    "golangci-lint-v2": "${workspaceRoot}/bin/golangci-lint",
+    "customFormatter": "${workspaceRoot}/bin/golangci-lint",
+    "go": "${workspaceRoot}/bin/go",  },
   "go.formatFlags": [
     "fmt",
     "--stdin"
@@ -18,6 +19,10 @@
     "itsmechlark",
     "libc",
     "pathlib",
+    "skalt",
     "stdlib"
   ],
+  "[go]": {
+    "editor.formatOnSave": true
+  },
 }
