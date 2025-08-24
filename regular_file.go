@@ -103,6 +103,7 @@ func (f File) Exists() bool {
 
 // Lstat implements [Beholder].
 func (f File) Lstat() (Info[File], error) {
+	// FIXME: note complication where Dir/File MAY also be a symlink
 	return lstat(f)
 }
 

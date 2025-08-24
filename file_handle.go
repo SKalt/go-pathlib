@@ -14,12 +14,16 @@ type Handle struct {
 	inner *os.File
 }
 
-// PurePath --------------------------------------------------------------------
-var _ PurePath = &Handle{}
-
 func (h *Handle) Path() File {
 	return File(h.inner.Name())
 }
+
+func (h *Handle) String() string {
+	return h.Path().String()
+}
+
+// PurePath --------------------------------------------------------------------
+var _ PurePath = &Handle{}
 
 // BaseName implements PurePath.
 func (h *Handle) BaseName() string {

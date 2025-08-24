@@ -147,11 +147,3 @@ func (s Symlink) Remove() error {
 func (s Symlink) Rename(newPath PathStr) (Symlink, error) {
 	return rename(s, newPath)
 }
-
-// Destroyer -------------------------------------------------------------------
-var _ Destroyer[Symlink] = Symlink("./link")
-
-// RemoveAll implements [Destroyer].
-func (s Symlink) RemoveAll() (Symlink, error) {
-	return removeAll(s)
-}

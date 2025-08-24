@@ -201,19 +201,20 @@ func TestSymlink_mover(t *testing.T) {
 	}
 }
 
-func TestSymlink_removeAll(t *testing.T) {
-	temp := pathlib.Dir(t.TempDir())
-	dir := expect(temp.Join("foo").AsDir().Make(0777))
-	f := dir.Join("file.txt")
-	expect(f.AsFile().Make(0666))
-	link1 := expect(temp.Join("link1").AsSymlink().LinkTo(pathlib.PathStr(dir)))
-	link2 := expect(temp.Join("link2").AsSymlink().LinkTo(pathlib.PathStr(link1)))
+// func TestSymlink_removeAll(t *testing.T) {
+// 	temp := pathlib.Dir(t.TempDir())
+// 	dir := expect(temp.Join("foo").AsDir().Make(0777))
+// 	f := dir.Join("file.txt")
+// 	expect(f.AsFile().Make(0666))
+// 	link1 := expect(temp.Join("link1").AsSymlink().LinkTo(pathlib.PathStr(dir)))
+// 	link2 := expect(temp.Join("link2").AsSymlink().LinkTo(pathlib.PathStr(link1)))
 
-	expect(link2.RemoveAll())
-	if link1.Exists() {
-		t.Fatal("removing link2 should remove link1")
-	}
-	if dir.Exists() {
-		t.Fatal("removing link2 should not affect target dir")
-	}
-}
+// 	expect(link2.RemoveAll())
+// 	if !link1.Exists() {
+// 		t.Fatal("removing link2 should not remove its target (link1)")
+// 	}
+// 	expect(link1.RemoveAll())
+// 	if dir.Exists() {
+// 		t.Fatal("removing link1 should not remove its target(dir)")
+// 	}
+// }
