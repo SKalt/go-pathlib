@@ -11,62 +11,88 @@ import (
 
 // An open file descriptor. Unlike an [os.File], it can only represent a logical
 // file (as in a document on-disk), never a directory.
-type Handle struct {
-	inner *os.File
+type FileHandle interface {
+	Path() File
+	String() string
+	PurePath
+	Beholder[File]
+	Transformer[File]
+	Changer
+	Mover[File]
+
+	// from *os.File
+	Name() string
+	Truncate(size int64) error
+	SyscallConn() (syscall.RawConn, error)
+	SetDeadline(deadline time.Time) error
+	SetReadDeadline(deadline time.Time) error
+	SetWriteDeadline(deadline time.Time) error
+	Fd() uintptr
+
+	io.Closer
+	io.Seeker
+	io.Reader
+	io.Writer
+	io.StringWriter
 }
 
-func (h *Handle) Path() File {
-	return File(h.inner.Name())
+type handle struct{ *os.File }
+
+
+var _ FileHandle = &handle{}
+
+func (h *handle) Path() File {
+	return File(h.Name())
 }
 
-func (h *Handle) String() string {
+func (h *handle) String() string {
 	return h.Path().String()
 }
 
 // PurePath --------------------------------------------------------------------
-var _ PurePath = &Handle{}
+var _ PurePath = &handle{}
 
 // BaseName implements PurePath.
-func (h *Handle) BaseName() string {
+func (h *handle) BaseName() string {
 	return h.Path().BaseName()
 }
 
 // Ext implements PurePath.
-func (h *Handle) Ext() string {
+func (h *handle) Ext() string {
 	return h.Path().Ext()
 }
 
 // IsAbsolute implements PurePath.
-func (h *Handle) IsAbsolute() bool {
+func (h *handle) IsAbsolute() bool {
 	return h.Path().IsAbsolute()
 }
 
 // IsLocal implements PurePath.
-func (h *Handle) IsLocal() bool {
+func (h *handle) IsLocal() bool {
 	return h.Path().IsLocal()
 }
 
 // Join implements PurePath.
-func (h *Handle) Join(segments ...string) PathStr {
+func (h *handle) Join(segments ...string) PathStr {
 	return h.Path().Join(segments...)
 }
 
 // Parent implements PurePath.
-func (h *Handle) Parent() Dir {
+func (h *handle) Parent() Dir {
 	return h.Path().Parent()
 }
 
 // Parts implements PurePath.
-func (h *Handle) Parts() []string {
+func (h *handle) Parts() []string {
 	return h.Path().Parts()
 }
 
 // Beholder --------------------------------------------------------------------
 
-var _ Beholder[File] = &Handle{}
+var _ Beholder[File] = &handle{}
 
 // Lstat implements Beholder.
-func (h *Handle) Lstat() (Info[File], error) {
+func (h *handle) Lstat() (Info[File], error) {
 	info, err := h.Path().Lstat()
 	h.closeIfNonexistent(err)
 	// FIXME: handle case where h is one or more symlinks pointing to a regular file?
@@ -74,19 +100,19 @@ func (h *Handle) Lstat() (Info[File], error) {
 }
 
 // OnDisk implements Beholder.
-func (h *Handle) OnDisk() (Info[File], error) {
+func (h *handle) OnDisk() (Info[File], error) {
 	info, err := h.Path().OnDisk()
 	h.closeIfNonexistent(err)
 	return info, err
 }
-func (h *Handle) closeIfNonexistent(err error) {
+func (h *handle) closeIfNonexistent(err error) {
 	if errors.Is(err, fs.ErrNotExist) {
-		_ = h.inner.Close()
+		_ = h.Close()
 	}
 }
 
 // Stat implements Beholder.
-func (h *Handle) Stat() (Info[File], error) {
+func (h *handle) Stat() (Info[File], error) {
 	info, err := h.Path().Stat()
 	// it might be cheaper to use the `h.inner.Stat()` method, but that
 	// seems to erroneously report that the file exists if the file has
@@ -103,125 +129,66 @@ func (h *Handle) Stat() (Info[File], error) {
 }
 
 // Exists implements Beholder.
-func (h *Handle) Exists() bool {
+func (h *handle) Exists() bool {
 	return h.Path().Exists()
 }
 
 // Changer ---------------------------------------------------------------------
-var _ Changer = &Handle{}
+var _ Changer = &handle{}
 
 // Chmod implements [Changer].
-func (h *Handle) Chmod(mode fs.FileMode) error {
-	return h.inner.Chmod(mode)
+func (h *handle) Chmod(mode fs.FileMode) error {
+	return h.Chmod(mode)
 }
 
 // Chown implements [Changer].
-func (h *Handle) Chown(uid int, gid int) error {
-	return h.inner.Chown(uid, gid)
+func (h *handle) Chown(uid int, gid int) error {
+	return h.Chown(uid, gid)
 }
 
 // Mover -----------------------------------------------------------------------
 
 // Remove implements [Mover].
-func (h *Handle) Remove() error {
-	if err := h.Close(); err != nil {
-		return err
-	}
+func (h *handle) Remove() error {
+	_ = h.Close()
 	return h.Path().Remove()
 }
 
 // Rename implements Manipulator.
-func (h *Handle) Rename(newPath PathStr) (File, error) {
-	if err := h.Close(); err != nil {
-		return h.Path(), err
-	}
+func (h *handle) Rename(newPath PathStr) (File, error) {
+	_ = h.Close()
 	return h.Path().Rename(newPath)
 }
 
-// retained from *os.File ------------------------------------------------------
+// Transformer ------------------------------------------------------------------
+var _ Transformer[File] = &handle{}
 
-// See [os.File.Close].
-func (h *Handle) Close() error {
-	return h.inner.Close()
+// Abs implements Transformer.
+func (h *handle) Abs() (File, error) {
+	return h.Path().Abs()
 }
 
-// See [os.File.Fd].
-func (h *Handle) Fd() uintptr {
-	return h.inner.Fd()
+// Clean implements Transformer.
+func (h *handle) Clean() File {
+	return h.Path().Clean()
 }
 
-// See [os.File.Name].
-func (h *Handle) Name() string {
-	return h.inner.Name()
+// Eq implements Transformer.
+func (h *handle) Eq(other File) bool {
+	return h.Path().Eq(other)
 }
 
-// See [os.File.Read].
-func (h *Handle) Read(p []byte) (n int, err error) {
-	return h.inner.Read(p)
+// ExpandUser implements Transformer.
+func (h *handle) ExpandUser() (File, error) {
+	return h.Path().ExpandUser()
 }
 
-// See [os.File.ReadAt].
-func (h *Handle) ReadAt(p []byte, off int64) (n int, err error) {
-	return h.inner.ReadAt(p, off)
+// Localize implements Transformer.
+func (h *handle) Localize() (File, error) {
+	return h.Path().Localize()
 }
 
-// See [os.File.ReadFrom].
-func (h *Handle) ReadFrom(r io.Reader) (n int64, err error) {
-	return h.inner.ReadFrom(r)
-}
-
-// See [os.File.Seek].
-func (h *Handle) Seek(offset int64, whence int) (int64, error) {
-	return h.inner.Seek(offset, whence)
-}
-
-// See [os.File.SetDeadline].
-func (h *Handle) SetDeadline(deadline time.Time) error {
-	return h.inner.SetDeadline(deadline)
-}
-
-// See [os.File.SetReadDeadline].
-func (h *Handle) SetReadDeadline(deadline time.Time) error {
-	return h.inner.SetReadDeadline(deadline)
-}
-
-// See [os.File.Sync].
-func (h *Handle) Sync() error {
-	return h.inner.Sync()
-}
-
-// See [os.File.SyscallConn].
-func (h *Handle) SyscallConn() (syscall.RawConn, error) {
-	return h.inner.SyscallConn()
-}
-
-// See [os.File.Truncate].
-func (h *Handle) Truncate(size int64) error {
-	return h.inner.Truncate(size)
-}
-
-// See [os.File.Write].
-func (h *Handle) Write(p []byte) (n int, err error) {
-	return h.inner.Write(p)
-}
-
-// See [os.File.WriteAt].
-func (h *Handle) WriteAt(p []byte, off int64) (n int, err error) {
-	return h.inner.WriteAt(p, off)
-}
-
-// See [os.File.WriteTo].
-func (h *Handle) WriteTo(w io.Writer) (n int64, err error) {
-	return h.inner.WriteTo(w)
-}
-
-var _ io.StringWriter = &Handle{}
-
-// WriteString implements io.StringWriter.
-func (h *Handle) WriteString(s string) (n int, err error) {
-	return h.inner.WriteString(s)
-}
-
-func (h *Handle) SetWriteDeadline(deadline time.Time) error {
-	return h.inner.SetWriteDeadline(deadline)
+// Rel implements Transformer.
+func (h *handle) Rel(base Dir) (File, error) {
+	return h.Path().Rel(base)
 }

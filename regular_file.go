@@ -9,12 +9,12 @@ import (
 type File PathStr
 
 // See [os.OpenFile].
-func (f File) Open(flag int, perm fs.FileMode) (*Handle, error) {
+func (f File) Open(flag int, perm fs.FileMode) (FileHandle, error) {
 	ptr, err := os.OpenFile(string(f), flag, perm)
 	if err != nil {
 		return nil, err
 	}
-	return &Handle{ptr}, nil
+	return &handle{ptr}, nil
 }
 
 // PurePath --------------------------------------------------------------------
@@ -144,15 +144,15 @@ func (f File) Rename(newPath PathStr) (File, error) {
 }
 
 // Maker -----------------------------------------------------------------------
-var _ Maker[*Handle] = File("./example")
+var _ Maker[FileHandle] = File("./example")
 
 // Make implements [Maker].
-func (f File) Make(perm fs.FileMode) (*Handle, error) {
+func (f File) Make(perm fs.FileMode) (FileHandle, error) {
 	return f.Open(os.O_RDWR|os.O_CREATE, perm)
 }
 
 // MakeAll implements [Maker].
-func (f File) MakeAll(perm, parentPerm fs.FileMode) (result *Handle, err error) {
+func (f File) MakeAll(perm, parentPerm fs.FileMode) (result FileHandle, err error) {
 	_, err = f.Parent().MakeAll(parentPerm, parentPerm)
 	if err != nil {
 		return
