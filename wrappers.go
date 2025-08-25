@@ -111,6 +111,7 @@ func chown[P Kind](p P, uid int, gid int) error {
 	return os.Chown(string(p), uid, gid)
 }
 
+// See [os.Rename]
 func rename[P Kind](p P, newPath PathStr) (result P, err error) {
 	result = p
 	err = os.Rename(string(p), string(newPath))

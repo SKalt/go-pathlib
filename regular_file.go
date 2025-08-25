@@ -133,11 +133,15 @@ func (f File) Chown(uid int, gid int) error {
 // Mover ------------------------------------------------------------------------
 var _ Remover[File] = File("./example")
 
+// See [os.Remove].
+//
 // Remove implements [Remover].
 func (f File) Remove() error {
 	return remove(f)
 }
 
+// See [os.Rename].
+//
 // Rename implements [Remover].
 func (f File) Rename(newPath PathStr) (File, error) {
 	return rename(f, newPath)

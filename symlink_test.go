@@ -74,6 +74,30 @@ func TestSymlink_beholder(t *testing.T) {
 	// }
 }
 
+func TestSymlink_linkChasing(t *testing.T) {
+	temp := pathlib.Dir(t.TempDir())
+	file := temp.Join("file.txt")
+	handle := expect(file.AsFile().Make(0644))
+	content := "example"
+	expect(handle.WriteString(content))
+	enforce(handle.Close())
+	link1 := expect(temp.Join("nested/dir").
+		AsDir().
+		MakeAll(0777, 0777)).
+		Join("link1").AsSymlink()
+	expect(link1.LinkTo("../../file.txt"))
+	link2 := expect(temp.Join("link2").AsSymlink().LinkTo("nested/dir/link1"))
+
+	data := expect(link2.Join().AsFile().Read())
+	if string(data) != "example"{
+		t.Fatal(string(data))
+	}
+	info := expect(link2.Stat())
+	if info.Size() != int64(len(content)) {
+		t.Fatalf("unexpected info: %#v", info)
+	}
+}
+
 func TestSymlink_transformer(t *testing.T) {
 	dir := pathlib.Dir(t.TempDir())
 	file := dir.Join("file.txt").AsFile()

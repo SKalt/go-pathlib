@@ -1,6 +1,6 @@
 .PHONY: test coverage docs
 test:
-	mise run test
+	mise run coverage
 
 coverage: test
 	go tool cover -html=.coverage

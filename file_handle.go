@@ -114,7 +114,7 @@ func (h *handle) closeIfNonexistent(err error) {
 // Stat implements [Beholder].
 func (h *handle) Stat() (Info[File], error) {
 	info, err := h.Path().Stat()
-	// it might be cheaper to use the `h.inner.Stat()` method, but that
+	// it might be cheaper to use the `h.File.Stat()` method, but that
 	// seems to erroneously report that the file exists if the file has
 	// been removed since the handle was opened.
 	h.closeIfNonexistent(err)
@@ -138,12 +138,12 @@ var _ Changer = &handle{}
 
 // Chmod implements [Changer].
 func (h *handle) Chmod(mode fs.FileMode) error {
-	return h.Chmod(mode)
+	return h.File.Chmod(mode)
 }
 
 // Chown implements [Changer].
 func (h *handle) Chown(uid int, gid int) error {
-	return h.Chown(uid, gid)
+	return h.File.Chown(uid, gid)
 }
 
 // Mover -----------------------------------------------------------------------

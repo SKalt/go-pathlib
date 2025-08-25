@@ -286,12 +286,11 @@ func TestDir_chown(t *testing.T) {
 
 }
 
-func testChown[P interface {
-	pathlib.Kind
+func testChown[P pathlib.Kind, Q interface {
 	pathlib.Changer
 	pathlib.Beholder[P]
-}](t *testing.T, p P) {
-	switch strings.Split(runtime.GOOS, "/")[0] {
+}](t *testing.T, p Q) {
+	switch runtime.GOOS {
 	case "windows", "plan9":
 		t.Skip()
 	}
