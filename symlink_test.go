@@ -89,7 +89,7 @@ func TestSymlink_linkChasing(t *testing.T) {
 	link2 := expect(temp.Join("link2").AsSymlink().LinkTo("nested/dir/link1"))
 
 	data := expect(link2.Join().AsFile().Read())
-	if string(data) != "example"{
+	if string(data) != "example" {
 		t.Fatal(string(data))
 	}
 	info := expect(link2.Stat())

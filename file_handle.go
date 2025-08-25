@@ -38,7 +38,6 @@ type FileHandle interface {
 
 type handle struct{ *os.File }
 
-
 var _ FileHandle = &handle{}
 
 func (h *handle) Path() File {

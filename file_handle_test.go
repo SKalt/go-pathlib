@@ -165,25 +165,23 @@ func TestHandle_nonexistent_stat_rename(t *testing.T) {
 	}
 }
 
-
 func TestFileHandle_chown(t *testing.T) {
 	temp := pathlib.Dir(t.TempDir())
 	file := temp.Join("file.txt").AsFile()
-	handle  := expect(file.Make(0666))
+	handle := expect(file.Make(0666))
 	testChown(t, handle)
 }
 
 func TestFileHandle_chmod(t *testing.T) {
 	temp := pathlib.Dir(t.TempDir())
 	file := temp.Join("file.txt").AsFile()
-	handle  := expect(file.Make(0666))
+	handle := expect(file.Make(0666))
 	enforce(handle.Chmod(0600))
 	info := expect(handle.OnDisk())
 	if info.Mode() != 0600 {
 		t.Errorf("expected %s\ngot %ss", fs.FileMode(0600), info.Mode())
 	}
 }
-
 
 func TestFileHandle_transformer(t *testing.T) {
 	dir := pathlib.Dir(t.TempDir())
@@ -217,13 +215,12 @@ func TestFileHandle_transformer(t *testing.T) {
 	}
 }
 
-
 func TestFileHandle_openSymlink(t *testing.T) {
 	temp := tempDir(t)
 	h1 := expect(temp.Join("foo/bar/baz.txt").AsFile().MakeAll(0666, 0777))
 	content := "example"
-	h1.WriteString(content)
-	h1.Close()
+	expect(h1.WriteString(content))
+	enforce(h1.Close())
 
 	link := expect(temp.Join("link").AsSymlink().LinkTo("./foo/bar/baz.txt"))
 	handle := expect(pathlib.PathStr(link).AsFile().Open(os.O_RDONLY, 0666))
