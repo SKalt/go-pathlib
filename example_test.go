@@ -6,13 +6,14 @@ import (
 	"github.com/skalt/pathlib.go"
 )
 
+// Syntactic sugar.
 func enforce(err error) {
 	if err != nil {
 		panic(err)
 	}
 }
 
-// This syntactic sugar will be used throughout the examples.
+// More syntactic sugar.
 func expect[T any](val T, err error) T {
 	enforce(err)
 	return val
@@ -28,14 +29,8 @@ func Example() {
 	for i, subPath := range []string{"a.txt", "b.txt", "c/d.txt"} {
 		file := dir.Join(subPath).AsFile()
 		handle := expect(file.MakeAll(0o666, 0o777))
-		_, err := fmt.Fprintf(handle, "%d", i)
-		if err != nil {
-			panic(err)
-		}
-		if err = handle.Close(); err != nil {
-			panic(err)
-		}
-
+		expect(fmt.Fprintf(handle, "%d", i))
+		enforce(handle.Close())
 		fmt.Printf("contents of %s: %q\n", file, string(expect(file.Read())))
 	}
 

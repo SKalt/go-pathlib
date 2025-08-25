@@ -80,7 +80,7 @@ func ExampleUserConfigDir() {
 		}
 	}
 	fmt.Println("On Unix")
-	checkOutput( "/foo/bar")
+	checkOutput("/foo/bar")
 	checkOutput("")
 	checkOutput("./my_config")
 	// Output:

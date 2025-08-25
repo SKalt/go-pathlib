@@ -13,3 +13,6 @@ docs: bin/pkgsite
 
 lint:
 	mise run lint
+
+fmt:
+	mise run fmt

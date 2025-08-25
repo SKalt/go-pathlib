@@ -195,7 +195,6 @@ func ExampleDir_purePath() {
 	// 	.Ext() => string(".")
 }
 
-
 func ExampleDir_Localize() {
 	fmt.Println("On Unix")
 	fmt.Println("Localized", expect(pathlib.Dir("foo/bar/baz").Localize()))
