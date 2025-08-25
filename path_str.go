@@ -238,15 +238,6 @@ func (p PathStr) Eq(q PathStr) bool {
 	return x == y
 }
 
-// Destroyer -------------------------------------------------------------------
-var _ Destroyer[PathStr] = PathStr(".")
-
-// See [os.RemoveAll].
-//
-// RemoveAll implements [Destroyer].
-func (p PathStr) RemoveAll() (PathStr, error) {
-	return removeAll(p)
-}
 
 // casts -----------------------------------------------------------------------
 

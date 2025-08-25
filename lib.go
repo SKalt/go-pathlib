@@ -88,14 +88,10 @@ type Remover[P Kind] interface {
 	Rename(newPath PathStr) (P, error)
 }
 
+// Methods that alter a filesystem object without changing its path or performing I/O.
 type Changer interface {
 	// see [os.Chmod].
 	Chmod(fs.FileMode) error
 	// see [os.Chown].
 	Chown(uid, gid int) error
-}
-
-type Destroyer[P Kind] interface {
-	// see [os.RemoveAll].
-	RemoveAll() (P, error)
 }

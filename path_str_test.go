@@ -253,7 +253,7 @@ func ExamplePathStr_Read() {
 	if err != nil {
 		panic(err)
 	}
-	defer func() { expect(dir.RemoveAll()) }()
+	defer func() { expect(dir.AsDir().RemoveAll()) }()
 	expect(link.AsSymlink().LinkTo(file))
 
 	var contents any

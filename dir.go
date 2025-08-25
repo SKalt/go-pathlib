@@ -39,6 +39,14 @@ func (d Dir) Chdir() (Dir, error) {
 	return d, os.Chdir(string(d))
 }
 
+// See [os.RemoveAll].
+//
+// RemoveAll implements [Destroyer].
+func (d Dir) RemoveAll() (Dir, error) {
+	return removeAll(d)
+}
+
+
 // Readable --------------------------------------------------------------------
 var _ Readable[[]fs.DirEntry] = Dir(".")
 
@@ -225,12 +233,3 @@ func (d Dir) Rename(newPath PathStr) (Dir, error) {
 	return rename(d, newPath)
 }
 
-// Destroyer -------------------------------------------------------------------
-var _ Destroyer[Dir] = Dir(".")
-
-// See [os.RemoveAll].
-//
-// RemoveAll implements [Destroyer].
-func (d Dir) RemoveAll() (Dir, error) {
-	return removeAll(d)
-}
