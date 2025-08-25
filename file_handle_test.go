@@ -10,7 +10,7 @@ import (
 	"github.com/skalt/pathlib.go"
 )
 
-func ExampleHandle_Read() {
+func ExampleFileHandle_Read() {
 	file := pathlib.TempDir().Join("example.txt").AsFile()
 	handle := expect(file.Make(0o644))
 	defer func() { _ = handle.Close() }()
@@ -28,7 +28,7 @@ func ExampleHandle_Read() {
 
 }
 
-func ExampleHandle_Path() {
+func ExampleFileHandle_Path() {
 	handle, err := pathlib.TempDir().Join("example.txt").AsFile().Make(0o644)
 	if err != nil {
 		panic(err)
@@ -39,7 +39,7 @@ func ExampleHandle_Path() {
 	// /tmp/example.txt
 }
 
-func ExampleHandle_Parts() {
+func ExampleFileHandle_Parts() {
 	handle, err := pathlib.TempDir().Join("example.txt").AsFile().Make(0o644)
 	if err != nil {
 		panic(err)
@@ -50,7 +50,7 @@ func ExampleHandle_Parts() {
 	// [/ tmp example.txt]
 }
 
-func ExampleHandle_Join() {
+func ExampleFileHandle_Join() {
 	handle, err := pathlib.TempDir().Join("example.txt").AsFile().Make(0o644)
 	if err != nil {
 		panic(err)
@@ -117,7 +117,7 @@ func TestHandle_beholder(t *testing.T) {
 	assertStrEq(t, "example.txt", info.Name())
 }
 
-func ExampleHandle_Remove() {
+func ExampleFileHandle_Remove() {
 	handle, err := pathlib.TempDir().Join("example.txt").AsFile().Make(0o644)
 	if err != nil {
 		panic(err)
