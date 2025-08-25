@@ -21,13 +21,19 @@ func (p PathStr) Stat() (Info[PathStr], error) {
 	return stat(p)
 }
 
-// See [os.Lstat].
+// Observe the file info of the path on-disk. Note that this does not follow symlinks.
+//
+// see [os.Lstat].
 //
 // Lstat implements [Beholder].
 func (p PathStr) Lstat() (Info[PathStr], error) {
 	return lstat(p)
 }
 
+// Observe the file info of the path on-disk. Note that this does not follow symlinks.
+//
+// see [os.Lstat].
+//
 // OnDisk implements [Beholder].
 func (p PathStr) OnDisk() (Info[PathStr], error) {
 	return lstat(p)
@@ -153,10 +159,15 @@ func (p PathStr) Read() (any, error) {
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = PathStr(".")
 
+// Convenience method to cast get the untyped string representation of the path.
+//
+// String implements [Transformer].
 func (p PathStr) String() string {
 	return string(p)
 }
 
+// Remove ".", "..", and repeated slashes from a path.
+//
 // See [path/filepath.Clean].
 //
 // Clean implements [Transformer].
@@ -164,8 +175,12 @@ func (p PathStr) Clean() PathStr {
 	return clean(p)
 }
 
+// Returns an absolute path, or an error if the path cannot be made absolute. Note that there may be more than one
+// absolute path for a given input path.
+//
+// See [path/filepath.Abs].
+//
 // Abs implements [Transformer].
-// See [path/filepath.Abs] for more details.
 func (p PathStr) Abs() (PathStr, error) {
 	return abs(p)
 }
@@ -176,9 +191,11 @@ func (p PathStr) Localize() (PathStr, error) {
 	return localize(p)
 }
 
-// Rel implements [Transformer]. See [path/filepath.Rel]:
+// Returns a relative path to the target directory, or an error if the path cannot be made relative.
 //
 // See [path/filepath.Rel].
+//
+// Rel implements [Transformer]
 func (p PathStr) Rel(base Dir) (PathStr, error) {
 	return rel(base, p)
 }
@@ -192,6 +209,8 @@ func (p PathStr) ExpandUser() (PathStr, error) {
 // Changer ----------------------------------------------------------------------
 var _ Changer = PathStr(".")
 
+// See [os.Chmod].
+//
 // Chmod implements [Changer].
 func (p PathStr) Chmod(mode os.FileMode) error {
 	return chmod(p, mode)
@@ -207,18 +226,24 @@ func (p PathStr) Chown(uid int, gid int) error {
 // Mover ------------------------------------------------------------------------
 var _ Remover[PathStr] = PathStr(".")
 
+// See [os.Remove].
+//
 // Remove implements [Remover].
 func (p PathStr) Remove() error {
 	return remove(p)
 }
 
+// See [os.Rename].
+//
 // Rename implements [Remover].
 func (p PathStr) Rename(newPath PathStr) (PathStr, error) {
 	return rename(p, newPath)
 }
 
 // -----------------------------------------------------------------------------
-
+// Returns true if the two paths represent the same path.
+//
+// Eq implements [Transformer].
 func (p PathStr) Eq(q PathStr) bool {
 	// try to avoid panicking if Cwd() can't be obtained
 	p = p.Clean()
@@ -237,7 +262,6 @@ func (p PathStr) Eq(q PathStr) bool {
 	// TODO: check that this still works with UNC strings on windows
 	return x == y
 }
-
 
 // casts -----------------------------------------------------------------------
 

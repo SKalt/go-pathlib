@@ -60,19 +60,34 @@ func (p onDisk[P]) Parts() []string {
 // Transformer -----------------------------------------------------------------
 var _ Transformer[PathStr] = onDisk[PathStr]{}
 
+// Convenience method to cast get the untyped string representation of the path.
+//
+// String implements [Transformer].
 func (p onDisk[P]) String() string {
 	return string(p.Path())
 }
 
+// Returns true if the two paths represent the same path.
+//
+// Eq implements [Transformer].
 func (p onDisk[P]) Eq(q P) bool {
 	return PathStr(p.Path()).Eq(PathStr(q))
 }
 
+// Remove ".", "..", and repeated slashes from a path.
+//
+// See [path/filepath.Clean].
+//
 // Clean implements [Transformer]
 func (p onDisk[P]) Clean() P {
 	return clean(p.Path())
 }
 
+// Returns an absolute path, or an error if the path cannot be made absolute. Note that there may be more than one
+// absolute path for a given input path.
+//
+// See [path/filepath.Abs].
+//
 // Abs implements [Transformer].
 func (p onDisk[P]) Abs() (P, error) {
 	return abs(p.Path())
@@ -83,6 +98,10 @@ func (p onDisk[P]) Localize() (P, error) {
 	return localize(p.Path())
 }
 
+// Returns a relative path to the target directory, or an error if the path cannot be made relative.
+//
+// See [path/filepath.Rel].
+//
 // Rel implements [Transformer].
 func (p onDisk[P]) Rel(base Dir) (P, error) {
 	return rel(base, p.Path())
@@ -95,6 +114,8 @@ func (p onDisk[P]) ExpandUser() (P, error) {
 // Mover --------------------------------------------------------------------
 var _ Remover[PathStr] = onDisk[PathStr]{}
 
+// See [os.Remove].
+//
 // Remove implements [Remover].
 func (p onDisk[P]) Remove() error {
 	return remove(p.Path())
@@ -108,11 +129,15 @@ func (p onDisk[P]) Rename(destination PathStr) (P, error) {
 // Changer ----------------------------------------------------------------------
 var _ Changer = onDisk[PathStr]{}
 
+// See [os.Chmod].
+//
 // Chmod implements [Changer].
 func (p onDisk[P]) Chmod(mode fs.FileMode) error {
 	return chmod(p.Path(), mode)
 }
 
+// See [os.Chown].
+//
 // Chown implements [Changer].
 func (p onDisk[P]) Chown(uid, gid int) error {
 	return chown(p.Path(), uid, gid)

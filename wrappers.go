@@ -23,7 +23,7 @@ func lstat[P Kind](p P) (Info[P], error) {
 }
 
 func exists[P Kind](p P) bool {
-	_, err := lstat(p)
+	_, err := stat(p)
 	return !errors.Is(err, fs.ErrNotExist)
 }
 
@@ -103,6 +103,7 @@ func expandUser[P Kind](p P) (q P, err error) {
 	return
 }
 
+// See [os.Chmod].
 func chmod[P Kind](p P, mode os.FileMode) error {
 	return os.Chmod(string(p), mode)
 }

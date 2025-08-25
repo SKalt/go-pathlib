@@ -13,7 +13,6 @@ import (
 // file (as in a document on-disk), never a directory.
 type FileHandle interface {
 	Path() File
-	String() string
 	PurePath
 	Beholder[File]
 	Transformer[File]
@@ -44,6 +43,9 @@ func (h *handle) Path() File {
 	return File(h.Name())
 }
 
+// Convenience method to cast get the untyped string representation of the path.
+//
+// String implements [Transformer].
 func (h *handle) String() string {
 	return h.Path().String()
 }
@@ -90,27 +92,42 @@ func (h *handle) Parts() []string {
 
 var _ Beholder[File] = &handle{}
 
+// Observe the file info of the path on-disk without following symlinks.
+// If the file or link no longer exists, the file handle will be closed.
+//
+// See [os.Stat].
+//
 // Lstat implements [Beholder].
 func (h *handle) Lstat() (Info[File], error) {
 	info, err := h.Path().Lstat()
 	h.closeIfNonexistent(err)
-	// FIXME: handle case where h is one or more symlinks pointing to a regular file?
 	return info, err
 }
 
-// OnDisk implements [Beholder].
+// Observe the file info of the path on-disk. Follows symlinks.
+// If the file no longer exists, the file handle will be closed.
+//
+// See [os.Stat].
+//
+// OnDisk implements [Beholder]
 func (h *handle) OnDisk() (Info[File], error) {
 	info, err := h.Path().OnDisk()
 	h.closeIfNonexistent(err)
 	return info, err
 }
+
 func (h *handle) closeIfNonexistent(err error) {
 	if errors.Is(err, fs.ErrNotExist) {
 		_ = h.Close()
 	}
 }
 
-// Stat implements [Beholder].
+// Observe the file info of the path on-disk. Follows symlinks.
+// If the file no longer exists, the file handle will be closed.
+//
+// See [os.Stat].
+//
+// Stat implements [Beholder]
 func (h *handle) Stat() (Info[File], error) {
 	info, err := h.Path().Stat()
 	// it might be cheaper to use the `h.File.Stat()` method, but that
@@ -127,6 +144,10 @@ func (h *handle) Stat() (Info[File], error) {
 	return result, nil
 }
 
+// Returns true if the path exists on-disk after following symlinks.
+//
+// See [os.Stat], [fs.ErrNotExist].
+//
 // Exists implements [Beholder].
 func (h *handle) Exists() bool {
 	return h.Path().Exists()
@@ -135,11 +156,15 @@ func (h *handle) Exists() bool {
 // Changer ---------------------------------------------------------------------
 var _ Changer = &handle{}
 
+// See [os.Chmod].
+//
 // Chmod implements [Changer].
 func (h *handle) Chmod(mode fs.FileMode) error {
 	return h.File.Chmod(mode)
 }
 
+// See [os.Chown].
+//
 // Chown implements [Changer].
 func (h *handle) Chown(uid int, gid int) error {
 	return h.File.Chown(uid, gid)
@@ -147,12 +172,20 @@ func (h *handle) Chown(uid int, gid int) error {
 
 // Mover -----------------------------------------------------------------------
 
+// Close the file handle and remove the underlying file.
+//
+// See [os.Remove].
+//
 // Remove implements [Remover].
 func (h *handle) Remove() error {
 	_ = h.Close()
 	return h.Path().Remove()
 }
 
+// Close the file handle and rename the underlying file.
+//
+// See [os.Rename].
+//
 // Rename implements [Manipulator].
 func (h *handle) Rename(newPath PathStr) (File, error) {
 	_ = h.Close()
@@ -162,16 +195,27 @@ func (h *handle) Rename(newPath PathStr) (File, error) {
 // Transformer ------------------------------------------------------------------
 var _ Transformer[File] = &handle{}
 
+// Returns an absolute path, or an error if the path cannot be made absolute. Note that there may be more than one
+// absolute path for a given input path.
+//
+// See [path/filepath.Abs].
+//
 // Abs implements [Transformer].
 func (h *handle) Abs() (File, error) {
 	return h.Path().Abs()
 }
 
+// Remove ".", "..", and repeated slashes from a path.
+//
+// See [path/filepath.Clean].
+//
 // Clean implements [Transformer].
 func (h *handle) Clean() File {
 	return h.Path().Clean()
 }
 
+// Returns true if the two paths represent the same path.
+//
 // Eq implements [Transformer].
 func (h *handle) Eq(other File) bool {
 	return h.Path().Eq(other)

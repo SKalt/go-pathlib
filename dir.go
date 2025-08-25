@@ -46,7 +46,6 @@ func (d Dir) RemoveAll() (Dir, error) {
 	return removeAll(d)
 }
 
-
 // Readable --------------------------------------------------------------------
 var _ Readable[[]fs.DirEntry] = Dir(".")
 
@@ -102,21 +101,34 @@ func (d Dir) Ext() string {
 // Transformer -----------------------------------------------------------------
 var _ Transformer[Dir] = Dir(".")
 
+// Convenience method to cast get the untyped string representation of the path.
+//
 // String implements [Transformer].
 func (d Dir) String() string {
 	return string(d)
 }
 
+// Returns an absolute path, or an error if the path cannot be made absolute. Note that there may be more than one
+// absolute path for a given input path.
+//
+// See [path/filepath.Abs].
+//
 // Abs implements [Transformer].
 func (d Dir) Abs() (Dir, error) {
 	return abs(d)
 }
 
+// Returns true if the two paths represent the same path.
+//
 // Eq implements [Transformer].
 func (d Dir) Eq(other Dir) (equivalent bool) {
 	return PathStr(d).Eq(PathStr(other))
 }
 
+// Remove ".", "..", and repeated slashes from a path.
+//
+// See [path/filepath.Clean].
+//
 // Clean implements [Transformer].
 func (d Dir) Clean() Dir {
 	return clean(d)
@@ -129,7 +141,9 @@ func (d Dir) Localize() (Dir, error) {
 	return localize(d)
 }
 
-// See [path/filepath.Rel]
+// Returns a relative path to the target directory, or an error if the path cannot be made relative.
+//
+// See [path/filepath.Rel].
 //
 // Rel implements [Transformer].
 func (d Dir) Rel(base Dir) (Dir, error) {
@@ -144,15 +158,23 @@ func (d Dir) ExpandUser() (Dir, error) {
 // Beholder --------------------------------------------------------------------
 var _ Beholder[Dir] = Dir(".")
 
+// Observe the file info of the path on-disk. Follows symlinks. If the info is not a directory or a symlink,
+// Stat will return a [WrongTypeOnDisk] error.
+//
+// See [os.Stat].
+//
 // OnDisk implements [Beholder]
 func (d Dir) OnDisk() (result Info[Dir], err error) {
 	return d.Stat()
 }
 
+// Returns true if the path exists on-disk after following symlinks.
+//
+// See [os.Stat], [fs.ErrNotExist].
+//
 // Exists implements [Beholder].
 func (d Dir) Exists() bool {
-	_, err := d.Lstat()
-	return err == nil
+	return exists(d)
 }
 
 // See [os.Lstat].
@@ -160,12 +182,15 @@ func (d Dir) Exists() bool {
 // Lstat implements [Beholder].
 func (d Dir) Lstat() (result Info[Dir], err error) {
 	result, err = lstat(d)
-	if err == nil && !result.IsDir() {
+	if err == nil && !result.IsDir() && result.Mode()&fs.ModeSymlink != fs.ModeSymlink {
 		err = WrongTypeOnDisk[Dir]{result}
 	}
 	return
 }
 
+// Observe the directory's filesystem [Info] on-disk. If the info is not a directory or a symlink,
+// Stat will return a [WrongTypeOnDisk] error.
+//
 // See [os.Stat].
 //
 // Stat implements [Beholder].
@@ -180,6 +205,8 @@ func (d Dir) Stat() (result Info[Dir], err error) {
 // Maker -----------------------------------------------------------------------
 var _ Maker[Dir] = Dir("/example")
 
+// See [os.Mkdir].
+//
 // Make implements [Maker].
 func (d Dir) Make(perm fs.FileMode) (result Dir, err error) {
 	return d, os.Mkdir(string(d), perm)
@@ -203,6 +230,7 @@ func (d Dir) MakeAll(perm, parentPerm fs.FileMode) (result Dir, err error) {
 var _ Changer = Dir(".")
 
 // See [os.Chmod].
+//
 // Chmod implements [Changer].
 func (d Dir) Chmod(mode os.FileMode) error {
 	return chmod(d, mode)
@@ -232,4 +260,3 @@ func (d Dir) Remove() error {
 func (d Dir) Rename(newPath PathStr) (Dir, error) {
 	return rename(d, newPath)
 }
-

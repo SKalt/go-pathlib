@@ -118,6 +118,43 @@ func TestFile_open(t *testing.T) {
 	}
 
 }
+func TestFile_remake(t *testing.T) {
+	temp := pathlib.Dir(t.TempDir())
+	file := temp.Join("file.txt").AsFile()
+	h := expect(file.Make(0666))
+	expect(h.WriteString("hello"))
+	enforce(h.Close())
+
+	h2 := expect(file.Make(0600))
+	enforce(h2.Close())
+	if expect(file.Stat()).Mode() == 0600 {
+		t.Fail()
+	}
+	content := string(expect(file.Read()))
+	if content != "hello" {
+		t.Fail()
+	}
+}
+
+func TestFile_wrongType(t *testing.T) {
+	temp := pathlib.Dir(t.TempDir())
+	actual := expect(temp.Join("dir").AsDir().Make(0777))
+	incognito := pathlib.File(actual)
+	info, err := incognito.Stat()
+	if err == nil {
+		t.Fatalf("got %v", info)
+	}
+	if _, ok := err.(pathlib.WrongTypeOnDisk[pathlib.File]); !ok {
+		t.Fatalf("unexpected type : %T(%v)", err, err)
+	}
+	info, err = incognito.Lstat()
+	if err == nil {
+		t.Fatalf("got %v", info.Mode())
+	}
+	if _, ok := err.(pathlib.WrongTypeOnDisk[pathlib.File]); !ok {
+		t.Fatalf("unexpected type : %T(%v)", err, err)
+	}
+}
 
 func TestFile_localize(t *testing.T) {
 	temp := pathlib.Dir(t.TempDir())

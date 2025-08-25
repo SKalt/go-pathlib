@@ -35,20 +35,27 @@ type PurePath interface {
 
 // transforms the appearance of a path, but not what it represents.
 type Transformer[P Kind] interface {
+	// Returns an absolute path, or an error if the path cannot be made absolute. Note that there may be more than one
+	// absolute path for a given input path.
+	//
 	// See [path/filepath.Abs].
-	// Returns an absolute path, or an error if the path cannot be made absolute.
 	Abs() (P, error)
-	// See [path/filepath.Rel].
 	// Returns a relative path to the target directory, or an error if the path cannot be made relative.
+	//
+	// See [path/filepath.Rel].
 	Rel(target Dir) (P, error)
 	// See [path/filepath.Localize].
 	Localize() (P, error)
 	// Expand `~` into the home directory of the current user.
 	ExpandUser() (P, error)
+	// Remove ".", "..", and repeated slashes from a path.
+	//
 	// See [path/filepath.Clean].
 	Clean() P
 	// Returns true if the two paths represent the same path.
 	Eq(other P) bool
+
+	// Convenience method to cast get the untyped string representation of the path.
 	String() string
 }
 
@@ -65,7 +72,7 @@ type Info[P Kind] interface {
 
 // Behaviors for inspecting a path on-disk.
 type Beholder[P Kind] interface {
-	// Observe the file info of the path on-disk. Does not follow symlinks. See [os.Lstat].
+	// Observe the file info of the path on-disk.
 	OnDisk() (Info[P], error)
 	// See [os.Stat].
 	Stat() (Info[P], error)
