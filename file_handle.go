@@ -52,37 +52,37 @@ func (h *handle) String() string {
 // PurePath --------------------------------------------------------------------
 var _ PurePath = &handle{}
 
-// BaseName implements PurePath.
+// BaseName implements [PurePath].
 func (h *handle) BaseName() string {
 	return h.Path().BaseName()
 }
 
-// Ext implements PurePath.
+// Ext implements [PurePath].
 func (h *handle) Ext() string {
 	return h.Path().Ext()
 }
 
-// IsAbsolute implements PurePath.
+// IsAbsolute implements [PurePath].
 func (h *handle) IsAbsolute() bool {
 	return h.Path().IsAbsolute()
 }
 
-// IsLocal implements PurePath.
+// IsLocal implements [PurePath].
 func (h *handle) IsLocal() bool {
 	return h.Path().IsLocal()
 }
 
-// Join implements PurePath.
+// Join implements [PurePath].
 func (h *handle) Join(segments ...string) PathStr {
 	return h.Path().Join(segments...)
 }
 
-// Parent implements PurePath.
+// Parent implements [PurePath].
 func (h *handle) Parent() Dir {
 	return h.Path().Parent()
 }
 
-// Parts implements PurePath.
+// Parts implements [PurePath].
 func (h *handle) Parts() []string {
 	return h.Path().Parts()
 }
@@ -91,7 +91,7 @@ func (h *handle) Parts() []string {
 
 var _ Beholder[File] = &handle{}
 
-// Lstat implements Beholder.
+// Lstat implements [Beholder].
 func (h *handle) Lstat() (Info[File], error) {
 	info, err := h.Path().Lstat()
 	h.closeIfNonexistent(err)
@@ -99,7 +99,7 @@ func (h *handle) Lstat() (Info[File], error) {
 	return info, err
 }
 
-// OnDisk implements Beholder.
+// OnDisk implements [Beholder].
 func (h *handle) OnDisk() (Info[File], error) {
 	info, err := h.Path().OnDisk()
 	h.closeIfNonexistent(err)
@@ -111,7 +111,7 @@ func (h *handle) closeIfNonexistent(err error) {
 	}
 }
 
-// Stat implements Beholder.
+// Stat implements [Beholder].
 func (h *handle) Stat() (Info[File], error) {
 	info, err := h.Path().Stat()
 	// it might be cheaper to use the `h.inner.Stat()` method, but that
@@ -128,7 +128,7 @@ func (h *handle) Stat() (Info[File], error) {
 	return result, nil
 }
 
-// Exists implements Beholder.
+// Exists implements [Beholder].
 func (h *handle) Exists() bool {
 	return h.Path().Exists()
 }
@@ -154,7 +154,7 @@ func (h *handle) Remove() error {
 	return h.Path().Remove()
 }
 
-// Rename implements Manipulator.
+// Rename implements [Manipulator].
 func (h *handle) Rename(newPath PathStr) (File, error) {
 	_ = h.Close()
 	return h.Path().Rename(newPath)
@@ -163,32 +163,32 @@ func (h *handle) Rename(newPath PathStr) (File, error) {
 // Transformer ------------------------------------------------------------------
 var _ Transformer[File] = &handle{}
 
-// Abs implements Transformer.
+// Abs implements [Transformer].
 func (h *handle) Abs() (File, error) {
 	return h.Path().Abs()
 }
 
-// Clean implements Transformer.
+// Clean implements [Transformer].
 func (h *handle) Clean() File {
 	return h.Path().Clean()
 }
 
-// Eq implements Transformer.
+// Eq implements [Transformer].
 func (h *handle) Eq(other File) bool {
 	return h.Path().Eq(other)
 }
 
-// ExpandUser implements Transformer.
+// ExpandUser implements [Transformer].
 func (h *handle) ExpandUser() (File, error) {
 	return h.Path().ExpandUser()
 }
 
-// Localize implements Transformer.
+// Localize implements [Transformer].
 func (h *handle) Localize() (File, error) {
 	return h.Path().Localize()
 }
 
-// Rel implements Transformer.
+// Rel implements [Transformer].
 func (h *handle) Rel(base Dir) (File, error) {
 	return h.Path().Rel(base)
 }
