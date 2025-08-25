@@ -93,14 +93,14 @@ func (p onDisk[P]) ExpandUser() (P, error) {
 }
 
 // Mover --------------------------------------------------------------------
-var _ Mover[PathStr] = onDisk[PathStr]{}
+var _ Remover[PathStr] = onDisk[PathStr]{}
 
-// Remove implements [Mover].
+// Remove implements [Remover].
 func (p onDisk[P]) Remove() error {
 	return remove(p.Path())
 }
 
-// Rename implements [Mover].
+// Rename implements [Remover].
 func (p onDisk[P]) Rename(destination PathStr) (P, error) {
 	return rename(p.Path(), destination)
 }

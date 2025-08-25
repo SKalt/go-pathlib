@@ -136,14 +136,14 @@ func (s Symlink) Chown(uid int, gid int) error {
 }
 
 // Mover ------------------------------------------------------------------------
-var _ Mover[Symlink] = Symlink("./link")
+var _ Remover[Symlink] = Symlink("./link")
 
-// Remove implements [Mover].
+// Remove implements [Remover].
 func (s Symlink) Remove() error {
 	return remove(s)
 }
 
-// Rename implements [Mover].
+// Rename implements [Remover].
 func (s Symlink) Rename(newPath PathStr) (Symlink, error) {
 	return rename(s, newPath)
 }

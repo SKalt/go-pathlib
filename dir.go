@@ -207,18 +207,20 @@ func (d Dir) Chown(uid int, gid int) error {
 	return chown(d, uid, gid)
 }
 
-// Mover -----------------------------------------------------------------------
+// Remover -----------------------------------------------------------------------
+
+var _ Remover[Dir] = Dir(".")
 
 // See [os.Remove].
 //
-// Remove implements [Mover].
+// Remove implements [Remover].
 func (d Dir) Remove() error {
 	return remove(d)
 }
 
 // See [os.Rename].
 //
-// Rename implements [Mover].
+// Rename implements [Remover].
 func (d Dir) Rename(newPath PathStr) (Dir, error) {
 	return rename(d, newPath)
 }

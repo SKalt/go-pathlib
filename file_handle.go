@@ -18,7 +18,7 @@ type FileHandle interface {
 	Beholder[File]
 	Transformer[File]
 	Changer
-	Mover[File]
+	Remover[File]
 
 	// from *os.File
 	Name() string
@@ -148,7 +148,7 @@ func (h *handle) Chown(uid int, gid int) error {
 
 // Mover -----------------------------------------------------------------------
 
-// Remove implements [Mover].
+// Remove implements [Remover].
 func (h *handle) Remove() error {
 	_ = h.Close()
 	return h.Path().Remove()

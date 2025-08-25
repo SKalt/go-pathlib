@@ -58,7 +58,7 @@ type Info[P Kind] interface {
 	PurePath
 	Transformer[P]
 	Changer
-	Mover[P]
+	Remover[P]
 	// the typed version of [fs.FileInfo.Name]
 	Path() P
 }
@@ -80,7 +80,8 @@ type Maker[T any] interface {
 	MakeAll(perm, parentPerm fs.FileMode) (T, error)
 }
 
-type Mover[P Kind] interface {
+// Behaviors that cause something at a path to no longer be there.
+type Remover[P Kind] interface {
 	// see [os.Remove].
 	Remove() error
 	// see [os.Rename].

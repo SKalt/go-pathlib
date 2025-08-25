@@ -205,14 +205,14 @@ func (p PathStr) Chown(uid int, gid int) error {
 }
 
 // Mover ------------------------------------------------------------------------
-var _ Mover[PathStr] = PathStr(".")
+var _ Remover[PathStr] = PathStr(".")
 
-// Remove implements [Mover].
+// Remove implements [Remover].
 func (p PathStr) Remove() error {
 	return remove(p)
 }
 
-// Rename implements [Mover].
+// Rename implements [Remover].
 func (p PathStr) Rename(newPath PathStr) (PathStr, error) {
 	return rename(p, newPath)
 }
