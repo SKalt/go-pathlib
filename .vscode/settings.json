@@ -22,6 +22,7 @@
     "itsmechlark",
     "libc",
     "pathlib",
+    "shellcheck",
     "skalt",
     "stdlib",
     "syscalls",

@@ -2,6 +2,7 @@
 go = "latest"
 golangci-lint = "latest"
 ripgrep = "latest"
+shellcheck = "latest"
 
 [env]
 # https://mise.jdx.dev/environments/#env-path
@@ -10,12 +11,17 @@ _.path = ["{{env.GOBIN}}"]
 
 [tasks]
 test = "go test -coverprofile=.coverage ./..."
-lint = "golangci-lint run ./..."
+golangci-lint = "golangci-lint run ./..."
+shellcheck = "shellcheck ./scripts/*.sh"
 fmt = "golangci-lint fmt ./..."
 fmt-check = "golangci-lint fmt --diff ./..."
 
+[tasks.lint]
+depends = ["golangci-lint", "shellcheck", "fmt-check"]
+
+
 [tasks.ci]
-depends = ["test", "lint", "fmt-check"]
+depends = ["lint", "test"]
 
 
 [tasks.coverage]
