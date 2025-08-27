@@ -202,7 +202,7 @@ func ExamplePathStr_beholder() {
 	expect(file.AsFile().Make(0644))
 
 	rel := expect(file.Rel(temp))
-	fmt.Printf("OnDisk: %q %s\n", rel, expect(file.OnDisk()).Mode())
+	fmt.Printf("OnDisk: %q %s\n", rel, expect(file.Stat()).Mode())
 	fmt.Printf(" Lstat: %q %s\n", rel, expect(file.Lstat()).Mode())
 	fmt.Printf("  Stat: %q %s\n", rel, expect(file.Stat()).Mode())
 
@@ -353,7 +353,7 @@ func TestPathStr_read(t *testing.T) {
 	temp := pathlib.Dir(t.TempDir())
 
 	f := temp.Join("file.txt")
-	_, err := f.OnDisk()
+	_, err := f.Stat()
 	if !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("expected fs.ErrNotExist, got %v", err)
 	}

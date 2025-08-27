@@ -72,8 +72,6 @@ type Info[P Kind] interface {
 
 // Behaviors for inspecting a path on-disk.
 type Beholder[P Kind] interface {
-	// Observe the file info of the path on-disk.
-	OnDisk() (Info[P], error)
 	// See [os.Stat].
 	Stat() (Info[P], error)
 	// See [os.Lstat].

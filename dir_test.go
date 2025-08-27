@@ -92,7 +92,7 @@ func ExampleDir_Lstat() {
 
 	link := expect(tmpDir.Join("link").AsSymlink().LinkTo(pathlib.PathStr(dir)))
 	disguised := pathlib.Dir(link)
-	unmasked := expect(disguised.OnDisk()) // works
+	unmasked := expect(disguised.Stat()) // works
 	for _, name := range []string{"a", "b", "c"} {
 		expect(dir.Join(name).AsFile().Make(0666))
 	}
@@ -236,7 +236,7 @@ func TestDir_badStat(t *testing.T) {
 
 	expect(temp.Join("file.txt").AsFile().Make(0666))
 	expect(temp.Join("link").AsSymlink().LinkTo(temp.Join("file.txt")))
-	_, err := temp.Join("link").AsDir().OnDisk()
+	_, err := temp.Join("link").AsDir().Stat()
 	if _, ok := err.(pathlib.WrongTypeOnDisk[pathlib.Dir]); !ok {
 		t.Fail()
 	}
@@ -327,7 +327,7 @@ func TestOnDisk_chown(t *testing.T) {
 		Join(t.Name()).
 		AsDir().
 		Make(0755))
-	err := expect(dir.OnDisk()).Chown(0, 0)
+	err := expect(dir.Stat()).Chown(0, 0)
 	if err != nil {
 		if _, ok := err.(*fs.PathError); !ok {
 			t.Fatalf("expected *fs.PathError, got %T", err)
@@ -340,7 +340,7 @@ func TestOnDisk_chown_self(t *testing.T) {
 		Join(t.Name()).
 		AsDir()
 	dir = expect(dir.Make(0755))
-	onDisk := expect(dir.OnDisk())
+	onDisk := expect(dir.Stat())
 	switch strings.Split(runtime.GOOS, "/")[0] {
 	case "windows", "plan9":
 		t.Skip()

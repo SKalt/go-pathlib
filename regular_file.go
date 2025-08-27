@@ -138,16 +138,6 @@ func (f File) Lstat() (info Info[File], err error) {
 }
 
 // Observe the file info of the path on-disk. Follows symlinks.
-// If the observed info is not a file OnDisk returns a [WrongTypeOnDisk] error.
-//
-// See [os.Stat].
-//
-// OnDisk implements [Beholder]
-func (f File) OnDisk() (Info[File], error) {
-	return f.Stat()
-}
-
-// Observe the file info of the path on-disk. Follows symlinks.
 // If the observed info is not a file Stat returns a [WrongTypeOnDisk] error.
 //
 // See [os.Stat].

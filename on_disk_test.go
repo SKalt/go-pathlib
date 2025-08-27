@@ -18,7 +18,7 @@ func TestOnDisk_ensemble(t *testing.T) {
 			t.Fatalf("- %#v\n+ %#v\n", a, b)
 		}
 	}
-	info := expect(dir.OnDisk())
+	info := expect(dir.Stat())
 	assertEq(info.Parent(), pathlib.TempDir().Join("test/on-disk").AsDir())
 	assertEq(info.BaseName(), "ensemble.dir")
 	assertEq(info.Ext(), ".dir")
@@ -41,7 +41,7 @@ func TestOnDisk_ensemble(t *testing.T) {
 }
 
 func TestOnDisk_Transformer(t *testing.T) {
-	onDisk := expect(pathlib.Dir(t.TempDir()).OnDisk())
+	onDisk := expect(pathlib.Dir(t.TempDir()).Stat())
 
 	if !onDisk.IsAbsolute() {
 		t.Fail()
@@ -69,11 +69,11 @@ func TestOnDisk_Transformer(t *testing.T) {
 func TestOnDisk_manipulator(t *testing.T) {
 	temp := pathlib.Dir(t.TempDir())
 	dir := expect(temp.Join("foo").AsDir().Make(0777))
-	onDisk := expect(dir.OnDisk())
+	onDisk := expect(dir.Stat())
 	if err := onDisk.Chmod(0755); err != nil {
 		t.Fatal(err)
 	}
 	renamed := expect(onDisk.Rename(temp.Join("bar")))
-	onDisk = expect(renamed.OnDisk())
+	onDisk = expect(renamed.Stat())
 	enforce(onDisk.Remove())
 }

@@ -99,7 +99,6 @@ func TestFile_Beholder(t *testing.T) {
 	expect(file.Make(0666))
 	expect(file.Stat())
 	expect(file.Lstat())
-	expect(file.OnDisk())
 
 }
 

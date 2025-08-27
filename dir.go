@@ -158,16 +158,6 @@ func (d Dir) ExpandUser() (Dir, error) {
 // Beholder --------------------------------------------------------------------
 var _ Beholder[Dir] = Dir(".")
 
-// Observe the file info of the path on-disk. Follows symlinks. If the info is not a directory or a symlink,
-// Stat will return a [WrongTypeOnDisk] error.
-//
-// See [os.Stat].
-//
-// OnDisk implements [Beholder]
-func (d Dir) OnDisk() (result Info[Dir], err error) {
-	return d.Stat()
-}
-
 // Returns true if the path exists on-disk after following symlinks.
 //
 // See [os.Stat], [fs.ErrNotExist].

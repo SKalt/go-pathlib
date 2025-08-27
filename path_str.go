@@ -30,15 +30,6 @@ func (p PathStr) Lstat() (Info[PathStr], error) {
 	return lstat(p)
 }
 
-// Observe the file info of the path on-disk. Note that this does not follow symlinks.
-//
-// see [os.Lstat].
-//
-// OnDisk implements [Beholder].
-func (p PathStr) OnDisk() (Info[PathStr], error) {
-	return lstat(p)
-}
-
 // Exists implements [Beholder].
 func (p PathStr) Exists() bool {
 	return exists(p)
@@ -141,7 +132,7 @@ func (p PathStr) Read() (any, error) {
 	var actual os.FileInfo
 	var val any
 	var err error
-	actual, err = p.OnDisk()
+	actual, err = p.Lstat()
 	if err != nil {
 		return nil, err
 	}

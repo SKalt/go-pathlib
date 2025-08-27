@@ -104,18 +104,6 @@ func (h *handle) Lstat() (Info[File], error) {
 	return info, err
 }
 
-// Observe the file info of the path on-disk. Follows symlinks.
-// If the file no longer exists, the file handle will be closed.
-//
-// See [os.Stat].
-//
-// OnDisk implements [Beholder]
-func (h *handle) OnDisk() (Info[File], error) {
-	info, err := h.Path().OnDisk()
-	h.closeIfNonexistent(err)
-	return info, err
-}
-
 func (h *handle) closeIfNonexistent(err error) {
 	if errors.Is(err, fs.ErrNotExist) {
 		_ = h.Close()
@@ -134,14 +122,7 @@ func (h *handle) Stat() (Info[File], error) {
 	// seems to erroneously report that the file exists if the file has
 	// been removed since the handle was opened.
 	h.closeIfNonexistent(err)
-	if err != nil {
-		return nil, err
-	}
-	result := onDisk[File]{h.Path(), info}
-	if !info.Mode().IsRegular() {
-		return result, WrongTypeOnDisk[File]{result}
-	}
-	return result, nil
+	return info, err
 }
 
 // Returns true if the path exists on-disk after following symlinks.

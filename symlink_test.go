@@ -62,7 +62,7 @@ func TestSymlink_beholder(t *testing.T) {
 	if !symlink.Exists() {
 		t.Fail()
 	}
-	if expect(symlink.OnDisk()).Mode().IsRegular() {
+	if expect(symlink.Lstat()).Mode().IsRegular() {
 		t.Fail()
 	}
 	_, err := file.AsSymlink().Lstat()

@@ -123,16 +123,6 @@ func (s Symlink) ExpandUser() (Symlink, error) {
 // Beholder --------------------------------------------------------------------
 var _ Beholder[Symlink] = Symlink("./link")
 
-// Observe the file info of the path on-disk. Note that this returns information about the
-// symlink itself, not its target.
-//
-// see [os.Lstat].
-//
-// OnDisk implements [Beholder].
-func (s Symlink) OnDisk() (result Info[Symlink], err error) {
-	return s.Lstat()
-}
-
 // Returns true if the path exists on-disk WITHOUT following symlinks.
 //
 // See [os.Stat], [fs.ErrNotExist].
@@ -143,7 +133,8 @@ func (s Symlink) Exists() bool {
 	return !errors.Is(err, fs.ErrNotExist)
 }
 
-// Looks up the symlink's info on-disk. If the file info's mode not match [fs.ModeSymlink],
+// Looks up the symlink's info on-disk. Note that this returns information about the
+// symlink itself, not its target. If the file info's mode not match [fs.ModeSymlink],
 // Lstat returns a [WrongTypeOnDisk] error.
 //
 // See [os.Lstat].

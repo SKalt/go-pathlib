@@ -108,7 +108,7 @@ func TestHandle_beholder(t *testing.T) {
 	assertEq(t, false, info.Mode().IsDir())
 	assertStrEq(t, "example.txt", info.Name())
 
-	info = expect(handle.OnDisk())
+	info = expect(handle.Stat())
 	assertEq(t, true, info.Mode().IsRegular())
 	assertEq(t, false, info.Mode().IsDir())
 	assertStrEq(t, "example.txt", info.Name())
@@ -177,7 +177,7 @@ func TestFileHandle_chmod(t *testing.T) {
 	file := temp.Join("file.txt").AsFile()
 	handle := expect(file.Make(0666))
 	enforce(handle.Chmod(0600))
-	info := expect(handle.OnDisk())
+	info := expect(handle.Stat())
 	if info.Mode() != 0600 {
 		t.Errorf("expected %s\ngot %ss", fs.FileMode(0600), info.Mode())
 	}

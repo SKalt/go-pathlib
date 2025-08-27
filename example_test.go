@@ -23,7 +23,7 @@ func Example() {
 	dir := expect(pathlib.TempDir().Join("pathlib-example").AsDir().Make(0o777))
 	defer func() { expect(dir.RemoveAll()) }()
 
-	onDisk := expect(dir.OnDisk())
+	onDisk := expect(dir.Stat())
 	fmt.Printf("Created %s with mode %s\n", dir, onDisk.Mode())
 
 	for i, subPath := range []string{"a.txt", "b.txt", "c/d.txt"} {
