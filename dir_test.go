@@ -134,20 +134,6 @@ func ExampleDir_Walk() {
 	// foo/bar/baz
 }
 
-// TODO: find a reliably unreadable directory to test
-// func TestDir_failRead(t *testing.T) {
-// 	dir := pathlib.TempDir().Join("dir-walk-example").AsDir().Make(0333))
-// 	defer func() { dir.RemoveAll()) }()
-
-// 	dir.Join("foo/bar/baz").AsDir().MakeAll(0755, 0755))
-// 	dir.Join("a/b/c").AsDir().MakeAll(0755, 0755)
-
-// 	_, err := dir.Read()
-// 	if err == nil {
-// 		t.Fatal("expected read error")
-// 	}
-// }
-
 func TestDir_Chdir(t *testing.T) {
 	cwd := expect(pathlib.Cwd())
 	defer func() { expect(cwd.Chdir()) }()

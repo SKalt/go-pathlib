@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-// SEe [os.Stat].
+// See [os.Stat].
 func stat[P Kind](p P) (Info[P], error) {
 	info, err := os.Stat(string(p))
 	return onDisk[P]{p, info}, err
